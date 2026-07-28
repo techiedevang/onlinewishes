@@ -1,27 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://onlinewishes.in/</loc>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-pages.xml</loc>
     <lastmod>2026-07-28</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://onlinewishes.in/#templates</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-box21-surprise.xml</loc>
     <lastmod>2026-07-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://onlinewishes.in/#pricing</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-romantic-love-story.xml</loc>
     <lastmod>2026-07-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://onlinewishes.in/#custom-ai</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-bestie-chaos-polaroid.xml</loc>
     <lastmod>2026-07-28</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-</urlset>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-sisterhood-gratitude-tree.xml</loc>
+    <lastmod>2026-07-28</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-birthday-confetti-party.xml</loc>
+    <lastmod>2026-07-28</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-retro-90s-arcade.xml</loc>
+    <lastmod>2026-07-28</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-celestial-galaxy.xml</loc>
+    <lastmod>2026-07-28</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-minimalist-editorial.xml</loc>
+    <lastmod>2026-07-28</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://onlinewishes.in/sitemap-vintage-parchment.xml</loc>
+    <lastmod>2026-07-28</lastmod>
+  </sitemap>
+</sitemapindex>

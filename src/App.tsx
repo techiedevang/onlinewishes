@@ -19,6 +19,7 @@ import { PolicyModal, PolicyTab } from './components/PolicyModal';
 import { UserDashboard } from './components/UserDashboard';
 import { OfflineBanner } from './components/OfflineBanner';
 import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
+import { GoogleAd } from './components/GoogleAd';
 import { updatePageMetadata, updateMetadataForTemplate } from './utils/seo';
 import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link } from 'lucide-react';
 
@@ -350,6 +351,11 @@ A story forever to be told.`,
           </AnimatedSection>
         )}
       </main>
+
+      {/* Optional Top-Level Ad Placement */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 w-full">
+        <GoogleAd slot="1234567890" format="auto" className="my-8 bg-slate-900/50 rounded-2xl min-h-[100px] flex items-center justify-center border border-slate-800" />
+      </div>
 
       {/* Footer */}
       <Footer

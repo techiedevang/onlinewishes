@@ -219,7 +219,10 @@ Respond strictly in valid JSON format.`;
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: price })
       });
-      if (!res.ok) throw new Error('Failed to create order');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.details || errData.error || 'Failed to create order');
+      }
       const order = await res.json();
       
       // If it's a mock order (keys not configured), simulate successful payment automatically

@@ -200,7 +200,18 @@ async function startServer() {
   });
 
   // Serve Sitemap and Robots explicitly with correct XML/Text MIME types
-  app.get("/sitemap.xml", (req, res) => {
+  app.get("/sitemap*.xml", (req, res) => {
+    const filename = req.path.split("/").pop();
+    res.type("application/xml");
+    const distSitemap = path.join(process.cwd(), "dist", filename);
+    const publicSitemap = path.join(process.cwd(), "public", filename);
+    res.sendFile(publicSitemap, (err) => {
+      if (err) res.sendFile(distSitemap);
+    });
+  });
+
+  // Old route kept for safety if needed, but above handles it
+  app.get("/old-sitemap.xml", (req, res) => {
     res.type("application/xml");
     const distSitemap = path.join(process.cwd(), "dist", "sitemap.xml");
     const publicSitemap = path.join(process.cwd(), "public", "sitemap.xml");

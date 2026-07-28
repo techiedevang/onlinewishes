@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { motion } from 'motion/react';
+import { Analytics } from '@vercel/analytics/react';
 import { User, UserCustomization, Template, CustomAiBlueprint } from './types';
 import { TEMPLATES, INITIAL_MEMORIES_21, getDefaultCustomization } from './data/templates';
 import { Header } from './components/Header';
@@ -481,6 +482,8 @@ A story forever to be told.`,
         </div>
       )}
 
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }

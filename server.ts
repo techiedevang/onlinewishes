@@ -199,6 +199,25 @@ async function startServer() {
     }
   });
 
+  // Serve Sitemap and Robots explicitly with correct XML/Text MIME types
+  app.get("/sitemap.xml", (req, res) => {
+    res.type("application/xml");
+    const distSitemap = path.join(process.cwd(), "dist", "sitemap.xml");
+    const publicSitemap = path.join(process.cwd(), "public", "sitemap.xml");
+    res.sendFile(publicSitemap, (err) => {
+      if (err) res.sendFile(distSitemap);
+    });
+  });
+
+  app.get("/robots.txt", (req, res) => {
+    res.type("text/plain");
+    const distRobots = path.join(process.cwd(), "dist", "robots.txt");
+    const publicRobots = path.join(process.cwd(), "public", "robots.txt");
+    res.sendFile(publicRobots, (err) => {
+      if (err) res.sendFile(distRobots);
+    });
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

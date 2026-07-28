@@ -222,8 +222,18 @@ Respond strictly in valid JSON format.`;
       if (!res.ok) throw new Error('Failed to create order');
       const order = await res.json();
       
+      // If it's a mock order (keys not configured), simulate successful payment automatically
+      if (order.id && order.id.startsWith('order_mock_')) {
+        console.warn('Razorpay keys not configured. Simulating successful mock payment.');
+        setTimeout(async () => {
+          setIsProcessingPayment(false);
+          await submitToAdminBackend();
+        }, 1500);
+        return;
+      }
+
       const options = {
-        key: (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        key: order.key_id || 'rzp_test_placeholder',
         amount: order.amount,
         currency: order.currency,
         name: 'OnlineWishes',

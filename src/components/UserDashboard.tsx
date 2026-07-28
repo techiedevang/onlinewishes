@@ -251,6 +251,13 @@ export function UserDashboard({
             </button>
 
             <button
+              onClick={onLogout}
+              className="flex-1 sm:flex-none px-4 py-2 bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 font-bold text-xs border border-slate-700 hover:border-red-500/30 rounded-xl transition-all flex items-center justify-center space-x-1.5"
+            >
+              <span>Sign Out</span>
+            </button>
+
+            <button
               onClick={onClose}
               className="hidden sm:flex p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-full transition-colors"
               aria-label="Close Dashboard"

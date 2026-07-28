@@ -70,15 +70,6 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
                   <span>Contact</span>
                 </button>
               </li>
-              <li>
-                <button
-                  onClick={onOpenAdmin}
-                  className="hover:text-rose-400 transition-colors text-left flex items-center space-x-1.5"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Admin Panel</span>
-                </button>
-              </li>
             </ul>
           </div>
 

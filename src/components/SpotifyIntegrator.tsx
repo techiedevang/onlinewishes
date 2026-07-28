@@ -102,7 +102,33 @@ export function SpotifyIntegrator({
         setIsSearching(true);
         // 1. Get Token from our server
         const tokenRes = await fetch('/api/spotify/token');
-        if (!tokenRes.ok) throw new Error('Failed to fetch token');
+        
+        if (!tokenRes.ok) {
+          // Fallback to mock search results if Spotify credentials are not configured yet
+          console.warn('Spotify API keys not configured on server. Using mock results.');
+          const mockResults: SpotifyTrack[] = [
+            {
+              id: 'mock-1',
+              name: 'Mock Track 1 (Configure Spotify API)',
+              artist: 'Test Artist',
+              albumArt: 'https://images.unsplash.com/photo-1619983081563-430f63602796?w=100&q=80',
+              spotifyUrl: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT',
+              category: 'Pop'
+            },
+            {
+              id: 'mock-2',
+              name: 'Mock Track 2',
+              artist: 'Test Artist 2',
+              albumArt: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80',
+              spotifyUrl: 'https://open.spotify.com/track/0VjIj932C3P2932x',
+              category: 'Acoustic'
+            }
+          ];
+          setSearchResults(mockResults);
+          setIsSearching(false);
+          return;
+        }
+
         const { access_token } = await tokenRes.json();
         
         // 2. Search Spotify API
@@ -222,30 +248,25 @@ export function SpotifyIntegrator({
 
       {/* Currently Active Spotify Track Banner */}
       {customization.spotifyTrackUrl && (
-        <div className="bg-emerald-50 dark:bg-emerald-950/40 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center animate-pulse">
-              <Disc className="w-5 h-5 animate-spin" style={{ animationDuration: '4s' }} />
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-300">
-                Active Spotify Audio
-              </span>
-              <p className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-xs">
-                {customization.spotifyTrackName || 'Custom Spotify Track'} — {customization.spotifyArtistName || 'Artist'}
-              </p>
+        <div className="bg-slate-900 rounded-xl border border-slate-800 p-2 shadow-lg mb-4">
+          <div className="flex items-center justify-between px-2 mb-2">
+            <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
+              Active Spotify Audio
+            </span>
+            <div className="flex items-center space-x-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             </div>
           </div>
-
-          <a
-            href={customization.spotifyTrackUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center space-x-1"
-          >
-            <span>Open on Spotify</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <iframe
+            src={getSpotifyEmbedUrl(customization.spotifyTrackUrl) || ''}
+            width="100%"
+            height="80"
+            frameBorder="0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            className="rounded-lg"
+            title="Spotify Audio Player"
+          />
         </div>
       )}
 

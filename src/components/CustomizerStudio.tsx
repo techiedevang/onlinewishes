@@ -188,8 +188,20 @@ export function CustomizerStudio({
       if (!res.ok) throw new Error('Failed to create order');
       const order = await res.json();
       
+      // If it's a mock order (keys not configured), simulate successful payment automatically
+      if (order.id && order.id.startsWith('order_mock_')) {
+        console.warn('Razorpay keys not configured. Simulating successful mock payment.');
+        setTimeout(async () => {
+          setIsProcessingPayment(false);
+          setShowPaymentModal(false);
+          await handleSaveToCloudDatabase();
+          onPublish();
+        }, 1500);
+        return;
+      }
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Usually injected by env but fallback for test
+        key: order.key_id || 'rzp_test_placeholder', // Usually injected by env but fallback for test
         amount: order.amount,
         currency: order.currency,
         name: 'OnlineWishes',

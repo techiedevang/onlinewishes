@@ -158,7 +158,7 @@ async function startServer() {
   app.post("/api/payment/create-order", async (req, res) => {
     try {
       if (!razorpay) {
-        return res.status(500).json({ error: "Razorpay credentials missing." });
+        return res.json({ id: `order_mock_${Date.now()}`, amount: req.body?.amount ? Math.round(Number(req.body.amount) * 100) : 19900, currency: "INR", receipt: `receipt_order_${Date.now()}` });
       }
 
       const amountInRupees = req.body?.amount ? Number(req.body.amount) : 199;

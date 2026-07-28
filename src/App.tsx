@@ -69,7 +69,7 @@ export default function App() {
 
   // Check for /admin route
   useEffect(() => {
-    if (window.location.pathname === '/admin') {
+    if (window.location.pathname === '/admin' || window.location.pathname === '/admin/') {
       setShowAdminDashboard(true);
     }
   }, []);
@@ -83,7 +83,7 @@ export default function App() {
 
   const handleCloseAdmin = () => {
     setShowAdminDashboard(false);
-    if (window.location.pathname === '/admin') {
+    if (window.location.pathname === '/admin' || window.location.pathname === '/admin/') {
       window.history.pushState({}, '', '/');
     }
   };

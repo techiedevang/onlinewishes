@@ -51,16 +51,16 @@ async function startServer() {
       const { adminEmail } = req.body;
       const targetAdmin = (adminEmail || "").trim().toLowerCase();
 
-      if (targetAdmin !== "admin@onlinewishes.com") {
+      if (targetAdmin !== "admin@onlinewishes.in") {
         return res.status(403).json({
-          error: "Unauthorized email address. Only admin@onlinewishes.com is permitted.",
+          error: "Unauthorized email address. Only admin@onlinewishes.in is permitted.",
         });
       }
 
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-      adminOtpStore.set("admin@onlinewishes.com", { code: otpCode, expiresAt });
+      adminOtpStore.set("admin@onlinewishes.in", { code: otpCode, expiresAt });
 
       const recipientEmail = "codelearnpoint@gmail.com";
       const transporter = getTransporter();
@@ -77,7 +77,7 @@ async function startServer() {
             html: `
               <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; border: 1px solid #334155;">
                 <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
-                <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>admin@onlinewishes.com</strong>.</p>
+                <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>admin@onlinewishes.in</strong>.</p>
                 <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
                   <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
                 </div>
@@ -116,18 +116,18 @@ async function startServer() {
       const { adminEmail, otp } = req.body;
       const targetAdmin = (adminEmail || "").trim().toLowerCase();
 
-      if (targetAdmin !== "admin@onlinewishes.com") {
+      if (targetAdmin !== "admin@onlinewishes.in") {
         return res.status(403).json({ error: "Unauthorized email address." });
       }
 
-      const storedData = adminOtpStore.get("admin@onlinewishes.com");
+      const storedData = adminOtpStore.get("admin@onlinewishes.in");
 
       if (!storedData) {
         return res.status(400).json({ error: "No OTP found. Please request a new code." });
       }
 
       if (Date.now() > storedData.expiresAt) {
-        adminOtpStore.delete("admin@onlinewishes.com");
+        adminOtpStore.delete("admin@onlinewishes.in");
         return res.status(400).json({ error: "OTP code expired. Please request a new code." });
       }
 
@@ -136,7 +136,7 @@ async function startServer() {
       }
 
       // OTP Verified
-      adminOtpStore.delete("admin@onlinewishes.com");
+      adminOtpStore.delete("admin@onlinewishes.in");
 
       res.json({
         success: true,
@@ -144,7 +144,7 @@ async function startServer() {
         user: {
           id: "admin-master-id",
           name: "Master Admin",
-          email: "admin@onlinewishes.com",
+          email: "admin@onlinewishes.in",
           role: "admin",
         },
       });
@@ -218,6 +218,35 @@ async function startServer() {
     res.sendFile(publicSitemap, (err) => {
       if (err) res.sendFile(distSitemap);
     });
+  });
+
+  // API route to fetch images from Firestore
+  app.get("/api/images/:id", async (req, res) => {
+    try {
+      const docId = req.params.id;
+      const projectId = "gen-lang-client-0123999783";
+      const dbId = "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/uploaded_images/${docId}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data && data.fields && data.fields.data && data.fields.data.stringValue) {
+        const base64 = data.fields.data.stringValue;
+        const parts = base64.split(",");
+        const mime = parts[0].split(":")[1].split(";")[0];
+        const buffer = Buffer.from(parts[1], "base64");
+        
+        res.setHeader("Content-Type", mime);
+        res.setHeader("Cache-Control", "public, max-age=31536000");
+        res.send(buffer);
+      } else {
+        res.status(404).send("Image not found");
+      }
+    } catch (e) {
+      console.error("Error fetching image from Firestore", e);
+      res.status(500).send("Error fetching image");
+    }
   });
 
   app.get("/robots.txt", (req, res) => {

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+<input type="file" id="file" />
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+  
+  const config = {
+    projectId: "gen-lang-client-0123999783",
+    appId: "1:967369741407:web:ad95a3729d86442285b7ea",
+    apiKey: "AIzaSyAAsl785OWTeliRX3BvzybSWnI7thRCoBI",
+    authDomain: "gen-lang-client-0123999783.firebaseapp.com",
+    storageBucket: "gen-lang-client-0123999783.firebasestorage.app",
+  };
+  
+  const app = initializeApp(config);
+  const storage = getStorage(app, config.storageBucket);
+  
+  document.getElementById('file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const storageRef = ref(storage, 'test/' + file.name);
+      await uploadBytes(storageRef, file);
+      console.log('Upload success');
+    } catch(err) {
+      console.error('Upload error:', err);
+    }
+  });
+</script>
+</body>
+</html>

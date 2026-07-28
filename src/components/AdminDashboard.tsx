@@ -19,7 +19,7 @@ export function AdminDashboard({ currentUser, onClose, onLogin }: AdminDashboard
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(
     currentUser?.role === 'admin'
   );
-  const [adminEmail, setAdminEmail] = useState<string>('admin@onlinewishes.com');
+  const [adminEmail, setAdminEmail] = useState<string>('admin@onlinewishes.in');
   const [otpSent, setOtpSent] = useState<boolean>(false);
   const [generatedOtp, setGeneratedOtp] = useState<string>('');
   const [userOtp, setUserOtp] = useState<string>('');
@@ -149,7 +149,7 @@ export function AdminDashboard({ currentUser, onClose, onLogin }: AdminDashboard
   const [usersList, setUsersList] = useState<User[]>([
     { id: 'usr-101', name: 'Priya Sharma', email: 'priya.sharma@gmail.com', role: 'user', mfaEnabled: false },
     { id: 'usr-102', name: 'Rohit Verma', email: 'rohit.verma@yahoo.com', role: 'user', mfaEnabled: true },
-    { id: 'usr-103', name: 'System Admin', email: 'admin@onlinewishes.com', role: 'admin', mfaEnabled: true },
+    { id: 'usr-103', name: 'System Admin', email: 'admin@onlinewishes.in', role: 'admin', mfaEnabled: true },
     { id: 'usr-104', name: 'Ananya Kapoor', email: 'ananya.k@hotmail.com', role: 'user', mfaEnabled: false },
     { id: 'usr-105', name: 'Kabir Singh', email: 'kabir.singh@gmail.com', role: 'user', mfaEnabled: false },
   ]);
@@ -221,7 +221,7 @@ export function AdminDashboard({ currentUser, onClose, onLogin }: AdminDashboard
 
   const [logs, setLogs] = useState<SecurityLog[]>([
     { id: '1', timestamp: '2026-07-28 01:35:12', event: 'Payment Callback Verified (Razorpay SHA256)', severity: 'low', ipAddress: '192.168.1.45', userEmail: 'priya.sharma@gmail.com' },
-    { id: '2', timestamp: '2026-07-28 00:35:12', event: 'Successful Admin Mail OTP Login', severity: 'low', ipAddress: '192.168.1.45', userEmail: 'admin@onlinewishes.com' },
+    { id: '2', timestamp: '2026-07-28 00:35:12', event: 'Successful Admin Mail OTP Login', severity: 'low', ipAddress: '192.168.1.45', userEmail: 'admin@onlinewishes.in' },
     { id: '3', timestamp: '2026-07-28 00:12:10', event: 'SSL Certificate Renewed Automatically', severity: 'low', ipAddress: 'Cloud Run Auto', userEmail: 'system' },
     { id: '4', timestamp: '2026-07-27 23:10:00', event: 'Blocked Unauthenticated API Rate Spike', severity: 'medium', ipAddress: '185.220.101.4', userEmail: 'anonymous' },
   ]);
@@ -246,8 +246,8 @@ export function AdminDashboard({ currentUser, onClose, onLogin }: AdminDashboard
     setLoginError(null);
     setEmailStatusMessage(null);
 
-    if (adminEmail.trim().toLowerCase() !== 'admin@onlinewishes.com') {
-      setLoginError('Unauthorized Admin Email! Only admin@onlinewishes.com has master admin rights.');
+    if (adminEmail.trim().toLowerCase() !== 'admin@onlinewishes.in') {
+      setLoginError('Unauthorized Admin Email! Only admin@onlinewishes.in has master admin rights.');
       return;
     }
 
@@ -510,7 +510,7 @@ export function AdminDashboard({ currentUser, onClose, onLogin }: AdminDashboard
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     required
-                    placeholder="admin@onlinewishes.com"
+                    placeholder="admin@onlinewishes.in"
                     className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
                   />
                 </div>

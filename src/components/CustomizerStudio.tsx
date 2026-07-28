@@ -334,7 +334,7 @@ export function CustomizerStudio({
   const handleMultipleFilesSelected = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
     
-    if (!auth.currentUser) {
+    if (!checkIsLoggedIn()) {
       setShowAuthUploadModal(true);
       return;
     }
@@ -384,7 +384,7 @@ export function CustomizerStudio({
   const [cropperFile, setCropperFile] = useState<{ file: File; url: string; index: number } | null>(null);
 
   const handleSingleFileSelected = async (file: File, index: number) => {
-    if (!auth.currentUser) {
+    if (!checkIsLoggedIn()) {
       setShowAuthUploadModal(true);
       return;
     }
@@ -395,7 +395,7 @@ export function CustomizerStudio({
 
   const handleCropComplete = async (croppedDataUrl: string) => {
     if (!cropperFile) return;
-    if (!auth.currentUser) {
+    if (!checkIsLoggedIn()) {
       setShowAuthUploadModal(true);
       return;
     }
@@ -1908,7 +1908,7 @@ export function CustomizerStudio({
                 {/* Drag-and-Drop Native File Input Box */}
                 <label 
                   onClick={(e) => {
-                    if (!auth.currentUser) {
+                    if (!checkIsLoggedIn()) {
                       e.preventDefault();
                       e.stopPropagation();
                       setShowAuthUploadModal(true);
@@ -2059,7 +2059,7 @@ export function CustomizerStudio({
                       ) : (
                         <label 
                           onClick={(e) => {
-                            if (!auth.currentUser) {
+                            if (!checkIsLoggedIn()) {
                               e.preventDefault();
                               e.stopPropagation();
                               setShowAuthUploadModal(true);

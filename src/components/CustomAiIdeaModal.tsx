@@ -198,6 +198,8 @@ Respond strictly in valid JSON format.`;
     }
   };
 
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
   const handleSendToAdmin = async () => {
     if (!clientPrompt.trim() && !audioUrl) {
       alert('Please write a text description or record a voice note explaining your website idea.');
@@ -208,6 +210,67 @@ Respond strictly in valid JSON format.`;
       return;
     }
 
+    setIsProcessingPayment(true);
+    
+    try {
+      const price = generatedBlueprint?.estimatedPrice || 300;
+      const res = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: price })
+      });
+      if (!res.ok) throw new Error('Failed to create order');
+      const order = await res.json();
+      
+      const options = {
+        key: (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        amount: order.amount,
+        currency: order.currency,
+        name: 'OnlineWishes',
+        description: 'Custom AI Idea Website',
+        order_id: order.id,
+        handler: async function (response: any) {
+          setIsProcessingPayment(false);
+          await submitToAdminBackend();
+        },
+        prefill: {
+          name: recipientName || 'Sender',
+          contact: whatsappNumber
+        },
+        theme: {
+          color: '#10b981'
+        },
+        modal: {
+          ondismiss: function() {
+            setIsProcessingPayment(false);
+          }
+        }
+      };
+      
+      // @ts-ignore
+      if (window.Razorpay) {
+        // @ts-ignore
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response: any) {
+          setIsProcessingPayment(false);
+          alert('Payment failed: ' + response.error.description);
+        });
+        rzp.open();
+      } else {
+        // Fallback for environments without Razorpay script loaded
+        setTimeout(() => {
+          setIsProcessingPayment(false);
+          submitToAdminBackend();
+        }, 1500);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsProcessingPayment(false);
+      alert('Error initializing payment. Please try again.');
+    }
+  };
+
+  const submitToAdminBackend = async () => {
     setIsSaving(true);
     try {
       const cleanSlug = requestedSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || `${recipientName.toLowerCase().replace(/\s+/g, '-')}-special`;
@@ -579,10 +642,15 @@ Respond strictly in valid JSON format.`;
                   <button
                     type="button"
                     onClick={handleSendToAdmin}
-                    disabled={isSaving || (!clientPrompt.trim() && !audioUrl) || !whatsappNumber.trim()}
+                    disabled={isProcessingPayment || isSaving || (!clientPrompt.trim() && !audioUrl) || !whatsappNumber.trim()}
                     className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-slate-950 font-black text-xs rounded-xl shadow-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
                   >
-                    {isSaving ? (
+                    {isProcessingPayment ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                        <span>Processing Payment...</span>
+                      </>
+                    ) : isSaving ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
                         <span>Sending Idea & Voice Note to Admin...</span>
@@ -661,11 +729,12 @@ Respond strictly in valid JSON format.`;
                   <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
                     <button
                       onClick={handleSendToAdmin}
-                      disabled={isSaving || !whatsappNumber.trim()}
+                      disabled={isProcessingPayment || isSaving || !whatsappNumber.trim()}
                       className="w-full sm:flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                     >
-                      <span>Submit to Admin with WhatsApp Contact</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <span>{isProcessingPayment ? 'Processing Payment...' : isSaving ? 'Submitting...' : 'Submit to Admin with WhatsApp Contact'}</span>
+                      {!isProcessingPayment && !isSaving && <ArrowRight className="w-4 h-4" />}
+                      {(isProcessingPayment || isSaving) && <RefreshCw className="w-4 h-4 animate-spin" />}
                     </button>
                     <button
                       onClick={handleConfirmAndLoadStudio}

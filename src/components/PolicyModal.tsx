@@ -176,7 +176,7 @@ export function PolicyModal({ initialTab = 'privacy', onClose }: PolicyModalProp
                   <span>Data Retention & Deletion</span>
                 </h3>
                 <p>
-                  Surprise websites remain active perpetually unless you request deletion. You can request complete removal of your published links and media assets at any time by contacting our privacy officer at <a href="mailto:admin@onlinewishes.com" className="text-rose-400 underline">admin@onlinewishes.com</a>.
+                  Surprise websites remain active perpetually unless you request deletion. You can request complete removal of your published links and media assets at any time by contacting our privacy officer at <a href="mailto:admin@onlinewishes.in" className="text-rose-400 underline">admin@onlinewishes.in</a>.
                 </p>
               </section>
             </div>
@@ -290,8 +290,8 @@ export function PolicyModal({ initialTab = 'privacy', onClose }: PolicyModalProp
                     </div>
                     <div>
                       <span className="text-slate-500 block uppercase font-bold text-[10px]">Admin Inquiries</span>
-                      <a href="mailto:admin@onlinewishes.com" className="text-amber-400 font-mono font-bold hover:underline">
-                        admin@onlinewishes.com
+                      <a href="mailto:admin@onlinewishes.in" className="text-amber-400 font-mono font-bold hover:underline">
+                        admin@onlinewishes.in
                       </a>
                     </div>
                     <div>

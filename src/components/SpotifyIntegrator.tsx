@@ -19,6 +19,7 @@ const FEATURED_SPOTIFY_TRACKS: SpotifyTrackItem[] = [
     artist: 'Harry Styles',
     albumArt: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&fit=crop',
     spotifyUrl: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT',
+    previewAudioUrl: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3',
     category: 'Pop & Vibes',
   },
   {
@@ -106,13 +107,14 @@ export function SpotifyIntegrator({
         if (!tokenRes.ok) {
           // Fallback to mock search results if Spotify credentials are not configured yet
           console.warn('Spotify API keys not configured on server. Using mock results.');
-          const mockResults: SpotifyTrack[] = [
+          const mockResults: SpotifyTrackItem[] = [
             {
               id: 'mock-1',
               name: 'Mock Track 1 (Configure Spotify API)',
               artist: 'Test Artist',
               albumArt: 'https://images.unsplash.com/photo-1619983081563-430f63602796?w=100&q=80',
               spotifyUrl: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT',
+              previewAudioUrl: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3',
               category: 'Pop'
             },
             {
@@ -147,6 +149,7 @@ export function SpotifyIntegrator({
           artist: item.artists.map((a: any) => a.name).join(', '),
           albumArt: item.album.images[0]?.url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&fit=crop',
           spotifyUrl: item.external_urls.spotify,
+          previewAudioUrl: item.preview_url,
           category: 'Spotify Search'
         }));
         
@@ -174,6 +177,7 @@ export function SpotifyIntegrator({
     onChangeCustomization({
       ...customization,
       spotifyTrackUrl: track.spotifyUrl,
+      spotifyPreviewUrl: track.previewAudioUrl,
       spotifyTrackName: track.name,
       spotifyArtistName: track.artist,
       musicTrack: 'spotify_custom',
@@ -257,16 +261,29 @@ export function SpotifyIntegrator({
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             </div>
           </div>
-          <iframe
-            src={getSpotifyEmbedUrl(customization.spotifyTrackUrl) || ''}
-            width="100%"
-            height="80"
-            frameBorder="0"
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-            className="rounded-lg"
-            title="Spotify Audio Player"
-          />
+          {customization.spotifyPreviewUrl ? (
+            <div className="p-3 bg-slate-950 rounded-lg">
+              <div className="flex items-center space-x-3 mb-2">
+                <Music className="w-4 h-4 text-emerald-500" />
+                <div className="flex-1 truncate">
+                  <p className="text-xs font-bold text-white truncate">{customization.spotifyTrackName}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{customization.spotifyArtistName}</p>
+                </div>
+              </div>
+              <audio controls src={customization.spotifyPreviewUrl} className="w-full h-8" autoPlay />
+            </div>
+          ) : (
+            <iframe
+              src={getSpotifyEmbedUrl(customization.spotifyTrackUrl) || ''}
+              width="100%"
+              height="80"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              className="rounded-lg"
+              title="Spotify Audio Player"
+            />
+          )}
         </div>
       )}
 

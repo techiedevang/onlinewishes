@@ -106,6 +106,7 @@ export interface UserCustomization {
   bgTheme: string;
   musicTrack: string;
   spotifyTrackUrl?: string;
+  spotifyPreviewUrl?: string;
   spotifyTrackName?: string;
   spotifyArtistName?: string;
   ambientSoundscape?: string; // 'rainy_cafe' | 'library_whispers' | 'cozy_fireplace' | 'ocean_breeze' | 'stargazing_night' | 'none'

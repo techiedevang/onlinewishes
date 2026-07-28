@@ -222,6 +222,22 @@ export function InteractiveSurpriseTemplate({
     soundscapeEngine.setMuted(audioMuted);
   }, [audioMuted]);
 
+  // Play Spotify Preview Audio if available
+  useEffect(() => {
+    let previewAudio: HTMLAudioElement | null = null;
+    if (stage !== 'passcode' && customization.spotifyPreviewUrl && !audioMuted) {
+      previewAudio = new Audio(customization.spotifyPreviewUrl);
+      previewAudio.loop = true;
+      previewAudio.play().catch(e => console.log('Preview audio autoplay blocked:', e));
+    }
+    return () => {
+      if (previewAudio) {
+        previewAudio.pause();
+        previewAudio.src = '';
+      }
+    };
+  }, [stage, customization.spotifyPreviewUrl, audioMuted]);
+
 
 
 
@@ -2279,13 +2295,13 @@ A story forever to be told.`}
       </div>
 
       {/* Floating Spotify Audio Bar (If Spotify Track Selected) */}
-      {spotifyEmbedUrl && showSpotifyPlayer && stage !== 'greeting' && (
+      {(spotifyEmbedUrl || customization.spotifyPreviewUrl) && showSpotifyPlayer && stage !== 'greeting' && (
         <div className="absolute bottom-3 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-50 pointer-events-auto bg-slate-950/90 border border-emerald-500/50 backdrop-blur-xl rounded-2xl p-2.5 shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-1.5 px-1">
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
               <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">
-                Spotify Soundtrack
+                Soundtrack
               </span>
             </div>
             <button
@@ -2295,16 +2311,31 @@ A story forever to be told.`}
               ✕
             </button>
           </div>
-          <iframe
-            src={spotifyEmbedUrl}
-            width="100%"
-            height="80"
-            frameBorder="0"
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-            className="rounded-xl"
-            title="Spotify Audio Player"
-          />
+          {customization.spotifyPreviewUrl ? (
+            <div className="flex items-center space-x-3 p-2 bg-slate-900 rounded-xl">
+               <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                 <Music className="w-5 h-5 text-emerald-500" />
+               </div>
+               <div className="flex-1 overflow-hidden">
+                 <p className="text-xs font-bold text-white truncate">{customization.spotifyTrackName || 'Custom Song'}</p>
+                 <p className="text-[10px] text-slate-400 truncate">{customization.spotifyArtistName || 'Artist'}</p>
+               </div>
+               <div className="px-2 text-emerald-400">
+                 {audioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 animate-pulse" />}
+               </div>
+            </div>
+          ) : (
+            <iframe
+              src={spotifyEmbedUrl || ''}
+              width="100%"
+              height="80"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              className="rounded-xl"
+              title="Spotify Audio Player"
+            />
+          )}
         </div>
       )}
 

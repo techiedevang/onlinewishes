@@ -40,7 +40,15 @@ function AnimatedSection({ children, className = "", delay = 0 }: { children: Re
 export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('home');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('onlinewishes_current_user');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse saved user:', e);
+    }
+    return null;
+  });
 
   // Modals
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
@@ -328,6 +336,7 @@ A story forever to be told.`,
               }}
               onPublish={handlePublishWebsite}
               onOpenAuth={handleOpenAuth}
+              currentUser={currentUser}
             />
           </AnimatedSection>
         )}
@@ -399,8 +408,14 @@ A story forever to be told.`,
         <AuthModal
           currentUser={currentUser}
           initialMode={authInitialMode}
-          onLogin={(user) => setCurrentUser(user)}
-          onLogout={() => setCurrentUser(null)}
+          onLogin={(user) => {
+            localStorage.setItem('onlinewishes_current_user', JSON.stringify(user));
+            setCurrentUser(user);
+          }}
+          onLogout={() => {
+            localStorage.removeItem('onlinewishes_current_user');
+            setCurrentUser(null);
+          }}
           onClose={() => setShowAuthModal(false)}
           onOpenDashboard={() => setShowUserDashboard(true)}
         />

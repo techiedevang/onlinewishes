@@ -4,7 +4,7 @@ import { uploadImageToStorage } from '../lib/storageService';
 import { auth } from '../lib/firebase';
 
 // ... existing imports ...
-import { UserCustomization, Memory, OccasionType } from '../types';
+import { UserCustomization, Memory, OccasionType, User } from '../types';
 import { Heart, Sparkles, Upload, Music, Lock, Link as LinkIcon, Plus, Trash2, Check, ArrowRight, Eye, RefreshCw, Type, Image as ImageIcon, Save, Download, RotateCcw, Smartphone, LayoutGrid, GripVertical, Clock, Volume2, VolumeX, Play, Square, Smile, Database, Cloud, Search, Copy, Loader2, X, CreditCard, HelpCircle, Gamepad2, Star, Scroll, MessageSquare, LogIn, UserPlus, Shield } from 'lucide-react';
 
 import { SafeImage } from './SafeImage';
@@ -26,6 +26,7 @@ interface CustomizerStudioProps {
   onOpenLivePreview: () => void;
   onPublish: () => void;
   onOpenAuth?: (initialMode?: 'signin' | 'signup') => void;
+  currentUser?: User | null;
 }
 
 const DRAFT_STORAGE_KEY = 'onlinewishes_customization_draft';
@@ -68,6 +69,7 @@ export function CustomizerStudio({
   onOpenLivePreview,
   onPublish,
   onOpenAuth,
+  currentUser,
 }: CustomizerStudioProps) {
   const [activeStep, setActiveStep] = useState<number>(1);
   const [showAuthUploadModal, setShowAuthUploadModal] = useState<boolean>(false);
@@ -145,7 +147,36 @@ export function CustomizerStudio({
   const discountAmount = discountPercent > 0 ? Math.round((basePrice * discountPercent) / 100) : 0;
   const payablePrice = Math.max(1, basePrice - discountAmount);
 
+  const checkIsLoggedIn = (): boolean => {
+    if (currentUser) return true;
+    if (auth.currentUser) return true;
+    try {
+      if (localStorage.getItem('onlinewishes_current_user')) return true;
+    } catch (e) {
+      console.error('Error checking local user:', e);
+    }
+    return false;
+  };
+
+  const handleOpenPaymentModal = () => {
+    if (!checkIsLoggedIn()) {
+      if (onOpenAuth) {
+        onOpenAuth('signin');
+      }
+      return;
+    }
+    setShowPaymentModal(true);
+  };
+
   const handleRazorpayPayment = async () => {
+    if (!checkIsLoggedIn()) {
+      setShowPaymentModal(false);
+      if (onOpenAuth) {
+        onOpenAuth('signin');
+      }
+      return;
+    }
+
     try {
       setIsProcessingPayment(true);
       
@@ -2275,7 +2306,7 @@ export function CustomizerStudio({
 
                 <button
                   type="button"
-                  onClick={() => setShowPaymentModal(true)}
+                  onClick={handleOpenPaymentModal}
                   className="w-full sm:flex-1 px-7 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold rounded-xl text-sm shadow-lg hover:shadow-emerald-500/25 transition-all flex items-center justify-center space-x-2"
                 >
                   <CreditCard className="w-4 h-4" />

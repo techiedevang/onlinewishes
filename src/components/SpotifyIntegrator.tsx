@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserCustomization } from '../types';
-import { Music, Search, Disc, Play, ExternalLink, Check, Volume2, Sparkles, Radio } from 'lucide-react';
+import { Music, Search, Disc, Play, Pause, Plus, ExternalLink, Check, Volume2, Sparkles, Radio } from 'lucide-react';
 
 interface SpotifyTrackItem {
   id: string;
@@ -69,6 +69,46 @@ export function SpotifyIntegrator({
   const [searchQuery, setSearchQuery] = useState('');
   const [customUrlInput, setCustomUrlInput] = useState(customization.spotifyTrackUrl || '');
   const [copiedNotification, setCopiedNotification] = useState(false);
+  const [playingPreviewId, setPlayingPreviewId] = useState<string | null>(null);
+  
+  // Create an audio ref to manage preview playback
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // Cleanup audio on unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
+  }, []);
+
+  const handleTogglePreview = (e: React.MouseEvent, track: SpotifyTrackItem) => {
+    e.stopPropagation(); // Prevent track selection
+    
+    if (!track.previewAudioUrl) {
+      alert('Preview not available for this track.');
+      return;
+    }
+
+    if (playingPreviewId === track.id) {
+      // Pause current
+      if (audioRef.current) audioRef.current.pause();
+      setPlayingPreviewId(null);
+    } else {
+      // Play new
+      if (audioRef.current) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current = new Audio();
+        audioRef.current.onended = () => setPlayingPreviewId(null);
+      }
+      audioRef.current.src = track.previewAudioUrl;
+      audioRef.current.play().catch(console.error);
+      setPlayingPreviewId(track.id);
+    }
+  };
 
   // Extract Spotify Track ID from standard Spotify URLs
   const getSpotifyEmbedUrl = (url: string) => {
@@ -174,6 +214,10 @@ export function SpotifyIntegrator({
   }, [searchQuery]);
 
   const handleSelectTrack = (track: SpotifyTrackItem) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setPlayingPreviewId(null);
+    }
     onChangeCustomization({
       ...customization,
       spotifyTrackUrl: track.spotifyUrl,
@@ -330,16 +374,42 @@ export function SpotifyIntegrator({
                     </div>
                   </div>
 
-                  <div className="flex-shrink-0 ml-2">
-                    {isSelected ? (
-                      <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center">
-                        <Check className="w-3.5 h-3.5" />
-                      </span>
-                    ) : (
-                      <span className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-colors">
-                        <Play className="w-3 h-3 ml-0.5 fill-current" />
-                      </span>
+                  <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                    {track.previewAudioUrl && (
+                      <button
+                        onClick={(e) => handleTogglePreview(e, track)}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                          playingPreviewId === track.id
+                            ? 'bg-emerald-500 text-white animate-pulse'
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-400 hover:text-white'
+                        }`}
+                        title="Listen to preview"
+                      >
+                        {playingPreviewId === track.id ? (
+                          <Pause className="w-3 h-3 fill-current" />
+                        ) : (
+                          <Play className="w-3 h-3 ml-0.5 fill-current" />
+                        )}
+                      </button>
                     )}
+                    <button
+                      onClick={(e) => {
+                         e.stopPropagation();
+                         handleSelectTrack(track);
+                      }}
+                      className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                        isSelected 
+                          ? 'bg-emerald-500 text-white' 
+                          : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-500 hover:text-white'
+                      }`}
+                      title={isSelected ? "Selected" : "Select track"}
+                    >
+                      {isSelected ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
               );

@@ -289,12 +289,6 @@ export function PolicyModal({ initialTab = 'privacy', onClose }: PolicyModalProp
                       </a>
                     </div>
                     <div>
-                      <span className="text-slate-500 block uppercase font-bold text-[10px]">Admin Inquiries</span>
-                      <a href="mailto:admin@onlinewishes.in" className="text-amber-400 font-mono font-bold hover:underline">
-                        admin@onlinewishes.in
-                      </a>
-                    </div>
-                    <div>
                       <span className="text-slate-500 block uppercase font-bold text-[10px]">Response Guarantee</span>
                       <span className="text-emerald-400 font-medium">Replies dispatched within 2 hours</span>
                     </div>

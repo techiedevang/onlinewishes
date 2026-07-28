@@ -191,6 +191,7 @@ export function CustomizerStudio({
       // If it's a mock order (keys not configured), simulate successful payment automatically
       if (order.id && order.id.startsWith('order_mock_')) {
         console.warn('Razorpay keys not configured. Simulating successful mock payment.');
+        alert('Notice: Razorpay API keys are not configured on the server. Simulating a successful mock payment for testing.');
         setTimeout(async () => {
           setIsProcessingPayment(false);
           setShowPaymentModal(false);
@@ -216,13 +217,11 @@ export function CustomizerStudio({
           });
           setIsProcessingPayment(false);
           setShowPaymentModal(false);
-          handleSaveToCloudDatabase();
+          await handleSaveToCloudDatabase();
           onPublish();
         },
         prefill: {
-          name: customization.senderName || 'Sender',
-          email: 'customer@example.com',
-          contact: '9999999999'
+          name: customization.senderName || 'Sender'
         },
         theme: {
           color: '#2563EB'
@@ -244,23 +243,15 @@ export function CustomizerStudio({
         });
         try {
           rzp.open();
-        } catch (e) {
-          console.warn("Razorpay iframe blocked, falling back to auto-success", e);
-          setTimeout(async () => {
-            setIsProcessingPayment(false);
-            setShowPaymentModal(false);
-            await handleSaveToCloudDatabase();
-            onPublish();
-          }, 1500);
+        } catch (e: any) {
+          console.error("Razorpay open error:", e);
+          setIsProcessingPayment(false);
+          alert("Error opening Razorpay: " + (e.message || 'Unknown error. Please check if Razorpay keys are valid.'));
         }
       } else {
         // Fallback for environments without Razorpay script loaded
-        setTimeout(async () => {
-          setIsProcessingPayment(false);
-          setShowPaymentModal(false);
-          await handleSaveToCloudDatabase();
-          onPublish();
-        }, 1500);
+        setIsProcessingPayment(false);
+        alert("Payment gateway could not be loaded. Please disable your adblocker or try a different browser to complete the payment.");
       }
     } catch (error) {
       console.error(error);
@@ -372,12 +363,15 @@ export function CustomizerStudio({
       return;
     }
 
-    const fileArray = Array.from(files).slice(0, 50 - customization.memories.length);
-    if (fileArray.length === 0) {
-      alert('You have reached the maximum limit of 50 photos.');
+    const maxPhotos = selectedTemplate?.photoCount || 50;
+    const availableSlots = maxPhotos - customization.memories.length;
+    
+    if (availableSlots <= 0) {
+      alert(`You have reached the maximum limit of ${maxPhotos} photos for this template.`);
       return;
     }
-
+    
+    const fileArray = Array.from(files).slice(0, availableSlots);
     setIsUploading(true);
     setUploadProgressMsg(`Uploading ${fileArray.length} photos securely...`);
     

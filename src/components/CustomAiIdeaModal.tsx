@@ -225,6 +225,7 @@ Respond strictly in valid JSON format.`;
       // If it's a mock order (keys not configured), simulate successful payment automatically
       if (order.id && order.id.startsWith('order_mock_')) {
         console.warn('Razorpay keys not configured. Simulating successful mock payment.');
+        alert('Notice: Razorpay API keys are not configured on the server. Simulating a successful mock payment for testing.');
         setTimeout(async () => {
           setIsProcessingPayment(false);
           await submitToAdminBackend();
@@ -267,19 +268,15 @@ Respond strictly in valid JSON format.`;
         });
         try {
           rzp.open();
-        } catch (e) {
-          console.warn("Razorpay iframe blocked, falling back to auto-success", e);
-          setTimeout(() => {
-            setIsProcessingPayment(false);
-            submitToAdminBackend();
-          }, 1500);
+        } catch (e: any) {
+          console.error("Razorpay open error:", e);
+          setIsProcessingPayment(false);
+          alert("Error opening Razorpay: " + (e.message || 'Unknown error. Please check if Razorpay keys are valid.'));
         }
       } else {
         // Fallback for environments without Razorpay script loaded
-        setTimeout(() => {
-          setIsProcessingPayment(false);
-          submitToAdminBackend();
-        }, 1500);
+        setIsProcessingPayment(false);
+        alert("Payment gateway could not be loaded. Please disable your adblocker or try a different browser to complete the payment.");
       }
     } catch (err) {
       console.error(err);

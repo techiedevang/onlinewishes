@@ -18,6 +18,7 @@
     "@types/crypto-js": "^4.2.2",
     "@types/react-signature-canvas": "^1.0.7",
     "@vitejs/plugin-react": "^5.0.4",
+    "browser-image-compression": "^2.0.2",
     "canvas-confetti": "^1.9.4",
     "crypto-js": "^4.2.0",
     "dotenv": "^17.2.3",

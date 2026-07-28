@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { uploadImageToStorage } from '../lib/storageService';
 import { auth } from '../lib/firebase';
+import imageCompression from 'browser-image-compression';
 
 // ... existing imports ...
 import { UserCustomization, Memory, OccasionType, User } from '../types';
@@ -379,22 +380,32 @@ export function CustomizerStudio({
     const scrapbookId = customization.subdomain || `sb_${Date.now()}`;
     
     try {
-      for (let i = 0; i < fileArray.length; i++) {
-        const file = fileArray[i];
-        setUploadProgressMsg(`Uploading photo ${i + 1} of ${fileArray.length}...`);
+      let completedCount = 0;
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1200,
+        useWebWorker: true,
+      };
+
+      const uploadPromises = fileArray.map(async (file, i) => {
+        const compressedFile = await imageCompression(file, options);
+        const url = await uploadImageToStorage(compressedFile, scrapbookId);
+        completedCount++;
+        setUploadProgressMsg(`Uploaded ${completedCount} of ${fileArray.length} photos...`);
         
-        const url = await uploadImageToStorage(file, scrapbookId);
-        
-        newMems.push({
+        return {
           id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
           imageUrl: url,
           caption: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ") || `Memory #${customization.memories.length + i + 1}`,
           date: new Date().toISOString().split('T')[0],
           fallbackUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800',
-        });
-      }
+        };
+      });
 
-      const combined = [...newMems, ...customization.memories].slice(0, 50); // cap max 50
+      const uploadedMems = await Promise.all(uploadPromises);
+      newMems.push(...uploadedMems);
+
+      const combined = [...newMems, ...customization.memories].slice(0, maxPhotos); 
       onChangeCustomization({
         ...customization,
         memories: combined,

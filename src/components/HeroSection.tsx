@@ -142,15 +142,15 @@ export function HeroSection({
                   
                   {/* Floating Mini Photos Stack */}
                   <div className="absolute top-3 left-4 w-16 h-20 bg-white p-1 rounded shadow-md -rotate-12 group-hover:-rotate-18 transition-transform">
-                    <img src="/IMG-20260710-WA0007.jpg" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300'; }} alt="Memory 1" className="w-full h-full object-cover rounded-sm" />
+                    <img src="/IMG-20260710-WA0007.jpg" loading="lazy" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300'; }} alt="Memory 1" className="w-full h-full object-cover rounded-sm" />
                   </div>
 
                   <div className="absolute top-2 right-4 w-16 h-20 bg-white p-1 rounded shadow-md rotate-12 group-hover:rotate-24 transition-transform">
-                    <img src="/IMG-20260710-WA0008.jpg" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=300'; }} alt="Memory 2" className="w-full h-full object-cover rounded-sm" />
+                    <img src="/IMG-20260710-WA0008.jpg" loading="lazy" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=300'; }} alt="Memory 2" className="w-full h-full object-cover rounded-sm" />
                   </div>
 
                   <div className="absolute bottom-3 left-8 w-16 h-20 bg-white p-1 rounded shadow-md -rotate-6 group-hover:-rotate-12 transition-transform">
-                    <img src="/IMG-20260710-WA0009.jpg" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=300'; }} alt="Memory 3" className="w-full h-full object-cover rounded-sm" />
+                    <img src="/IMG-20260710-WA0009.jpg" loading="lazy" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=300'; }} alt="Memory 3" className="w-full h-full object-cover rounded-sm" />
                   </div>
 
                   {/* Center Gift Box Icon */}

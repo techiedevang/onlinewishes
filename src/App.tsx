@@ -19,6 +19,7 @@ import { PolicyModal, PolicyTab } from './components/PolicyModal';
 import { UserDashboard } from './components/UserDashboard';
 import { OfflineBanner } from './components/OfflineBanner';
 import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
+import { updatePageMetadata, updateMetadataForTemplate } from './utils/seo';
 import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link } from 'lucide-react';
 
 // Scroll Entrance Animation Wrapper Component
@@ -155,6 +156,25 @@ A story forever to be told.`,
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // Dynamic SEO Metadata updates
+  useEffect(() => {
+    if (previewTemplate) {
+      updateMetadataForTemplate(previewTemplate.title, previewTemplate.category, previewTemplate.description, previewTemplate.thumbnail);
+    } else if (activeTab === 'customizer') {
+      updatePageMetadata({
+        title: `Customizing ${customization.recipientName}'s Surprise Page`,
+        description: `Personalize photos, custom love letters, background music, and secret passcode for ${customization.recipientName} on OnlineWishes.`,
+      });
+    } else if (showAdminDashboard) {
+      updatePageMetadata({
+        title: 'Admin Dashboard',
+        description: 'OnlineWishes administration dashboard and user management.',
+      });
+    } else {
+      updatePageMetadata(); // Default homepage metadata
+    }
+  }, [activeTab, previewTemplate, customization.recipientName, showAdminDashboard]);
 
   const handleSelectTemplateToBuild = (template: Template) => {
     let sound = 'rainy_cafe';

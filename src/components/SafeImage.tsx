@@ -6,9 +6,10 @@ interface SafeImageProps {
   className?: string;
   alt?: string;
   style?: React.CSSProperties;
+  loading?: 'lazy' | 'eager';
 }
 
-export function SafeImage({ src, fallbackUrl, className, alt = "", style }: SafeImageProps) {
+export function SafeImage({ src, fallbackUrl, className, alt = "", style, loading = 'lazy' }: SafeImageProps) {
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
 
@@ -36,6 +37,7 @@ export function SafeImage({ src, fallbackUrl, className, alt = "", style }: Safe
     <img
       src={imgSrc}
       alt={alt}
+      loading={loading}
       className={className}
       style={style}
       onLoad={handleLoad}

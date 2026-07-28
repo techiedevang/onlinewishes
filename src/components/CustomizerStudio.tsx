@@ -91,6 +91,25 @@ export function CustomizerStudio({
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [promoMessage, setPromoMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleApplyPromoCode = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setPromoMessage(null);
+    const cleaned = promoCodeInput.trim().toUpperCase();
+    if (!cleaned) {
+      setPromoMessage({ type: 'error', text: 'Please enter a redeem code.' });
+      return;
+    }
+    if (cleaned === 'FIRST10') {
+      setDiscountPercent(99);
+      setPromoMessage({ type: 'success', text: 'Redeem code FIRST10 applied! 99% OFF unlocked.' });
+    } else {
+      setPromoMessage({ type: 'error', text: 'Invalid or expired redeem code.' });
+    }
+  };
 
   // Function to save state to localStorage and update timestamp
   const saveCustomizationDraft = () => {
@@ -122,7 +141,9 @@ export function CustomizerStudio({
   }, [customization]);
 
   const isCustomWebsite = customization.subdomain?.includes('custom') || selectedTemplate?.id?.includes('custom');
-  const activePrice = isCustomWebsite ? 300 : (selectedTemplate?.price || TEMPLATES.find(t => t.id === customization.bgTheme)?.price || 199);
+  const basePrice = isCustomWebsite ? 300 : (selectedTemplate?.price || TEMPLATES.find(t => t.id === customization.bgTheme)?.price || 199);
+  const discountAmount = discountPercent > 0 ? Math.round((basePrice * discountPercent) / 100) : 0;
+  const payablePrice = Math.max(1, basePrice - discountAmount);
 
   const handleRazorpayPayment = async () => {
     try {
@@ -131,7 +152,7 @@ export function CustomizerStudio({
       const res = await fetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: activePrice })
+        body: JSON.stringify({ amount: payablePrice })
       });
       if (!res.ok) throw new Error('Failed to create order');
       const order = await res.json();
@@ -2258,7 +2279,7 @@ export function CustomizerStudio({
                   className="w-full sm:flex-1 px-7 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold rounded-xl text-sm shadow-lg hover:shadow-emerald-500/25 transition-all flex items-center justify-center space-x-2"
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Publish & Pay (Rs. {activePrice})</span>
+                  <span>Publish & Pay (Rs. {payablePrice})</span>
                 </button>
               </div>
 
@@ -2360,10 +2381,54 @@ export function CustomizerStudio({
           </div>
 
           <div className="p-6">
-            <div className="text-center mb-6">
-              <p className="text-slate-500 text-sm font-medium mb-1">OnlineWishes Digital Scrapbook</p>
-              <h3 className="text-3xl font-black text-slate-900">Rs. {activePrice}.00</h3>
+            <div className="text-center mb-5">
+              <p className="text-slate-500 text-xs font-medium mb-1">OnlineWishes Digital Scrapbook</p>
+              {discountPercent > 0 ? (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-slate-400 text-lg line-through font-bold">Rs. {basePrice}.00</span>
+                    <span className="text-3xl font-black text-emerald-600">Rs. {payablePrice}.00</span>
+                  </div>
+                  <p className="text-xs text-emerald-600 font-bold bg-emerald-50 py-1 px-2.5 rounded-full inline-block border border-emerald-200">
+                    🎉 You saved Rs. {discountAmount} (99% OFF)
+                  </p>
+                </div>
+              ) : (
+                <h3 className="text-3xl font-black text-slate-900">Rs. {basePrice}.00</h3>
+              )}
             </div>
+
+            {/* Redeem Code Section */}
+            {!isProcessingPayment && (
+              <form onSubmit={handleApplyPromoCode} className="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                    Redeem Promo Code
+                  </label>
+                  <span className="text-[10px] text-rose-500 font-bold">Code: FIRST10</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. FIRST10"
+                    value={promoCodeInput}
+                    onChange={(e) => setPromoCodeInput(e.target.value)}
+                    className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600 uppercase font-mono tracking-wider text-slate-900 bg-white"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {promoMessage && (
+                  <p className={`text-xs font-bold ${promoMessage.type === 'success' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {promoMessage.text}
+                  </p>
+                )}
+              </form>
+            )}
 
             <div className="space-y-4">
               {isProcessingPayment ? (
@@ -2373,15 +2438,11 @@ export function CustomizerStudio({
                 </div>
               ) : (
                 <>
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-2">Secure Payment</p>
-                    <p className="text-sm text-slate-700">Click below to proceed to Razorpay and publish your scrapbook.</p>
-                  </div>
                   <button
                     onClick={handleRazorpayPayment}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex justify-center items-center gap-2"
                   >
-                    <span>Pay Rs. {activePrice}.00</span>
+                    <span>Pay Rs. {payablePrice}.00</span>
                   </button>
                 </>
               )}

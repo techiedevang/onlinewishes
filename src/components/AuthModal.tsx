@@ -23,6 +23,58 @@ interface AuthModalProps {
   onOpenDashboard?: () => void;
 }
 
+const mapAuthErrorToMessage = (err: any): string => {
+  if (!err) return 'An error occurred during authentication. Please try again.';
+  const code = err.code || '';
+  const message = err.message || '';
+
+  if (
+    code === 'auth/invalid-credential' ||
+    code === 'auth/wrong-password' ||
+    code === 'auth/user-not-found' ||
+    message.includes('auth/invalid-credential') ||
+    message.includes('auth/wrong-password') ||
+    message.includes('auth/user-not-found')
+  ) {
+    return 'Invalid email or password. Please check your credentials or register for a new account.';
+  }
+
+  if (code === 'auth/invalid-email' || message.includes('auth/invalid-email')) {
+    return 'Please enter a valid email address.';
+  }
+
+  if (code === 'auth/email-already-in-use' || message.includes('auth/email-already-in-use')) {
+    return 'An account with this email address already exists. Please sign in instead.';
+  }
+
+  if (code === 'auth/weak-password' || message.includes('auth/weak-password')) {
+    return 'Password must be at least 6 characters long.';
+  }
+
+  if (code === 'auth/too-many-requests' || message.includes('auth/too-many-requests')) {
+    return 'Too many failed login attempts. Please wait a few minutes and try again.';
+  }
+
+  if (code === 'auth/user-disabled' || message.includes('auth/user-disabled')) {
+    return 'This account has been disabled. Please contact support for assistance.';
+  }
+
+  if (code === 'auth/popup-closed-by-user') {
+    return 'The Google sign-in popup was closed before completing. Please try again.';
+  }
+
+  if (code === 'auth/network-request-failed') {
+    return 'Network connection error. Please check your internet connection.';
+  }
+
+  const cleaned = message
+    .replace(/^FirebaseError:\s*/i, '')
+    .replace(/^Firebase:\s*/i, '')
+    .replace(/\s*\([^)]*\)/g, '');
+
+  return cleaned || 'Authentication failed. Please check your inputs and try again.';
+};
+
 export function AuthModal({
   currentUser,
   initialMode = 'signin',
@@ -101,11 +153,7 @@ export function AuthModal({
       onClose();
     } catch (err: any) {
       console.error('Sign in error:', err);
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        setError('Invalid email or password. Please check your credentials or create a new account.');
-      } else {
-        setError(err.message || 'Failed to sign in. Please try again.');
-      }
+      setError(mapAuthErrorToMessage(err));
     } finally {
       setLoading(false);
     }
@@ -158,11 +206,7 @@ export function AuthModal({
       onClose();
     } catch (err: any) {
       console.error('Sign up error:', err);
-      if (err.code === 'auth/email-already-in-use') {
-        setError('An account with this email already exists. Please sign in instead.');
-      } else {
-        setError(err.message || 'Failed to create account. Please check your inputs.');
-      }
+      setError(mapAuthErrorToMessage(err));
     } finally {
       setLoading(false);
     }
@@ -177,7 +221,7 @@ export function AuthModal({
       onClose();
     } catch (err: any) {
       console.error('Google login failed:', err);
-      setError(err.message || 'Failed to sign in with Google');
+      setError(mapAuthErrorToMessage(err));
     } finally {
       setLoading(false);
     }
@@ -203,12 +247,10 @@ export function AuthModal({
       setResetSuccess(true);
     } catch (err: any) {
       console.error('Password reset error:', err);
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        setError('No account found with this email address. Please check your spelling or create an account.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('Please enter a valid email address.');
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.message?.includes('user-not-found')) {
+        setError('No account found with this email address. Please check your spelling or register a new account.');
       } else {
-        setError(err.message || 'Failed to send password reset email. Please try again.');
+        setError(mapAuthErrorToMessage(err));
       }
     } finally {
       setLoading(false);

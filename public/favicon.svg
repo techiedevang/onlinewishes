@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="bg-gradient" x1="10" y1="10" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F43F5E" />
+      <stop offset="1" stop-color="#F59E0B" />
+    </linearGradient>
+    <linearGradient id="box-left-gradient" x1="35" y1="60" x2="60" y2="105" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E11D48" />
+      <stop offset="1" stop-color="#BE123C" />
+    </linearGradient>
+    <linearGradient id="box-right-gradient" x1="60" y1="60" x2="85" y2="105" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F43F5E" />
+      <stop offset="1" stop-color="#E11D48" />
+    </linearGradient>
+    <linearGradient id="lid-gradient" x1="30" y1="30" x2="90" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FB7185" />
+      <stop offset="1" stop-color="#F43F5E" />
+    </linearGradient>
+    <linearGradient id="ribbon-gradient" x1="40" y1="20" x2="80" y2="105" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDE68A" />
+      <stop offset="1" stop-color="#F59E0B" />
+    </linearGradient>
+    <linearGradient id="sparkle-gradient" x1="49" y1="28" x2="71" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FCD34D" />
+      <stop offset="1" stop-color="#10B981" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dark outer ring background for high legibility across tabs -->
+  <circle cx="60" cy="60" r="58" fill="url(#bg-gradient)" />
+  <circle cx="60" cy="60" r="52" fill="#0F172A" />
+
+  <!-- Gift Box Base -->
+  <path d="M35 60 L60 75 L85 60 L85 90 L60 105 L35 90 Z" fill="url(#box-left-gradient)" />
+  <path d="M60 75 L85 60 L85 90 L60 105 Z" fill="url(#box-right-gradient)" />
+
+  <!-- Gift Box Lid -->
+  <path d="M30 45 L60 60 L90 45 L60 30 Z" fill="url(#lid-gradient)" />
+
+  <!-- Ribbon -->
+  <path d="M45 37.5 L60 60 M75 37.5 L60 60 M60 75 L60 105" stroke="url(#ribbon-gradient)" stroke-width="4" stroke-linecap="round" />
+  <path d="M50 30 C50 20, 60 20, 60 30 M70 30 C70 20, 60 20, 60 30" stroke="url(#ribbon-gradient)" stroke-width="4" stroke-linecap="round" fill="none" />
+
+  <!-- Magical Sparks -->
+  <path d="M60 50 L63 42 L71 39 L63 36 L60 28 L57 36 L49 39 L57 42 Z" fill="url(#sparkle-gradient)" />
+  <circle cx="42" cy="22" r="3.5" fill="#FBBF24" />
+  <circle cx="78" cy="18" r="3" fill="#34D399" />
+  <circle cx="82" cy="36" r="4" fill="#F472B6" />
+</svg>

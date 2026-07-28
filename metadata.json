@@ -1,0 +1,6 @@
+{
+  "name": "OnlineWishes",
+  "description": "Create personalized digital surprise, memory book, and birthday websites for your girlfriend, bestie, sister, or loved ones at onlinewishes.in.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

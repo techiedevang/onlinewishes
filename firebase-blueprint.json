@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "Scrapbook": {
+      "title": "Scrapbook",
+      "description": "User created personalized scrapbook project stored securely in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique scrapbook ID or subdomain code" },
+        "recipientName": { "type": "string", "maxLength": 100 },
+        "occasion": { "type": "string", "maxLength": 50 },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "passcode": { "type": "string", "maxLength": 50 },
+        "subdomain": { "type": "string", "maxLength": 50 },
+        "speechPoem": { "type": "string", "maxLength": 5000 },
+        "spotifyTrackUrl": { "type": "string", "maxLength": 500 },
+        "ambientSoundscape": { "type": "string", "maxLength": 50 },
+        "bgTheme": { "type": "string", "maxLength": 50 },
+        "isLocked": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "recipientName", "occasion", "senderName"]
+    },
+    "CustomRequest": {
+      "title": "CustomRequest",
+      "description": "Custom website request from user with written description, audio voice note, and WhatsApp contact details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "recipientName": { "type": "string" },
+        "relationship": { "type": "string" },
+        "clientPrompt": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "requestedSlug": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "recipientName", "clientPrompt", "whatsappNumber", "requestedSlug"]
+    }
+  },
+  "firestore": {
+    "/scrapbooks/{scrapbookId}": {
+      "schema": { "$ref": "#/entities/Scrapbook" },
+      "description": "Collection of user-created scrapbooks with privacy protection"
+    },
+    "/custom_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/CustomRequest" },
+      "description": "Collection of custom website requests for admin review"
+    }
+  }
+}
+

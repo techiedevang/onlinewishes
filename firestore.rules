@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper validation functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function isValidScrapbook(data) {
+      return data.keys().hasAll(['id', 'recipientName', 'occasion', 'senderName'])
+        && data.id is string && data.id.size() <= 128
+        && data.recipientName is string && data.recipientName.size() <= 100
+        && data.occasion is string && data.occasion.size() <= 100
+        && data.senderName is string && data.senderName.size() <= 100;
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Scrapbooks collection rules
+    match /scrapbooks/{scrapbookId} {
+      allow read: if true;
+      allow create, update: if isValidId(scrapbookId) && isValidScrapbook(incoming());
+      allow delete: if false;
+    }
+
+    // Custom requests collection rules
+    match /custom_requests/{requestId} {
+      allow read, write: if true;
+    }
+
+
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

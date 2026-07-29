@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { saveCustomWebsiteRequest } from '../lib/customRequestService';
+import { recordPaymentInCloud } from '../lib/scrapbookService';
 
 interface CustomAiIdeaModalProps {
   onClose: () => void;
@@ -229,6 +230,12 @@ Respond strictly in valid JSON format.`;
       if (order.id && order.id.startsWith('order_mock_')) {
         console.warn('Razorpay keys not configured. Simulating successful mock payment.');
         alert('Notice: Razorpay API keys are not configured on the server. Simulating a successful mock payment for testing.');
+        const mockPayId = `pay_mock_${Date.now()}`;
+        try {
+          await recordPaymentInCloud(order.id, mockPayId, price, `Bespoke AI Architecture Blueprint: ${generatedBlueprint?.title || 'Custom Surprise App'}`);
+        } catch (payErr) {
+          console.error("Failed to write mock custom payment to cloud:", payErr);
+        }
         setTimeout(async () => {
           setIsProcessingPayment(false);
           await submitToAdminBackend();
@@ -244,6 +251,11 @@ Respond strictly in valid JSON format.`;
         description: 'Custom AI Idea Website',
         order_id: order.id,
         handler: async function (response: any) {
+          try {
+            await recordPaymentInCloud(order.id, response.razorpay_payment_id || `pay_${Date.now()}`, price, `Bespoke AI Architecture Blueprint: ${generatedBlueprint?.title || 'Custom Surprise App'}`);
+          } catch (payErr) {
+            console.error("Failed to write custom payment to cloud:", payErr);
+          }
           setIsProcessingPayment(false);
           await submitToAdminBackend();
         },

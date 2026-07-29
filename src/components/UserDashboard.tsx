@@ -74,7 +74,12 @@ export function UserDashboard({
     async function loadUserData() {
       try {
         if (!currentUser?.id) return;
-        const qProj = query(collection(db, 'projects'), where('userId', '==', currentUser.id));
+        
+        // Reset states for a fresh load
+        setUserProjects([]);
+        setUserPayments([]);
+
+        const qProj = query(collection(db, 'scrapbooks'), where('userId', '==', currentUser.id));
         const projSnap = await getDocs(qProj);
         if (!projSnap.empty) {
           const loaded: SavedProject[] = [];
@@ -82,17 +87,19 @@ export function UserDashboard({
             const data = docSnap.data();
             loaded.push({
               id: docSnap.id,
-              title: data.title || 'Custom Surprise Scrapbook',
+              title: data.title || `${data.recipientName || 'Bestie'}'s Surprise Website`,
               recipientName: data.recipientName || 'Bestie',
-              templateId: data.templateId || 'bestie-21',
-              subdomain: data.subdomain || 'my-surprise',
-              publishedUrl: data.publishedUrl || `https://onlinewishes.in/p/${data.subdomain || docSnap.id}`,
-              createdAt: data.createdAt || new Date().toISOString().substring(0, 10),
-              status: data.status || 'published',
+              templateId: data.occasion || 'bestie-21',
+              subdomain: data.subdomain || docSnap.id,
+              publishedUrl: `https://onlinewishes.in/p/${data.subdomain || docSnap.id}`,
+              createdAt: data.createdAt ? data.createdAt.substring(0, 10) : new Date().toISOString().substring(0, 10),
+              status: 'published',
               views: data.views || 1,
             });
           });
           setUserProjects(loaded);
+        } else {
+          setUserProjects([]);
         }
 
         const qPay = query(collection(db, 'payments'), where('userEmail', '==', currentUser.email));
@@ -111,10 +118,12 @@ export function UserDashboard({
               templateTitle: d.templateTitle || 'Surprise Website License',
               paymentGateway: d.paymentGateway || 'Razorpay UPI',
               status: d.status || 'SUCCESS',
-              createdAt: d.createdAt || new Date().toISOString().substring(0, 10),
+              createdAt: d.createdAt ? d.createdAt.substring(0, 10) : new Date().toISOString().substring(0, 10),
             });
           });
           setUserPayments(loadedPays);
+        } else {
+          setUserPayments([]);
         }
       } catch (e) {
         console.log('User dashboard cloud sync note:', e);

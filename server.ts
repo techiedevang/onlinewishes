@@ -99,10 +99,10 @@ async function startServer() {
         success: true,
         emailSent,
         emailError,
-        recipient: recipientEmail,
+        recipient: "registered secure inbox",
         message: emailSent
-          ? `Real OTP email sent to ${recipientEmail}!`
-          : `OTP code generated for ${recipientEmail}.`,
+          ? `Real OTP email sent successfully!`
+          : `OTP code generated successfully.`,
         fallbackOtp: emailSent ? undefined : otpCode,
       });
     } catch (err: any) {
@@ -254,9 +254,29 @@ async function startServer() {
   app.get("/api/images/:id", async (req, res) => {
     try {
       const docId = req.params.id;
-      const projectId = "gen-lang-client-0123999783";
-      const dbId = "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
-      const apiKey = "AIzaSyAAsl785OWTeliRX3BvzybSWnI7thRCoBI";
+      let projectId = process.env.FIRESTORE_PROJECT_ID;
+      let dbId = process.env.FIRESTORE_DATABASE_ID;
+      let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
+
+      try {
+        const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+        if (fs.existsSync(configPath)) {
+          const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+          if (!projectId) projectId = config.projectId;
+          if (!dbId) dbId = config.firestoreDatabaseId;
+          if (!apiKey) apiKey = config.apiKey;
+        }
+      } catch (err) {
+        console.error("Failed to read firebase config file", err);
+      }
+
+      projectId = projectId || "gen-lang-client-0123999783";
+      dbId = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+
+      if (!apiKey) {
+        return res.status(500).send("Configuration Error: API Key not found");
+      }
+
       const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/uploaded_images/${docId}?key=${apiKey}`;
       
       const response = await fetch(url);

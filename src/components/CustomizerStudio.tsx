@@ -18,7 +18,7 @@ import { DigitalStickersPanel } from './DigitalStickersPanel';
 import { ImageCropper } from './ImageCropper';
 import { SignaturePanel } from './SignaturePanel';
 import { SOUNDSCAPE_OPTIONS, soundscapeEngine } from '../utils/soundscapes';
-import { saveScrapbookToCloud, loadScrapbookFromCloud } from '../lib/scrapbookService';
+import { saveScrapbookToCloud, loadScrapbookFromCloud, recordPaymentInCloud } from '../lib/scrapbookService';
 import { TEMPLATES, getDefaultCustomization } from '../data/templates';
 
 interface CustomizerStudioProps {
@@ -79,7 +79,12 @@ export function CustomizerStudio({
   const [draftSavedToast, setDraftSavedToast] = useState<boolean>(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [hasSavedDraft, setHasSavedDraft] = useState<boolean>(false);
-  const [studioLayout, setStudioLayout] = useState<'split' | 'form_only'>('split');
+  const [studioLayout, setStudioLayout] = useState<'split' | 'form_only'>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      return 'form_only';
+    }
+    return 'split';
+  });
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [previewSoundId, setPreviewSoundId] = useState<string | null>(null);
   const selectedTemplate = TEMPLATES.find(t => t.id === customization.bgTheme);
@@ -196,6 +201,12 @@ export function CustomizerStudio({
       if (order.id && order.id.startsWith('order_mock_')) {
         console.warn('Razorpay keys not configured. Simulating successful mock payment.');
         alert('Notice: Razorpay API keys are not configured on the server. Simulating a successful mock payment for testing.');
+        const mockPayId = `pay_mock_${Date.now()}`;
+        try {
+          await recordPaymentInCloud(order.id, mockPayId, payablePrice, `Premium License for ${customization.recipientName || 'Bestie'}'s Surprise Page`);
+        } catch (payErr) {
+          console.error("Failed to write mock payment record to cloud:", payErr);
+        }
         setTimeout(async () => {
           setIsProcessingPayment(false);
           setShowPaymentModal(false);
@@ -219,6 +230,11 @@ export function CustomizerStudio({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(response)
           });
+          try {
+            await recordPaymentInCloud(order.id, response.razorpay_payment_id || `pay_${Date.now()}`, payablePrice, `Premium License for ${customization.recipientName || 'Bestie'}'s Surprise Page`);
+          } catch (payErr) {
+            console.error("Failed to write payment record to cloud:", payErr);
+          }
           setIsProcessingPayment(false);
           setShowPaymentModal(false);
           await handleSaveToCloudDatabase();
@@ -645,7 +661,7 @@ export function CustomizerStudio({
 
             {/* Layout Toggle Buttons */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
-              <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold w-full sm:w-auto">
+              <div className="hidden lg:flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-bold w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setStudioLayout('split')}
@@ -2055,14 +2071,13 @@ export function CustomizerStudio({
                               }}
                             />
                             
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5 pointer-events-none">
-                            </div>
+                            <div className="absolute inset-0 bg-black/50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5 pointer-events-none" />
 
-                            <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[9px] rounded font-bold backdrop-blur-sm opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
+                            <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[9px] rounded font-bold backdrop-blur-sm opacity-0 sm:opacity-100 sm:group-hover:opacity-0 transition-opacity pointer-events-none">
                               #{index + 1}
                             </div>
 
-                            <div className="absolute inset-x-1 top-1 flex justify-between items-start opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute inset-x-1 top-1 flex justify-between items-start opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                               <div className="flex flex-col gap-1 w-16">
                                 {/* Object Fit */}
                                 <select 

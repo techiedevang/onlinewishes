@@ -9,7 +9,7 @@ import {
   where,
   getDocFromServer
 } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from './firebase';
+import { db, handleFirestoreError, OperationType, auth } from './firebase';
 import { UserCustomization } from '../types';
 import CryptoJS from 'crypto-js';
 
@@ -46,6 +46,7 @@ export async function saveScrapbookToCloud(
   
   let payload: any = {
     id: scrapbookId,
+    userId: auth.currentUser?.uid || null,
     recipientName: customization.recipientName || 'Bestie',
     occasion: customization.occasion || 'Special Day',
     senderName: customization.senderName || 'Your Friend',
@@ -123,3 +124,38 @@ export async function loadScrapbookFromCloud(
     return null;
   }
 }
+
+/**
+ * Saves a payment transaction record to Firestore so it appears in dashboards
+ */
+export async function recordPaymentInCloud(
+  orderId: string,
+  paymentId: string,
+  amount: number,
+  templateTitle: string
+): Promise<void> {
+  const path = `payments/${paymentId}`;
+  const currentUser = auth.currentUser;
+  const userEmail = currentUser?.email || 'guest@onlinewishes.in';
+  const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Guest User';
+
+  const payload = {
+    id: paymentId,
+    orderId: orderId,
+    userEmail: userEmail,
+    userName: userName,
+    amount: amount,
+    currency: 'INR',
+    templateTitle: templateTitle,
+    paymentGateway: 'Razorpay UPI',
+    status: 'SUCCESS',
+    createdAt: new Date().toISOString(),
+  };
+
+  try {
+    await setDoc(doc(db, 'payments', paymentId), payload);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+

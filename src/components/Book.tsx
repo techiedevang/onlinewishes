@@ -65,6 +65,8 @@ function playPageFlipSound() {
 
 export default function Book({ memories = [], stickers = [], signatureUrl, senderName }: BookProps) {
   const [activePage, setActivePage] = useState(0);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
 
   const mems = memories && memories.length > 0 ? memories : defaultMemories;
 
@@ -93,11 +95,56 @@ export default function Book({ memories = [], stickers = [], signatureUrl, sende
     setActivePage(targetPageIndex);
   };
 
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateScale = () => {
+      if (!containerRef.current) return;
+      const containerWidth = containerRef.current.clientWidth;
+
+      let pageWidth = 170;
+      if (window.innerWidth >= 768) {
+        pageWidth = 380;
+      } else if (window.innerWidth >= 640) {
+        pageWidth = 260;
+      }
+
+      // When open, the book occupies twice the single-page width plus some breathing space
+      const bookOpenWidth = pageWidth * 2 + 16;
+
+      if (containerWidth < bookOpenWidth) {
+        const newScale = containerWidth / bookOpenWidth;
+        setScale(newScale);
+      } else {
+        setScale(1);
+      }
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    // Extra trigger after a short delay to handle modal rendering animations
+    const timer = setTimeout(updateScale, 200);
+
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      clearTimeout(timer);
+    };
+  }, []);
+
   return (
     <div className="w-full flex flex-col items-center justify-center relative my-2">
       {/* 3D Perspective Book Stage */}
-      <div className="w-full flex justify-center items-center relative perspective-container z-10 py-4">
-        <div className="relative w-[170px] h-[240px] sm:w-[260px] sm:h-[360px] md:w-[380px] md:h-[500px] shrink-0 preserve-3d transition-transform duration-500">
+      <div 
+        ref={containerRef}
+        className="w-full flex justify-center items-center relative perspective-container z-10 py-4 overflow-hidden"
+      >
+        <div 
+          className="relative w-[170px] h-[240px] sm:w-[260px] sm:h-[360px] md:w-[380px] md:h-[500px] shrink-0 preserve-3d transition-all duration-500"
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'center'
+          }}
+        >
           {pages.map((page, i) => {
             const isFlipped = i < activePage;
             const zIndex = isFlipped ? i : pages.length - i;

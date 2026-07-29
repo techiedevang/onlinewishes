@@ -10,36 +10,8 @@ import { CustomWebsiteRequest } from '../types';
 
 const LOCAL_STORAGE_KEY = 'onlinewishes_custom_requests';
 
-// Initial sample custom requests so Admin Dashboard always has sample data to demonstrate
-export const INITIAL_SAMPLE_REQUESTS: CustomWebsiteRequest[] = [
-  {
-    id: 'req_sample_101',
-    recipientName: 'Aarav',
-    relationship: 'Boyfriend',
-    clientPrompt: 'I want a retro 8-bit cyberpunk theme for my boyfriend with custom high score quiz and neon romantic sunset memory wall.',
-    whatsappNumber: '+91 9876543210',
-    requestedSlug: 'aarav-cyber-love',
-    status: 'PENDING',
-    createdAt: '2026-07-28 04:30',
-    userEmail: 'sneha.k@gmail.com',
-    estimatedPrice: 300,
-    aiBlueprintTitle: 'Aarav\'s Cyberpunk Love Quest',
-    audioDuration: 18,
-  },
-  {
-    id: 'req_sample_102',
-    recipientName: 'Meera',
-    relationship: 'Sister',
-    clientPrompt: 'Chic Vogue style editorial website for my sister with 25 photo cards, jazz background music, and a custom sisterhood promises list.',
-    whatsappNumber: '+91 9123456789',
-    requestedSlug: 'meera-vogue',
-    status: 'CONTACTED',
-    createdAt: '2026-07-27 18:15',
-    userEmail: 'rohit.v@gmail.com',
-    estimatedPrice: 300,
-    aiBlueprintTitle: 'Meera\'s Editorial Sisterhood Magazine',
-  }
-];
+// Initial custom requests starts 100% fresh and empty
+export const INITIAL_SAMPLE_REQUESTS: CustomWebsiteRequest[] = [];
 
 export async function saveCustomWebsiteRequest(
   requestInput: Omit<CustomWebsiteRequest, 'id' | 'createdAt' | 'status'>

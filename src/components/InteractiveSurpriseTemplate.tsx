@@ -199,6 +199,14 @@ export function InteractiveSurpriseTemplate({
   const [passcodeError, setPasscodeError] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
   const [showSpotifyPlayer, setShowSpotifyPlayer] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const themeConfig = getThemeConfig(customization.bgTheme, customization.occasion);
   const safeMemories = [...(customization.memories || [])];
@@ -766,7 +774,10 @@ A story forever to be told.`}
                 {safeMemories.slice(0, 21).map((m, i) => {
                   const total = Math.max(safeMemories.slice(0, 21).length, 1);
                   const angle = (i / total) * 360;
-                  const radius = 120 + (i % 3) * 45;
+                  const isMobile = windowWidth < 640;
+                  const baseRadius = isMobile ? 65 : 120;
+                  const stepRadius = isMobile ? 22 : 45;
+                  const radius = baseRadius + (i % 3) * stepRadius;
                   const x = Math.cos((angle * Math.PI) / 180) * radius;
                   const y = Math.sin((angle * Math.PI) / 180) * radius;
                   
@@ -973,7 +984,7 @@ A story forever to be told.`}
               >
                 🎂
               </motion.div>
-              <h2 className="text-4xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">Happy Birthday!</h2>
+              <h2 className="text-2xl sm:text-4xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">Happy Birthday!</h2>
               <p className="text-xl text-sky-100 font-bold mb-10 max-w-md">{customization.customParagraph || "Wishing you the best day ever!"}</p>
               <button
                 onClick={handleNextStage}
@@ -1029,7 +1040,7 @@ A story forever to be told.`}
                     </div>
                   );
                 })()}
-              <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 mb-8 drop-shadow-lg">
+              <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 mb-8 drop-shadow-lg">
                 IT'S TIME!
               </h1>
               <button
@@ -1050,7 +1061,7 @@ A story forever to be told.`}
               exit={{ opacity: 0, y: 100 }}
               className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-sky-400 to-indigo-600 z-20 text-center"
             >
-              <h2 className="text-4xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">Make a Wish!</h2>
+              <h2 className="text-2xl sm:text-4xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">Make a Wish!</h2>
               <p className="text-xl text-sky-100 font-bold mb-10 max-w-md">Tap the candles or use your mic to blow them out.</p>
               
               <div className="relative mb-12 flex justify-center items-end h-48 w-full max-w-md">
@@ -1529,7 +1540,7 @@ A story forever to be told.`}
               className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-black z-20 border-8 border-slate-800"
             >
               <div className="w-full max-w-2xl border-4 border-emerald-500 p-8 text-center bg-emerald-950/20">
-                <h2 className="text-4xl md:text-6xl font-black text-emerald-400 mb-8 font-mono uppercase animate-pulse">
+                <h2 className="text-2xl sm:text-4xl md:text-6xl font-black text-emerald-400 mb-8 font-mono uppercase animate-pulse break-words">
                   LEVEL 1: {customization.recipientName}
                 </h2>
                 <div className="space-y-4 mb-10 text-emerald-500 font-mono text-lg uppercase">
@@ -1663,7 +1674,7 @@ A story forever to be told.`}
                 <h2 className="text-3xl font-black text-yellow-400 mb-2 font-mono uppercase">
                   HIGH SCORE
                 </h2>
-                <p className="text-5xl font-black text-white font-mono mb-8 tracking-widest">
+                <p className="text-3xl sm:text-5xl font-black text-white font-mono mb-8 tracking-widest">
                   999,999
                 </p>
                 <div className="space-y-4 mb-8">

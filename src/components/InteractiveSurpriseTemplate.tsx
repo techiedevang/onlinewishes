@@ -3,6 +3,7 @@ import { ArrowLeft, Gift, PartyPopper, Heart, ArrowRight, Sparkles, Smile, Refre
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Memory, UserCustomization } from '../types';
+import { INITIAL_MEMORIES_21 } from '../data/templates';
 import Book from './Book';
 import { SafeImage } from './SafeImage';
 import { SparkleParticleCanvas } from './SparkleParticleCanvas';
@@ -200,6 +201,8 @@ export function InteractiveSurpriseTemplate({
   const [showSpotifyPlayer, setShowSpotifyPlayer] = useState(true);
 
   const themeConfig = getThemeConfig(customization.bgTheme, customization.occasion);
+  const safeMemories = [...(customization.memories || [])];
+
   const spotifyEmbedUrl = getMediaEmbedUrl(customization.spotifyTrackUrl);
 
   // Auto-play ambient soundscape when scrapbook is opened or experience starts
@@ -751,7 +754,7 @@ A story forever to be told.`}
             >
               <div className="absolute top-6 z-20 text-center px-4">
                 <h2 className="text-white text-xl sm:text-3xl font-extrabold tracking-tight">
-                  21 Unforgettable Memories ✨
+                  {safeMemories.length} Unforgettable Memories ✨
                 </h2>
                 <p className="text-pink-300 text-xs sm:text-sm font-semibold">
                   Watch your photos pop out!
@@ -760,8 +763,9 @@ A story forever to be told.`}
 
               {/* 21 Animated Floating Photo Cards */}
               <div className="relative w-full max-w-4xl h-[420px] flex items-center justify-center">
-                {(customization.memories || []).slice(0, 21).map((m, i) => {
-                  const angle = (i / 21) * 360;
+                {safeMemories.slice(0, 21).map((m, i) => {
+                  const total = Math.max(safeMemories.slice(0, 21).length, 1);
+                  const angle = (i / total) * 360;
                   const radius = 120 + (i % 3) * 45;
                   const x = Math.cos((angle * Math.PI) / 180) * radius;
                   const y = Math.sin((angle * Math.PI) / 180) * radius;
@@ -771,10 +775,10 @@ A story forever to be told.`}
                       key={m.id || i}
                       initial={{ scale: 0, x: 0, y: 0, rotate: 0 }}
                       animate={{
-                        scale: [0, 1, 0.9],
-                        x: [0, x],
-                        y: [0, y],
-                        rotate: [0, (i % 2 === 0 ? 12 : -12)],
+                        scale: 1,
+                        x: x,
+                        y: y,
+                        rotate: (i % 2 === 0 ? 12 : -12),
                       }}
                       transition={{
                         duration: 1.2,
@@ -836,7 +840,7 @@ A story forever to be told.`}
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 w-full max-w-4xl pb-20">
-                {(customization.memories || []).slice(0, 21).map((m, idx) => (
+                {safeMemories.slice(0, 21).map((m, idx) => (
                   <div key={m.id || idx} className="bg-white p-2 rounded-xl shadow hover:shadow-md transition-shadow">
                     <div className="aspect-square bg-slate-100 rounded-lg overflow-hidden mb-1.5">
                       <SafeImage
@@ -1190,7 +1194,7 @@ A story forever to be told.`}
                 Bestie Wall of Fame
               </h2>
               <div className="flex flex-wrap justify-center gap-4 max-w-4xl mb-10">
-                {customization.memories.slice(0, 3).map((mem, i) => (
+                {safeMemories.slice(0, 3).map((mem, i) => (
                   <motion.div 
                     key={i}
                     initial={{ rotate: Math.random() * 20 - 10, opacity: 0, y: 50 }}
@@ -1227,8 +1231,8 @@ A story forever to be told.`}
               </h2>
               <div className="bg-slate-900 p-6 rounded-2xl border-4 border-fuchsia-500 max-w-lg w-full text-center space-y-6">
                 {(customization.insideJokes && customization.insideJokes.length > 0 ? customization.insideJokes : [
-                  { id: '1', title: 'VOICE NOTE #1:', caption: customization.memories[0]?.caption || 'That one time... you know.' },
-                  { id: '2', title: 'VOICE NOTE #2:', caption: customization.memories[1]?.caption || 'We do not speak of this.' }
+                  { id: '1', title: 'VOICE NOTE #1:', caption: safeMemories[0]?.caption || 'That one time... you know.' },
+                  { id: '2', title: 'VOICE NOTE #2:', caption: safeMemories[1]?.caption || 'We do not speak of this.' }
                 ]).map((joke, idx) => (
                   <div key={joke.id || idx} className="bg-white/10 p-4 rounded-xl hover:bg-white/20 transition-colors cursor-pointer" onClick={() => { if(!audioMuted) { const a = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); a.play().catch(e=>console.log(e)); } }}>
                     <p className="text-fuchsia-300 font-mono mb-2">▶️ {joke.title || `VOICE NOTE #${idx+1}`}</p>
@@ -1306,7 +1310,7 @@ A story forever to be told.`}
               <div className="bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 p-2 rounded-2xl shadow-2xl mb-8 max-w-sm w-full transform rotate-1">
                 <div className="bg-slate-900 p-6 rounded-xl text-center space-y-6">
                   <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white mb-4">
-                    <SafeImage src={customization.memories[0]?.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae'} fallbackUrl="" className="w-full h-full object-cover" alt="Besties" />
+                    <SafeImage src={safeMemories[0]?.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae'} fallbackUrl="" className="w-full h-full object-cover" alt="Besties" />
                   </div>
                   <h3 className="text-3xl font-black text-white uppercase">{customization.recipientName} & {customization.senderName}</h3>
                   <p className="text-cyan-300 font-mono">EST. 2024</p>
@@ -1348,7 +1352,7 @@ A story forever to be told.`}
                 <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-amber-200 transform -translate-x-1/2"></div>
                 {(customization.timelineEvents && customization.timelineEvents.length > 0
                   ? customization.timelineEvents
-                  : customization.memories.slice(0, 4).map((m, i) => ({
+                  : safeMemories.slice(0, 4).map((m, i) => ({
                       id: m.id || String(i),
                       year: `Year ${i+1}`,
                       title: m.caption || 'Special Memory',
@@ -1484,13 +1488,13 @@ A story forever to be told.`}
                   <h3 className="text-2xl font-serif text-amber-800 italic">Family & Sisterhood</h3>
                   <div className="flex justify-center -space-x-4 py-4">
                     <div className="w-20 h-20 rounded-full border-4 border-white overflow-hidden shadow-md z-10">
-                      <SafeImage src={customization.memories[0]?.imageUrl || 'https://images.unsplash.com/photo-1511895426328-dc8714191300'} fallbackUrl="" className="w-full h-full object-cover" alt="Pic1" />
+                      <SafeImage src={safeMemories[0]?.imageUrl || 'https://images.unsplash.com/photo-1511895426328-dc8714191300'} fallbackUrl="" className="w-full h-full object-cover" alt="Pic1" />
                     </div>
                     <div className="w-20 h-20 rounded-full border-4 border-white overflow-hidden shadow-md z-20 transform scale-110">
-                      <SafeImage src={customization.memories[1]?.imageUrl || 'https://images.unsplash.com/photo-1511895426328-dc8714191300'} fallbackUrl="" className="w-full h-full object-cover" alt="Pic2" />
+                      <SafeImage src={safeMemories[1]?.imageUrl || 'https://images.unsplash.com/photo-1511895426328-dc8714191300'} fallbackUrl="" className="w-full h-full object-cover" alt="Pic2" />
                     </div>
                     <div className="w-20 h-20 rounded-full border-4 border-white overflow-hidden shadow-md z-10">
-                      <SafeImage src={customization.memories[2]?.imageUrl || 'https://images.unsplash.com/photo-1511895426328-dc8714191300'} fallbackUrl="" className="w-full h-full object-cover" alt="Pic3" />
+                      <SafeImage src={safeMemories[2]?.imageUrl || 'https://images.unsplash.com/photo-1511895426328-dc8714191300'} fallbackUrl="" className="w-full h-full object-cover" alt="Pic3" />
                     </div>
                   </div>
                   <p className="text-amber-900 font-serif text-sm">"Forever rooted in love, growing side by side."</p>
@@ -1614,7 +1618,7 @@ A story forever to be told.`}
                 MEMORY INVENTORY
               </h2>
               <div className="flex flex-wrap justify-center gap-6 max-w-4xl mb-10">
-                {customization.memories.slice(0, 3).map((mem, i) => (
+                {safeMemories.slice(0, 3).map((mem, i) => (
                   <motion.div 
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
@@ -1742,7 +1746,7 @@ A story forever to be told.`}
                     className="absolute w-24 h-24 md:w-32 md:h-32 rounded-full border-2 border-indigo-400 p-1 bg-black/50 backdrop-blur shadow-[0_0_15px_rgba(129,140,248,0.5)] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer hover:scale-110 transition-transform hover:z-20 hover:border-purple-300"
                     style={{ left: pos.x, top: pos.y }}
                   >
-                     <SafeImage src={customization.memories[i]?.imageUrl || 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86'} fallbackUrl="" className="w-full h-full object-cover rounded-full filter brightness-75 group-hover:brightness-110 transition-all" alt="Constellation Node" />
+                     <SafeImage src={safeMemories[i]?.imageUrl || 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86'} fallbackUrl="" className="w-full h-full object-cover rounded-full filter brightness-75 group-hover:brightness-110 transition-all" alt="Constellation Node" />
                      <div className="absolute inset-0 rounded-full bg-indigo-500/20 mix-blend-overlay"></div>
                   </motion.div>
                 ))}
@@ -2018,7 +2022,7 @@ A story forever to be told.`}
                     transition={{ duration: 1.5 }}
                     className="w-full aspect-[3/4] bg-stone-200 relative overflow-hidden"
                   >
-                    <SafeImage src={customization.memories[1]?.imageUrl || customization.memories[0]?.imageUrl || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d'} fallbackUrl="" className="w-full h-full object-cover filter contrast-125 saturate-50" alt="editorial portrait" />
+                    <SafeImage src={safeMemories[1]?.imageUrl || safeMemories[0]?.imageUrl || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d'} fallbackUrl="" className="w-full h-full object-cover filter contrast-125 saturate-50" alt="editorial portrait" />
                     <div className="absolute bottom-4 right-4 text-white text-xs font-sans tracking-widest mix-blend-difference">FIG. 01</div>
                   </motion.div>
                 </div>
@@ -2041,7 +2045,7 @@ A story forever to be told.`}
                 </h2>
                 <div className="w-16 h-px bg-stone-400 mb-8"></div>
                 <div className="flex gap-4 mb-12 h-64 md:h-80 w-full overflow-hidden">
-                  {customization.memories.slice(0, 3).map((mem, i) => (
+                  {safeMemories.slice(0, 3).map((mem, i) => (
                     <motion.div 
                       key={i}
                       initial={{ filter: 'grayscale(100%)' }}
@@ -2137,7 +2141,7 @@ A story forever to be told.`}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
-                  {customization.memories.slice(0, 4).map((mem, i) => (
+                  {safeMemories.slice(0, 4).map((mem, i) => (
                     <motion.div 
                       key={i}
                       initial={{ opacity: 0, rotate: (i % 2 === 0 ? -2 : 3) }}
@@ -2200,7 +2204,7 @@ A story forever to be told.`}
             >
               <div className="w-full max-w-3xl h-[480px] sm:h-[540px]">
                 <Book 
-                  memories={customization.memories} 
+                  memories={safeMemories} 
                   stickers={customization.placedStickers} 
                   signatureUrl={customization.signatureUrl}
                   senderName={customization.senderName}
@@ -2259,7 +2263,7 @@ A story forever to be told.`}
                 </h2>
 
                 <p className="text-white/90 max-w-md text-xs sm:text-sm mb-6 leading-relaxed">
-                  {customization.finalMessage || `Hope this ${customization.memories.length > 0 ? `${customization.memories.length}-memory ` : ''}surprise brought a huge smile to your face!`}
+                  {customization.finalMessage || `Hope this ${safeMemories.length > 0 ? `${safeMemories.length}-memory ` : ''}surprise brought a huge smile to your face!`}
                 </p>
 
                 {(customization.signatureUrl || customization.senderName || customization.finalClosingNote) && (

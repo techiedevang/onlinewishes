@@ -36,7 +36,7 @@ export function ContactAndNewsletter() {
 
   return (
     <section className="py-12 md:py-20 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      <div className="w-full px-4 sm:px-8 lg:px-12 space-y-16">
         
         {/* 1. NEWSLETTER BANNER */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-pink-500 via-rose-500 to-rose-600 p-8 sm:p-12 text-white shadow-2xl">
@@ -114,7 +114,7 @@ export function ContactAndNewsletter() {
 
             <div className="pt-2 space-y-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
               <p>📍 OnlineWishes Inc. - Global Digital Platform</p>
-              <p>✉️ support@onlinewishes.in</p>
+              <p>✉️ codelearnpoint@gmail.com</p>
               <p>⚡ Average response time: &lt; 2 hours</p>
             </div>
           </div>

@@ -14,12 +14,20 @@ export function HeroSection({
   onTrySamplePreview,
 }: HeroSectionProps) {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-rose-50/70 via-pink-50/30 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pt-10 pb-16 md:pt-16 md:pb-24">
+    <div className="relative overflow-hidden bg-gradient-to-b from-rose-50/90 via-pink-50/60 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 pt-16 pb-24 md:pt-24 md:pb-36">
       
-      {/* Background Decorative Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-tr from-pink-300/30 via-rose-300/20 to-amber-200/20 dark:from-pink-900/20 dark:via-rose-900/10 dark:to-slate-900/0 blur-3xl pointer-events-none -z-10 rounded-full" />
+      {/* Immersive Background Photo Collage with Sophisticated Vignette & Gradient Mask */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center -z-20 opacity-25 dark:opacity-15 mix-blend-soft-light dark:mix-blend-color-dodge filter brightness-105 saturate-110 pointer-events-none transition-all duration-1000"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=2200&q=85')` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-transparent to-white/60 dark:from-zinc-950/90 dark:via-zinc-950/50 dark:to-zinc-950/90 -z-15 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Background Decorative Glowing Orbs */}
+      <div className="absolute top-10 left-1/4 w-96 h-96 bg-pink-400/20 dark:bg-rose-600/15 blur-[120px] pointer-events-none -z-10 rounded-full" />
+      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-amber-400/15 dark:bg-amber-600/10 blur-[120px] pointer-events-none -z-10 rounded-full" />
+
+      <div className="w-full px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Column - Copy & CTA */}
@@ -56,7 +64,7 @@ export function HeroSection({
               transition={{ delay: 0.2 }}
               className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
             >
-              Turn your favorite 21 memories into an interactive unboxing experience. Floating photo box, heart confetti, custom romantic poems, 3D flipbook scrapbook, and instant shareable domain links!
+              Turn your favorite memories into an interactive unboxing experience. Floating photo box, heart confetti, custom romantic poems, 3D flipbook scrapbook, and instant shareable domain links!
             </motion.p>
 
             {/* CTA Buttons */}
@@ -82,7 +90,7 @@ export function HeroSection({
                 <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-rose-600">
                   <Play className="w-4 h-4 fill-rose-600 translate-x-0.5" />
                 </div>
-                <span>Try Live 21-Photo Preview</span>
+                <span>Try Live Photo Preview</span>
               </button>
             </motion.div>
 
@@ -193,7 +201,7 @@ export function HeroSection({
                   21
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800 dark:text-white">21 Floating Photos</p>
+                  <p className="text-xs font-bold text-slate-800 dark:text-white">Floating Photos</p>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400">Pop-out physics animation</p>
                 </div>
               </div>

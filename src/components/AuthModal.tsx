@@ -360,7 +360,7 @@ export function AuthModal({
   };
 
   const handleSignOut = async () => {
-    await signOut(auth);
+    onLogout();
     onClose();
   };
 

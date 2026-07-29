@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { motion } from 'motion/react';
 import { User, UserCustomization, Template, CustomAiBlueprint } from './types';
+import { auth } from './lib/firebase';
+import { signOut } from 'firebase/auth';
 import { TEMPLATES, INITIAL_MEMORIES_21, getDefaultCustomization } from './data/templates';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
@@ -61,6 +63,18 @@ export default function App() {
   const [showAdminDashboard, setShowAdminDashboard] = useState<boolean>(false);
   const [policyTab, setPolicyTab] = useState<PolicyTab | null>(null);
   const [publishedToast, setPublishedToast] = useState<{ show: boolean; link: string } | null>(null);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error('Failed to sign out:', e);
+    }
+    localStorage.removeItem('onlinewishes_current_user');
+    setCurrentUser(null);
+    setShowUserDashboard(false);
+    setShowAdminDashboard(false);
+  };
 
   const handleOpenAuth = (mode: 'signin' | 'signup' = 'signin') => {
     setAuthInitialMode(mode);
@@ -257,7 +271,14 @@ A story forever to be told.`,
   };
 
   return (
-    <div className={`min-h-screen max-w-full overflow-x-hidden bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 font-sans ${darkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen max-w-full overflow-x-hidden bg-white dark:bg-zinc-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 font-sans relative ${darkMode ? 'dark' : ''}`}>
+      
+      {/* Immersive Global Background Photo Wallpaper for Dark Mode */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center opacity-0 dark:opacity-20 pointer-events-none -z-30 transition-opacity duration-700 filter saturate-125"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=2400&q=85')` }}
+      />
+      <div className="fixed inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/90 to-zinc-950/95 opacity-0 dark:opacity-100 pointer-events-none -z-25 transition-opacity duration-700" />
       
       {/* Interactive Canvas Sparkle Overlay on Hover / Touch / Scroll */}
       <SparkleParticleCanvas isFullScreen={true} particleDensity={1.0} />
@@ -352,11 +373,6 @@ A story forever to be told.`,
         )}
       </main>
 
-      {/* Optional Top-Level Ad Placement */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 w-full">
-        <GoogleAd slot="1234567890" format="auto" className="my-8 bg-slate-900/50 rounded-2xl min-h-[100px] flex items-center justify-center border border-slate-800" />
-      </div>
-
       {/* Footer */}
       <Footer
         onOpenAdmin={handleOpenAdmin}
@@ -418,10 +434,7 @@ A story forever to be told.`,
             localStorage.setItem('onlinewishes_current_user', JSON.stringify(user));
             setCurrentUser(user);
           }}
-          onLogout={() => {
-            localStorage.removeItem('onlinewishes_current_user');
-            setCurrentUser(null);
-          }}
+          onLogout={handleLogout}
           onClose={() => setShowAuthModal(false)}
           onOpenDashboard={() => setShowUserDashboard(true)}
         />
@@ -431,10 +444,7 @@ A story forever to be told.`,
       {showUserDashboard && currentUser && (
         <UserDashboard
           currentUser={currentUser}
-          onLogout={() => {
-            setCurrentUser(null);
-            setShowUserDashboard(false);
-          }}
+          onLogout={handleLogout}
           onClose={() => setShowUserDashboard(false)}
           onNewWebsite={() => {
             setActiveTab('customizer');
@@ -448,6 +458,7 @@ A story forever to be told.`,
         <AdminDashboard
           currentUser={currentUser}
           onLogin={(user) => setCurrentUser(user)}
+          onLogout={handleLogout}
           onClose={handleCloseAdmin}
         />
       )}

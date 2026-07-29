@@ -28,7 +28,7 @@ export function PricingSection({
 
   return (
     <section id="pricing" className="py-12 md:py-20 bg-slate-50 dark:bg-slate-900/80 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <div className="w-full px-4 sm:px-8 lg:px-12 space-y-12">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">

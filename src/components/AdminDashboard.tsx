@@ -13,9 +13,10 @@ interface AdminDashboardProps {
   currentUser: User | null;
   onClose: () => void;
   onLogin?: (user: User) => void;
+  onLogout?: () => void;
 }
 
-export function AdminDashboard({ currentUser, onClose, onLogin }: AdminDashboardProps) {
+export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: AdminDashboardProps) {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(
     currentUser?.role === 'admin'
   );
@@ -462,7 +463,7 @@ export function AdminDashboard({ currentUser, onClose, onLogin }: AdminDashboard
           <div className="flex items-center space-x-2">
             {isAdminAuthenticated && (
               <button
-                onClick={() => setIsAdminAuthenticated(false)}
+                onClick={() => { setIsAdminAuthenticated(false); if (onLogout) onLogout(); }}
                 className="px-3 py-1.5 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30 font-bold text-xs rounded-xl transition-colors"
               >
                 Sign Out

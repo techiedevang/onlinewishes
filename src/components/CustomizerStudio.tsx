@@ -470,7 +470,7 @@ export function CustomizerStudio({
       
       onChangeCustomization({
         ...customization,
-        memories: updatedMemories,
+        memories: updatedMemories.filter(Boolean),
       });
     } catch (err: any) {
       console.error('Upload failed:', err);
@@ -541,7 +541,7 @@ export function CustomizerStudio({
 
   return (
     <div id="customizer" className="py-12 md:py-16 bg-white dark:bg-slate-900 transition-colors">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div className="w-full px-4 sm:px-8 lg:px-12 space-y-8">
         
         {/* Studio Header & Auto-Save Indicator */}
         <div className="text-center max-w-2xl mx-auto space-y-2">
@@ -2038,24 +2038,32 @@ export function CustomizerStudio({
                   return (
                     <div 
                       key={index} 
-                      className={`group relative w-full aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden border-2 ${mem ? 'border-transparent' : 'border-dashed border-slate-300 dark:border-slate-700'} flex flex-col items-center justify-center`}
+                      className={`group relative w-full h-[180px] bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden border-2 ${mem ? 'border-transparent' : 'border-dashed border-slate-300 dark:border-slate-700'} flex flex-col`}
                     >
                       {mem ? (
                         <>
-                          <SafeImage 
-                            src={mem.imageUrl} 
-                            alt={`Slot ${index + 1}`} 
-                            fallbackUrl={mem.fallbackUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300'}
-                            className="w-full h-full transition-transform duration-500 group-hover:scale-110"
-                            style={{
-                              objectFit: mem.objectFit || 'cover',
-                              objectPosition: mem.objectPosition || 'center',
-                              filter: mem.filter === 'vintage' ? 'sepia(0.5) hue-rotate(-30deg) contrast(1.2)' : mem.filter === 'sepia' ? 'sepia(1)' : mem.filter === 'grayscale' ? 'grayscale(1)' : mem.filter === 'contrast' ? 'contrast(1.5)' : 'none'
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-black/40 to-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5">
-                            <div className="flex justify-between items-start">
-                              <div className="flex flex-col gap-1 w-20">
+                          <div className="relative flex-1 overflow-hidden w-full group">
+                            <SafeImage 
+                              src={mem.imageUrl} 
+                              alt={`Slot ${index + 1}`} 
+                              fallbackUrl={mem.fallbackUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300'}
+                              className="w-full h-full transition-transform duration-500 group-hover:scale-110"
+                              style={{
+                                objectFit: mem.objectFit || 'cover',
+                                objectPosition: mem.objectPosition || 'center',
+                                filter: mem.filter === 'vintage' ? 'sepia(0.5) hue-rotate(-30deg) contrast(1.2)' : mem.filter === 'sepia' ? 'sepia(1)' : mem.filter === 'grayscale' ? 'grayscale(1)' : mem.filter === 'contrast' ? 'contrast(1.5)' : 'none'
+                              }}
+                            />
+                            
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5 pointer-events-none">
+                            </div>
+
+                            <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[9px] rounded font-bold backdrop-blur-sm opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
+                              #{index + 1}
+                            </div>
+
+                            <div className="absolute inset-x-1 top-1 flex justify-between items-start opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex flex-col gap-1 w-16">
                                 {/* Object Fit */}
                                 <select 
                                   value={mem.objectFit || 'cover'} 
@@ -2064,7 +2072,7 @@ export function CustomizerStudio({
                                     updated[index] = { ...updated[index], objectFit: e.target.value as any };
                                     updateField('memories', updated);
                                   }}
-                                  className="bg-black/70 text-[9px] text-white rounded border border-white/20 p-0.5 outline-none"
+                                  className="bg-black/80 text-[10px] text-white rounded border border-white/20 p-0.5 outline-none cursor-pointer"
                                 >
                                   <option value="cover">Fill</option>
                                   <option value="contain">Fit</option>
@@ -2078,7 +2086,7 @@ export function CustomizerStudio({
                                     updated[index] = { ...updated[index], filter: e.target.value };
                                     updateField('memories', updated);
                                   }}
-                                  className="bg-black/70 text-[9px] text-white rounded border border-white/20 p-0.5 outline-none"
+                                  className="bg-black/80 text-[10px] text-white rounded border border-white/20 p-0.5 outline-none cursor-pointer"
                                 >
                                   <option value="none">No Filter</option>
                                   <option value="vintage">Vintage</option>
@@ -2088,16 +2096,35 @@ export function CustomizerStudio({
                                 </select>
                               </div>
                               
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveMemory(mem.id)}
-                                className="p-1 bg-red-500 text-white rounded hover:bg-red-600 shadow-md z-20"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              <div className="flex flex-col gap-1.5 items-end">
+                                <label className="flex items-center gap-1.5 px-2 py-1 bg-indigo-500/95 text-white text-[10px] font-bold uppercase rounded hover:bg-indigo-600 shadow-md cursor-pointer pointer-events-auto transition-transform hover:scale-105" title="Change Photo">
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                      if (e.target.files && e.target.files[0]) {
+                                        handleSingleFileSelected(e.target.files[0], index);
+                                      }
+                                    }} 
+                                  />
+                                  <RefreshCw className="w-3.5 h-3.5" />
+                                  <span>Change</span>
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMemory(mem.id)}
+                                  className="flex items-center gap-1.5 px-2 py-1 bg-red-500/95 text-white text-[10px] font-bold uppercase rounded hover:bg-red-600 shadow-md z-20 pointer-events-auto transition-transform hover:scale-105"
+                                  title="Delete Photo"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
-                          <div className="w-full bg-slate-50 dark:bg-slate-800 p-1.5 border-t border-slate-200 dark:border-slate-700">
+
+                          <div className="w-full bg-slate-50 dark:bg-slate-800/90 p-1.5 shrink-0 border-t border-slate-200 dark:border-slate-700/50">
                              <input
                                 type="text"
                                 value={mem.caption}
@@ -2106,13 +2133,9 @@ export function CustomizerStudio({
                                   updated[index] = { ...updated[index], caption: e.target.value };
                                   updateField('memories', updated);
                                 }}
-                                className="w-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-[10px] px-2 py-1 rounded border border-slate-200 dark:border-slate-600 focus:outline-none focus:border-rose-400 placeholder:text-slate-400"
-                                placeholder="Add caption..."
+                                className="w-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-[11px] px-2 py-1 rounded border border-slate-200 dark:border-slate-600 focus:outline-none focus:border-rose-400 placeholder:text-slate-400 placeholder:italic"
+                                placeholder="Add memory caption..."
                               />
-                          </div>
-                          
-                          <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-black/60 text-white text-[9px] rounded font-bold backdrop-blur-sm pointer-events-none opacity-100 group-hover:opacity-0 transition-opacity">
-                            #{index + 1}
                           </div>
                         </>
                       ) : (

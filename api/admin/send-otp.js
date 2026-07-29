@@ -1,9 +1,59 @@
 import nodemailer from "nodemailer";
+import fs from "fs";
+import path from "path";
 
-// Note: In Vercel serverless, global variables may not persist between requests.
-// For true persistence, you should store the OTP in Firestore.
-// We are exporting this globally for a best-effort cache in a hot container.
-global.adminOtpStore = global.adminOtpStore || new Map();
+function getFirestoreConfig() {
+  let projectId = process.env.FIRESTORE_PROJECT_ID;
+  let dbId = process.env.FIRESTORE_DATABASE_ID;
+  let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
+
+  try {
+    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      if (!projectId) projectId = config.projectId;
+      if (!dbId) dbId = config.firestoreDatabaseId;
+      if (!apiKey) apiKey = config.apiKey;
+    }
+  } catch (err) {
+    console.error("Failed to read firebase config file", err);
+  }
+
+  projectId = projectId || "gen-lang-client-0123999783";
+  dbId = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+
+  return { projectId, dbId, apiKey };
+}
+
+async function saveOtpToFirestore(adminEmail, otpCode, expiresAt) {
+  const { projectId, dbId, apiKey } = getFirestoreConfig();
+  if (!apiKey) {
+    throw new Error("Configuration Error: API Key not found");
+  }
+
+  const docId = encodeURIComponent(adminEmail);
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
+
+  const body = {
+    fields: {
+      code: { stringValue: otpCode },
+      expiresAt: { stringValue: String(expiresAt) }
+    }
+  };
+
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Firestore save failed: ${response.statusText} - ${errorText}`);
+  }
+}
 
 function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
@@ -40,7 +90,8 @@ export default async function handler(req, res) {
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
     
-    global.adminOtpStore.set("admin@onlinewishes.in", { code: otpCode, expiresAt });
+    // Save to Firestore for multi-container and serverless persistence
+    await saveOtpToFirestore("admin@onlinewishes.in", otpCode, expiresAt);
 
     const recipientEmail = process.env.ADMIN_RECIPIENT_EMAIL || process.env.SMTP_USER || "itsmedevu16@gmail.com";
     const transporter = getTransporter();

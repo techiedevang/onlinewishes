@@ -6,8 +6,103 @@ import Razorpay from "razorpay";
 import SpotifyWebApi from "spotify-web-api-node";
 import nodemailer from "nodemailer";
 
-// In-memory OTP storage
-const adminOtpStore = new Map<string, { code: string; expiresAt: number }>();
+function getFirestoreConfig() {
+  let projectId = process.env.FIRESTORE_PROJECT_ID;
+  let dbId = process.env.FIRESTORE_DATABASE_ID;
+  let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
+
+  try {
+    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      if (!projectId) projectId = config.projectId;
+      if (!dbId) dbId = config.firestoreDatabaseId;
+      if (!apiKey) apiKey = config.apiKey;
+    }
+  } catch (err) {
+    console.error("Failed to read firebase config file", err);
+  }
+
+  projectId = projectId || "gen-lang-client-0123999783";
+  dbId = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+
+  return { projectId, dbId, apiKey };
+}
+
+async function saveOtpToFirestore(adminEmail: string, otpCode: string, expiresAt: number) {
+  const { projectId, dbId, apiKey } = getFirestoreConfig();
+  if (!apiKey) {
+    throw new Error("Configuration Error: API Key not found");
+  }
+
+  const docId = encodeURIComponent(adminEmail);
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
+
+  const body = {
+    fields: {
+      code: { stringValue: otpCode },
+      expiresAt: { stringValue: String(expiresAt) }
+    }
+  };
+
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Firestore save failed: ${response.statusText} - ${errorText}`);
+  }
+}
+
+async function getOtpFromFirestore(adminEmail: string) {
+  const { projectId, dbId, apiKey } = getFirestoreConfig();
+  if (!apiKey) {
+    throw new Error("Configuration Error: API Key not found");
+  }
+
+  const docId = encodeURIComponent(adminEmail);
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
+
+  const response = await fetch(url);
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Firestore read failed: ${response.statusText} - ${errorText}`);
+  }
+
+  const data: any = await response.json();
+  const code = data.fields?.code?.stringValue;
+  const expiresAt = Number(data.fields?.expiresAt?.stringValue || "0");
+
+  return { code, expiresAt };
+}
+
+async function deleteOtpFromFirestore(adminEmail: string) {
+  const { projectId, dbId, apiKey } = getFirestoreConfig();
+  if (!apiKey) {
+    throw new Error("Configuration Error: API Key not found");
+  }
+
+  const docId = encodeURIComponent(adminEmail);
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: 'DELETE'
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`Firestore delete failed: ${response.statusText} - ${errorText}`);
+  }
+}
 
 function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
@@ -61,7 +156,8 @@ async function startServer() {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-      adminOtpStore.set("admin@onlinewishes.in", { code: otpCode, expiresAt });
+      // Save to Firestore for multi-container and serverless persistence
+      await saveOtpToFirestore("admin@onlinewishes.in", otpCode, expiresAt);
 
       const recipientEmail = process.env.ADMIN_RECIPIENT_EMAIL || process.env.SMTP_USER || "itsmedevu16@gmail.com";
       const transporter = getTransporter();
@@ -112,7 +208,7 @@ async function startServer() {
   });
 
   // Admin OTP Verify API
-  app.post("/api/admin/verify-otp", (req, res) => {
+  app.post("/api/admin/verify-otp", async (req, res) => {
     try {
       const { adminEmail, otp } = req.body;
       const targetAdmin = (adminEmail || "").trim().toLowerCase();
@@ -121,14 +217,14 @@ async function startServer() {
         return res.status(403).json({ error: "Unauthorized email address." });
       }
 
-      const storedData = adminOtpStore.get("admin@onlinewishes.in");
+      const storedData = await getOtpFromFirestore("admin@onlinewishes.in");
 
       if (!storedData) {
-        return res.status(400).json({ error: "No OTP found. Please request a new code." });
+        return res.status(400).json({ error: "No OTP found or container reset. Please request a new code." });
       }
 
       if (Date.now() > storedData.expiresAt) {
-        adminOtpStore.delete("admin@onlinewishes.in");
+        await deleteOtpFromFirestore("admin@onlinewishes.in");
         return res.status(400).json({ error: "OTP code expired. Please request a new code." });
       }
 
@@ -137,7 +233,7 @@ async function startServer() {
       }
 
       // OTP Verified
-      adminOtpStore.delete("admin@onlinewishes.in");
+      await deleteOtpFromFirestore("admin@onlinewishes.in");
 
       res.json({
         success: true,

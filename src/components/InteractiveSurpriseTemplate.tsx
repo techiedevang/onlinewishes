@@ -17,33 +17,36 @@ interface InteractiveSurpriseTemplateProps {
 }
 
 // Helper to compute Spotify embed link
-const getSpotifyEmbedUrl = (url?: string) => {
+const getMediaEmbedUrl = (url?: string) => {
   if (!url) return null;
   try {
-    let type = '';
-    let id = '';
-    
-    if (url.startsWith('spotify:')) {
-      const parts = url.split(':');
-      if (parts.length >= 3) {
-        type = parts[1];
-        id = parts[2];
+    if (url.includes('spotify.com') || url.startsWith('spotify:')) {
+      let type = '';
+      let id = '';
+      if (url.startsWith('spotify:')) {
+        const parts = url.split(':');
+        if (parts.length >= 3) { type = parts[1]; id = parts[2]; }
+      } else {
+        const match = url.match(/(track|playlist|album|episode|show|artist)\/([a-zA-Z0-9]+)/);
+        if (match) { type = match[1]; id = match[2]; }
       }
-    } else {
-      const match = url.match(/(track|playlist|album|episode|show|artist)\/([a-zA-Z0-9]+)/);
-      if (match) {
-        type = match[1];
-        id = match[2];
+      if (type && id) {
+        return `https://open.spotify.com/embed/${type}/${id}?utm_source=generator&theme=0`;
       }
     }
-
-    if (type && id) {
-      return `https://open.spotify.com/embed/${type}/${id}?utm_source=generator&theme=0&autoplay=1`;
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const match = url.match(/(?:v=|youtu\.be\/)([\w-]+)/);
+      if (match && match[1]) {
+        return `https://www.youtube.com/embed/${match[1]}?autoplay=1&loop=1&playlist=${match[1]}`;
+      }
+    }
+    if (url.includes('soundcloud.com')) {
+      return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23ff5500&auto_play=true&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
     }
   } catch (e) {
-    console.error('Failed to parse Spotify URL:', e);
+    console.error('Failed to parse Media URL:', e);
   }
-  return null;
+  return url.startsWith('http') ? url : null;
 };
 
 // Helper for dynamic theme styling
@@ -197,7 +200,7 @@ export function InteractiveSurpriseTemplate({
   const [showSpotifyPlayer, setShowSpotifyPlayer] = useState(true);
 
   const themeConfig = getThemeConfig(customization.bgTheme, customization.occasion);
-  const spotifyEmbedUrl = getSpotifyEmbedUrl(customization.spotifyTrackUrl);
+  const spotifyEmbedUrl = getMediaEmbedUrl(customization.spotifyTrackUrl);
 
   // Auto-play ambient soundscape when scrapbook is opened or experience starts
   useEffect(() => {
@@ -2324,9 +2327,9 @@ A story forever to be told.`}
                  {audioMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 animate-pulse" />}
                </div>
             </div>
-          ) : (
+          ) : spotifyEmbedUrl ? (
             <iframe
-              src={spotifyEmbedUrl || ''}
+              src={spotifyEmbedUrl}
               width="100%"
               height="80"
               frameBorder="0"
@@ -2335,7 +2338,7 @@ A story forever to be told.`}
               className="rounded-xl"
               title="Spotify Audio Player"
             />
-          )}
+          ) : null}
         </div>
       )}
 

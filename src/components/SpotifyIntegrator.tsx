@@ -14,44 +14,39 @@ interface SpotifyTrackItem {
 
 const FEATURED_SPOTIFY_TRACKS: SpotifyTrackItem[] = [
   {
-    id: '4cOdK2wGLETKBW3PvgPWqT',
-    name: 'As It Was',
+    id: '1226034393',
+    name: 'Sign of the Times',
     artist: 'Harry Styles',
-    albumArt: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&fit=crop',
-    spotifyUrl: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT',
-    previewAudioUrl: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3',
-    category: 'Pop & Vibes',
+    albumArt: 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3d/5e/aa/3d5eaaa3-9a86-c264-5cd5-7fac83f99a59/886446451978.jpg/100x100bb.jpg',
+    spotifyUrl: 'https://music.apple.com/us/album/sign-of-the-times/1226034336?i=1226034393',
+    previewAudioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/19/f7/99/19f799a3-4638-f354-8713-f5ac076f328e/mzaf_2398941441794619302.plus.aac.p.m4a',
+    category: 'Pop',
   },
   {
-    id: '0VjIj932C3P2932x',
+    id: '1581702085',
     name: 'Until I Found You',
     artist: 'Stephen Sanchez',
-    albumArt: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=300&fit=crop',
-    spotifyUrl: 'https://open.spotify.com/track/0VjIj932C3P2932x',
-    category: 'Romantic Acoustic',
+    albumArt: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/64/d2/c5/64d2c511-67f4-ae09-5153-d39c3da413a3/21UMGIM75467.rgb.jpg/100x100bb.jpg',
+    spotifyUrl: 'https://music.apple.com/us/album/until-i-found-you/1581702082?i=1581702085',
+    previewAudioUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/53/82/c1/5382c1d4-ddba-aa2b-90df-57268895fac9/mzaf_8926201202931541051.plus.aac.p.m4a',
+    category: 'Singer/Songwriter',
   },
   {
-    id: '1Bxf3_LoFi_01',
-    name: 'Late Night Coffee & Secrets',
-    artist: 'ChilledCow Lo-Fi Beats',
-    albumArt: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=300&fit=crop',
-    spotifyUrl: 'https://open.spotify.com/track/1Bxf3_LoFi_01',
-    category: 'Lo-Fi Chill',
-  },
-  {
-    id: '7qiZ42938x_Bestie',
+    id: '1529156069898',
     name: 'Count On Me',
     artist: 'Bruno Mars',
     albumArt: 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=300&fit=crop',
     spotifyUrl: 'https://open.spotify.com/track/7qiZ42938x_Bestie',
+    previewAudioUrl: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3',
     category: 'Bestie Anthem',
   },
   {
-    id: '3n3Pp2392x_Golden',
-    name: 'Golden Hour Sunset',
+    id: '1492684223066',
+    name: 'Golden Hour',
     artist: 'JVKE',
     albumArt: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=300&fit=crop',
     spotifyUrl: 'https://open.spotify.com/track/3n3Pp2392x_Golden',
+    previewAudioUrl: 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3',
     category: 'Piano & Strings',
   },
 ];
@@ -111,22 +106,31 @@ export function SpotifyIntegrator({
   };
 
   // Extract Spotify Track ID from standard Spotify URLs
-  const getSpotifyEmbedUrl = (url: string) => {
+  const getMediaEmbedUrl = (url: string) => {
     if (!url) return null;
     try {
-      if (url.includes('open.spotify.com')) {
+      if (url.includes('spotify.com')) {
         const match = url.match(/(track|playlist|album)\/([a-zA-Z0-9]+)/);
         if (match && match[1] && match[2]) {
           return `https://open.spotify.com/embed/${match[1]}/${match[2]}?utm_source=generator&theme=0`;
         }
       }
+      if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        const match = url.match(/(?:v=|youtu\.be\/)([\w-]+)/);
+        if (match && match[1]) {
+          return `https://www.youtube.com/embed/${match[1]}?autoplay=1&loop=1&playlist=${match[1]}`;
+        }
+      }
+      if (url.includes('soundcloud.com')) {
+        return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%23ff5500&auto_play=true&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
+      }
     } catch (e) {
-      console.error('Failed to parse Spotify URL:', e);
+      console.error('Failed to parse Media URL:', e);
     }
-    return null;
+    return url.startsWith('http') ? url : null;
   };
 
-  const currentEmbedUrl = getSpotifyEmbedUrl(customization.spotifyTrackUrl || '');
+  const currentEmbedUrl = getMediaEmbedUrl(customization.spotifyTrackUrl || '');
 
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SpotifyTrackItem[]>(FEATURED_SPOTIFY_TRACKS);
@@ -141,70 +145,25 @@ export function SpotifyIntegrator({
     const delayDebounceFn = setTimeout(async () => {
       try {
         setIsSearching(true);
-        // 1. Get Token from our server
-        const tokenRes = await fetch('/api/spotify/token');
+        // Search using iTunes API which provides 30s audio previews for free
+        const searchRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchQuery)}&entity=song&limit=10`);
         
-        if (!tokenRes.ok) {
-          // Fallback to mock search results if Spotify credentials are not configured yet
-          console.warn('Spotify API keys not configured on server. Using mock results.');
-          const mockResults: SpotifyTrackItem[] = [
-            {
-              id: 'mock-1',
-              name: 'Mock Track 1 (Configure Spotify API)',
-              artist: 'Test Artist',
-              albumArt: 'https://images.unsplash.com/photo-1619983081563-430f63602796?w=100&q=80',
-              spotifyUrl: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT',
-              previewAudioUrl: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3',
-              category: 'Pop'
-            },
-            {
-              id: 'mock-2',
-              name: 'Mock Track 2',
-              artist: 'Test Artist 2',
-              albumArt: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80',
-              spotifyUrl: 'https://open.spotify.com/track/0VjIj932C3P2932x',
-              category: 'Acoustic'
-            }
-          ];
-          setSearchResults(mockResults);
-          setIsSearching(false);
-          return;
-        }
-
-        const { access_token } = await tokenRes.json();
-        
-        // 2. Search Spotify API
-        const searchRes = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=10`, {
-          headers: {
-            'Authorization': `Bearer ${access_token}`
-          }
-        });
-        
-        if (!searchRes.ok) throw new Error('Spotify API error');
+        if (!searchRes.ok) throw new Error('Search API error');
         
         const data = await searchRes.json();
-        const tracks = data.tracks.items.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          artist: item.artists.map((a: any) => a.name).join(', '),
-          albumArt: item.album.images[0]?.url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&fit=crop',
-          spotifyUrl: item.external_urls.spotify,
-          previewAudioUrl: item.preview_url,
-          category: 'Spotify Search'
+        const results = data.results.map((item: any) => ({
+          id: String(item.trackId),
+          name: item.trackName,
+          artist: item.artistName,
+          albumArt: item.artworkUrl100,
+          spotifyUrl: item.trackViewUrl,
+          previewAudioUrl: item.previewUrl,
+          category: item.primaryGenreName
         }));
         
-        setSearchResults(tracks);
+        setSearchResults(results.length > 0 ? results : FEATURED_SPOTIFY_TRACKS);
       } catch (error) {
-        console.error('Spotify Search Error:', error);
-        // Fallback to local filter if API fails
-        const lowerQuery = searchQuery.toLowerCase();
-        setSearchResults(
-          FEATURED_SPOTIFY_TRACKS.filter(t => 
-            t.name.toLowerCase().includes(lowerQuery) || 
-            t.artist.toLowerCase().includes(lowerQuery) ||
-            t.category.toLowerCase().includes(lowerQuery)
-          )
-        );
+        console.error('Error searching music:', error);
       } finally {
         setIsSearching(false);
       }
@@ -256,13 +215,13 @@ export function SpotifyIntegrator({
           </div>
           <div>
             <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-              <span>Spotify Track & Ambient Music Integration</span>
+              <span>Music Track & Ambient Audio Integration</span>
               <span className="text-[10px] bg-emerald-500 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase">
-                SPOTIFY API
+                MUSIC SEARCH
               </span>
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Search Spotify, pick a background song, or embed any custom Spotify track URL.
+              Search Music, pick a background song, or embed any custom Spotify track URL.
             </p>
           </div>
         </div>
@@ -278,7 +237,7 @@ export function SpotifyIntegrator({
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Search Spotify
+            Search Music
           </button>
           <button
             type="button"
@@ -289,7 +248,7 @@ export function SpotifyIntegrator({
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Embed Spotify Link
+            Embed Custom Link Link
           </button>
         </div>
       </div>
@@ -299,7 +258,7 @@ export function SpotifyIntegrator({
         <div className="bg-slate-900 rounded-xl border border-slate-800 p-2 shadow-lg mb-4">
           <div className="flex items-center justify-between px-2 mb-2">
             <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">
-              Active Spotify Audio
+              Active Background Music
             </span>
             <div className="flex items-center space-x-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
@@ -316,17 +275,27 @@ export function SpotifyIntegrator({
               </div>
               <audio controls src={customization.spotifyPreviewUrl} className="w-full h-8" autoPlay />
             </div>
-          ) : (
+          ) : getMediaEmbedUrl(customization.spotifyTrackUrl) ? (
             <iframe
-              src={getSpotifyEmbedUrl(customization.spotifyTrackUrl) || ''}
+              src={getMediaEmbedUrl(customization.spotifyTrackUrl)!}
               width="100%"
               height="80"
               frameBorder="0"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
               className="rounded-lg"
-              title="Spotify Audio Player"
+              title="Media Audio Player"
             />
+          ) : (
+             <div className="p-3 bg-slate-950 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Music className="w-4 h-4 text-emerald-500" />
+                <div className="flex-1 truncate">
+                  <p className="text-xs font-bold text-white truncate">{customization.spotifyTrackName || 'Audio Track'}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{customization.spotifyArtistName || 'Selected'}</p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -334,13 +303,17 @@ export function SpotifyIntegrator({
       {/* TAB 1: SPOTIFY TRACK SEARCH */}
       {activeTab === 'search' && (
         <div className="space-y-3">
+          <div className="bg-slate-100 dark:bg-slate-800/60 p-2.5 rounded-lg text-[10px] text-slate-500 flex items-start space-x-2">
+            <span className="text-xl">ℹ️</span>
+            <p><strong>Note:</strong> API search results only provide <strong>30-second previews</strong> due to copyright limits. For the <strong>FULL song</strong>, please use the "Custom Link" tab to embed a YouTube or SoundCloud URL.</p>
+          </div>
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search Spotify track, artist, or vibe (e.g. Harry Styles, Acoustic, Lo-Fi)..."
+              placeholder="Search any song or artist... (e.g. Harry Styles, Acoustic, Lo-Fi)..."
               className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
           </div>
@@ -423,14 +396,14 @@ export function SpotifyIntegrator({
         <form onSubmit={handleApplyCustomUrl} className="space-y-3">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Paste Any Spotify Track or Playlist Link
+              Paste Any YouTube, Spotify, or SoundCloud Link (Full Songs)
             </label>
             <div className="flex items-center space-x-2">
               <input
                 type="text"
                 value={customUrlInput}
                 onChange={(e) => setCustomUrlInput(e.target.value)}
-                placeholder="https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"
+                placeholder="Paste YouTube, Spotify, or SoundCloud link..."
                 className="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-mono"
               />
               <button
@@ -451,7 +424,7 @@ export function SpotifyIntegrator({
           {currentEmbedUrl ? (
             <div className="pt-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">
-                Live Spotify Player Preview:
+                Live Media Player Preview:
               </span>
               <iframe
                 src={currentEmbedUrl}

@@ -8,7 +8,7 @@ export const getDefaultCustomization = (templateId: string = 'box21-surprise'): 
   primaryColor: '#ec4899',
   bgTheme: templateId,
   musicTrack: 'acoustic_love',
-  memories: INITIAL_MEMORIES_21,
+  memories: [],
   customPoem: `Through sunny days and stormy weather,
 We laugh and navigate together.
 Memories preserved in gold,

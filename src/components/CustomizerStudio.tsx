@@ -385,7 +385,7 @@ export function CustomizerStudio({
     try {
       let completedCount = 0;
       const options = {
-        maxSizeMB: 1,
+        maxSizeMB: 0.5,
         maxWidthOrHeight: 1200,
         useWebWorker: true,
       };
@@ -451,8 +451,8 @@ export function CustomizerStudio({
       const res = await fetch(croppedDataUrl);
       const blob = await res.blob();
       const croppedFile = new File([blob], file.name, { type: 'image/jpeg' });
-      
-      const url = await uploadImageToStorage(croppedFile, scrapbookId);
+      const compressedFile = await imageCompression(croppedFile, { maxSizeMB: 0.5, maxWidthOrHeight: 1200, useWebWorker: true });
+      const url = await uploadImageToStorage(compressedFile, scrapbookId);
       
       const newMemory: Memory = {
         id: `${Date.now()}-${index}-${Math.random().toString(36).substring(2, 6)}`,
@@ -1826,16 +1826,34 @@ export function CustomizerStudio({
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
+                          onClick={(e) => {
+                            if (!checkIsLoggedIn()) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowAuthUploadModal(true);
+                            }
+                          }}
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (evt) => {
-                                if (evt.target?.result) {
-                                  updateField('finalImageUrl', evt.target.result as string);
-                                }
-                              };
-                              reader.readAsDataURL(file);
+                              if (!checkIsLoggedIn()) {
+                                setShowAuthUploadModal(true);
+                                return;
+                              }
+                              try {
+                                setIsUploading(true);
+                                setUploadProgressMsg('Compressing and uploading photo...');
+                                const compressedFile = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1200, useWebWorker: true });
+                                const scrapbookId = customization.subdomain || `sb_${Date.now()}`;
+                                const url = await uploadImageToStorage(compressedFile, scrapbookId);
+                                updateField('finalImageUrl', url);
+                              } catch (err: any) {
+                                console.error('Upload failed:', err);
+                                alert('Failed to upload image: ' + err.message);
+                              } finally {
+                                setIsUploading(false);
+                                setUploadProgressMsg('');
+                              }
                             }
                           }}
                         />
@@ -1948,13 +1966,6 @@ export function CustomizerStudio({
 
                 {/* Drag-and-Drop Native File Input Box */}
                 <label 
-                  onClick={(e) => {
-                    if (!checkIsLoggedIn()) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowAuthUploadModal(true);
-                    }
-                  }}
                   className={`border-2 border-dashed ${isUploading ? 'border-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20' : 'border-rose-300 dark:border-rose-700/60 hover:border-rose-500 dark:hover:border-rose-500 bg-white dark:bg-slate-900'} p-6 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all text-center group`}
                 >
                   <input
@@ -1963,6 +1974,13 @@ export function CustomizerStudio({
                     accept="image/*"
                     className="hidden"
                     disabled={isUploading || customization.memories.length >= 50}
+                    onClick={(e) => {
+                      if (!checkIsLoggedIn()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowAuthUploadModal(true);
+                      }
+                    }}
                     onChange={(e) => e.target.files && handleMultipleFilesSelected(e.target.files)}
                   />
                   
@@ -2099,13 +2117,6 @@ export function CustomizerStudio({
                         </>
                       ) : (
                         <label 
-                          onClick={(e) => {
-                            if (!checkIsLoggedIn()) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowAuthUploadModal(true);
-                            }
-                          }}
                           className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                         >
                           <input
@@ -2113,6 +2124,13 @@ export function CustomizerStudio({
                             accept="image/*"
                             className="hidden"
                             disabled={isUploading}
+                            onClick={(e) => {
+                              if (!checkIsLoggedIn()) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowAuthUploadModal(true);
+                              }
+                            }}
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
                                 handleSingleFileSelected(e.target.files[0], index);

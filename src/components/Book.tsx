@@ -247,6 +247,8 @@ function PageContent({
 
   // Memory Type
   const m = data.data;
+  if (!m) return <div className="w-full h-full bg-white flex justify-center items-center"><Heart className="w-8 h-8 text-rose-200 animate-pulse" /></div>;
+
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-2 sm:p-5 md:p-8 relative overflow-hidden">
       {/* Washi tape graphic */}
@@ -254,13 +256,13 @@ function PageContent({
 
       <div className="bg-white p-2 sm:p-3 md:p-5 pb-6 sm:pb-12 md:pb-20 rounded-sm shadow-xl rotate-1 w-full max-w-full relative">
         <div className="w-full aspect-square bg-gray-100 rounded-sm overflow-hidden mb-2 sm:mb-4">
-          <SafeImage src={m.imageUrl} fallbackUrl={m.fallbackUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=600&fit=crop'} alt="Memory" className="w-full h-full object-cover" />
+          <SafeImage src={m?.imageUrl || ''} fallbackUrl={m?.fallbackUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=600&fit=crop'} alt="Memory" className="w-full h-full object-cover" />
         </div>
         <p className="font-handwriting text-[1rem] sm:text-2xl md:text-3xl text-gray-800 text-center leading-tight -mt-1 sm:-mt-2 px-1 sm:px-2 line-clamp-2 md:line-clamp-3">
-          {m.caption}
+          {m?.caption}
         </p>
         <p className="text-gray-400 font-sans text-[0.45rem] sm:text-[0.65rem] md:text-xs text-center mt-1 sm:mt-2 uppercase tracking-widest">
-          {m.date}
+          {m?.date}
         </p>
       </div>
 

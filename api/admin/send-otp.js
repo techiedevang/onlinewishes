@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 function getFirestoreConfig() {
   let projectId = process.env.FIRESTORE_PROJECT_ID;
@@ -8,9 +9,22 @@ function getFirestoreConfig() {
   let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
 
   try {
-    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-    if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    const pathsToTry = [
+      path.join(process.cwd(), "firebase-applet-config.json"),
+      path.join(path.dirname(fileURLToPath(import.meta.url)), "../../firebase-applet-config.json"),
+      path.join(path.dirname(fileURLToPath(import.meta.url)), "../firebase-applet-config.json")
+    ];
+
+    let configContent = null;
+    for (const configPath of pathsToTry) {
+      if (fs.existsSync(configPath)) {
+        configContent = fs.readFileSync(configPath, "utf-8");
+        break;
+      }
+    }
+
+    if (configContent) {
+      const config = JSON.parse(configContent);
       if (!projectId) projectId = config.projectId;
       if (!dbId) dbId = config.firestoreDatabaseId;
       if (!apiKey) apiKey = config.apiKey;
@@ -38,7 +52,8 @@ async function saveOtpToFirestore(adminEmail, otpCode, expiresAt) {
     }
 
     const docId = encodeURIComponent(adminEmail);
-    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
+    // CRITICAL: Must append updateMask parameters so Firestore REST API actually writes/overwrites these specific fields!
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}&updateMask.fieldPaths=code&updateMask.fieldPaths=expiresAt`;
 
     const body = {
       fields: {

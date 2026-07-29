@@ -23,7 +23,10 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
 import { GoogleAd } from './components/GoogleAd';
 import { updatePageMetadata, updateMetadataForTemplate } from './utils/seo';
-import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link } from 'lucide-react';
+import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart } from 'lucide-react';
+import { loadScrapbookFromCloud } from './lib/scrapbookService';
+import { InteractiveSurpriseTemplate } from './components/InteractiveSurpriseTemplate';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Scroll Entrance Animation Wrapper Component
 function AnimatedSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
@@ -63,6 +66,72 @@ export default function App() {
   const [showAdminDashboard, setShowAdminDashboard] = useState<boolean>(false);
   const [policyTab, setPolicyTab] = useState<PolicyTab | null>(null);
   const [publishedToast, setPublishedToast] = useState<{ show: boolean; link: string } | null>(null);
+
+  // Direct Scrapbook Loading States
+  const [publishedScrapbook, setPublishedScrapbook] = useState<UserCustomization | null>(null);
+  const [isScrapbookLoading, setIsScrapbookLoading] = useState<boolean>(false);
+  const [scrapbookError, setScrapbookError] = useState<string | null>(null);
+  const [isPasscodeLocked, setIsPasscodeLocked] = useState<boolean>(false);
+  const [passcodeAttempt, setPasscodeAttempt] = useState<string>('');
+
+  const loadSlug = async (slug: string, passcode?: string) => {
+    setIsScrapbookLoading(true);
+    setScrapbookError(null);
+    try {
+      const result = await loadScrapbookFromCloud(slug, passcode);
+      if (result) {
+        if (result.isLocked) {
+          setIsPasscodeLocked(true);
+          if (passcode) {
+            setScrapbookError('Incorrect passcode. Please try again.');
+          }
+        } else if (result.customization) {
+          setPublishedScrapbook(result.customization);
+          setIsPasscodeLocked(false);
+          setScrapbookError(null);
+        }
+      } else {
+        setScrapbookError('Surprise scrapbook page not found.');
+      }
+    } catch (e) {
+      console.error(e);
+      setScrapbookError('Failed to load surprise page.');
+    } finally {
+      setIsScrapbookLoading(false);
+    }
+  };
+
+  const handleUnlockPasscode = (e: React.FormEvent) => {
+    e.preventDefault();
+    const path = window.location.pathname;
+    let slug = '';
+    if (path.startsWith('/p/')) {
+      slug = path.split('/p/')[1];
+    } else {
+      const searchParams = new URLSearchParams(window.location.search);
+      slug = searchParams.get('p') || searchParams.get('id') || searchParams.get('subdomain') || '';
+    }
+    if (slug) {
+      loadSlug(slug.trim(), passcodeAttempt);
+    }
+  };
+
+  // Direct loading on mount
+  useEffect(() => {
+    const path = window.location.pathname;
+    let slug = '';
+    
+    if (path.startsWith('/p/')) {
+      slug = path.split('/p/')[1];
+    } else {
+      const searchParams = new URLSearchParams(window.location.search);
+      slug = searchParams.get('p') || searchParams.get('id') || searchParams.get('subdomain') || '';
+    }
+
+    if (slug && slug.trim() !== '' && slug !== 'admin') {
+      loadSlug(slug.trim());
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -269,6 +338,101 @@ A story forever to be told.`,
       link: generatedUrl,
     });
   };
+
+  // Standalone Direct URL Loading Views
+  if (isScrapbookLoading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center text-white">
+        <SparkleParticleCanvas isFullScreen={true} particleDensity={1.2} />
+        <div className="relative flex flex-col items-center space-y-4 text-center p-6">
+          <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/30 animate-pulse">
+            <Heart className="w-8 h-8 text-rose-500 animate-ping" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Unwrapping Your Surprise...</h2>
+          <p className="text-xs text-slate-400 max-w-xs">Connecting to OnlineWishes Cloud to retrieve this beautiful custom gift scrapbook.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isPasscodeLocked) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center text-white p-4">
+        <SparkleParticleCanvas isFullScreen={true} particleDensity={1.0} />
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative space-y-6">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
+              <Lock className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-extrabold tracking-tight">Secret Passcode Protected</h2>
+            <p className="text-xs text-slate-400">This surprise is encrypted for privacy. Please enter the passcode to open.</p>
+          </div>
+
+          <form onSubmit={handleUnlockPasscode} className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Enter secret passcode</label>
+              <input
+                type="password"
+                required
+                placeholder="••••"
+                value={passcodeAttempt}
+                onChange={(e) => setPasscodeAttempt(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-center text-xl font-bold tracking-widest text-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              />
+            </div>
+
+            {scrapbookError && (
+              <p className="text-xs text-rose-400 text-center font-semibold">{scrapbookError}</p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm rounded-xl transition-all shadow-lg hover:shadow-amber-500/20 active:scale-98 uppercase tracking-wider"
+            >
+              Unlock Surprise
+            </button>
+          </form>
+
+          <p className="text-[10px] text-slate-500 text-center">Powered by OnlineWishes.in End-to-End Encryption</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (scrapbookError) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center text-white p-4">
+        <SparkleParticleCanvas isFullScreen={true} particleDensity={0.8} />
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center space-y-5">
+          <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto">
+            <XCircle className="w-6 h-6" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold">Failed to Load Surprise</h2>
+            <p className="text-xs text-slate-400">{scrapbookError}</p>
+          </div>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition-colors"
+          >
+            Visit Homepage
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (publishedScrapbook) {
+    return (
+      <ErrorBoundary>
+        <InteractiveSurpriseTemplate
+          key={`${publishedScrapbook.subdomain}-${publishedScrapbook.bgTheme}`}
+          customization={publishedScrapbook}
+          isStandaloneView={true}
+        />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <div className={`min-h-screen max-w-full overflow-x-hidden bg-white dark:bg-zinc-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 font-sans relative ${darkMode ? 'dark' : ''}`}>

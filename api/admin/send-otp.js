@@ -31,16 +31,16 @@ export default async function handler(req, res) {
     const { adminEmail } = req.body;
     const targetAdmin = (adminEmail || "").trim().toLowerCase();
     
-    if (targetAdmin !== "admin@onlinewishes.com") {
+    if (targetAdmin !== "admin@onlinewishes.in") {
       return res.status(403).json({
-        error: "Unauthorized email address. Only admin@onlinewishes.com is permitted.",
+        error: "Unauthorized email address. Only admin@onlinewishes.in is permitted.",
       });
     }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
     
-    global.adminOtpStore.set("admin@onlinewishes.com", { code: otpCode, expiresAt });
+    global.adminOtpStore.set("admin@onlinewishes.in", { code: otpCode, expiresAt });
 
     const recipientEmail = "codelearnpoint@gmail.com";
     const transporter = getTransporter();
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
           html: `
             <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; border: 1px solid #334155;">
               <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
-              <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>admin@onlinewishes.com</strong>.</p>
+              <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>admin@onlinewishes.in</strong>.</p>
               <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
                 <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
               </div>

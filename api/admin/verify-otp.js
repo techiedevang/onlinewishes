@@ -7,12 +7,12 @@ export default async function handler(req, res) {
     const { adminEmail, otp } = req.body;
     const targetAdmin = (adminEmail || "").trim().toLowerCase();
     
-    if (targetAdmin !== "admin@onlinewishes.com") {
+    if (targetAdmin !== "admin@onlinewishes.in") {
       return res.status(403).json({ error: "Unauthorized email address." });
     }
 
     // Attempt to read from global store (works if same hot container in serverless)
-    const storedData = global.adminOtpStore?.get("admin@onlinewishes.com");
+    const storedData = global.adminOtpStore?.get("admin@onlinewishes.in");
     
     // On Vercel, if container restarts, the memory is wiped. 
     // Fallback logic for Vercel (ideally use Firestore for this).
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     }
 
     if (Date.now() > storedData.expiresAt) {
-      global.adminOtpStore.delete("admin@onlinewishes.com");
+      global.adminOtpStore.delete("admin@onlinewishes.in");
       return res.status(400).json({ error: "OTP code expired. Please request a new code." });
     }
 
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     }
 
     // OTP Verified
-    global.adminOtpStore.delete("admin@onlinewishes.com");
+    global.adminOtpStore.delete("admin@onlinewishes.in");
     
     res.json({
       success: true,
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
       user: {
         id: "admin-master-id",
         name: "Master Admin",
-        email: "admin@onlinewishes.com",
+        email: "admin@onlinewishes.in",
         role: "admin",
       },
     });

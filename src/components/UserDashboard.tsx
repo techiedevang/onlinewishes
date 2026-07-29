@@ -62,60 +62,10 @@ export function UserDashboard({
   const [passcodeSuccess, setPasscodeSuccess] = useState<string | null>(null);
 
   // User Websites List
-  const [userProjects, setUserProjects] = useState<SavedProject[]>([
-    {
-      id: 'proj-2101',
-      title: 'Besties Forever 21 Memories',
-      recipientName: 'Ananya Kapoor',
-      templateId: 'bestie-21',
-      subdomain: 'ananya-bestie-21',
-      publishedUrl: 'https://onlinewishes.in/p/ananya-bestie-21',
-      createdAt: '2026-07-20 14:32',
-      status: 'published',
-      views: 342,
-    },
-    {
-      id: 'proj-2102',
-      title: 'Romantic Anniversary Vault',
-      recipientName: 'Rohan Sharma',
-      templateId: 'romantic-vault',
-      subdomain: 'rohan-love-vault',
-      publishedUrl: 'https://onlinewishes.in/p/rohan-love-vault',
-      createdAt: '2026-07-24 18:10',
-      status: 'published',
-      views: 189,
-    },
-  ]);
+  const [userProjects, setUserProjects] = useState<SavedProject[]>([]);
 
   // User Payments List
-  const [userPayments, setUserPayments] = useState<PaymentTransaction[]>([
-    {
-      id: 'pay-90812',
-      orderId: 'order_OW_20260720_01',
-      userEmail: currentUser.email,
-      userName: currentUser.name,
-      amount: 199,
-      currency: 'INR',
-      templateTitle: 'Bestie 21-Photo Surprise Website (Pro Pass)',
-      paymentGateway: 'Razorpay UPI',
-      status: 'SUCCESS',
-      createdAt: '2026-07-20 14:30',
-      receiptUrl: '#',
-    },
-    {
-      id: 'pay-90884',
-      orderId: 'order_OW_20260724_08',
-      userEmail: currentUser.email,
-      userName: currentUser.name,
-      amount: 300,
-      currency: 'INR',
-      templateTitle: 'Bespoke Custom Website (Lifetime VIP Hosting)',
-      paymentGateway: 'Google Pay',
-      status: 'SUCCESS',
-      createdAt: '2026-07-24 18:08',
-      receiptUrl: '#',
-    },
-  ]);
+  const [userPayments, setUserPayments] = useState<PaymentTransaction[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
 

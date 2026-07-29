@@ -8,6 +8,8 @@ import {
   Mic, MessageSquare, Phone, ExternalLink, Globe, Volume2, Sparkles, Send
 } from 'lucide-react';
 import { fetchCustomWebsiteRequests, updateCustomWebsiteRequestStatus } from '../lib/customRequestService';
+import { db } from '../lib/firebase';
+import { collection, getDocs, query, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 interface AdminDashboardProps {
   currentUser: User | null;
@@ -38,8 +40,90 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
   useEffect(() => {
     if (isAdminAuthenticated) {
       loadCustomRequests();
+      loadCloudAdminData();
     }
   }, [isAdminAuthenticated]);
+
+  const loadCloudAdminData = async () => {
+    try {
+      // 1. Fetch Users from Firestore
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const loadedUsers: User[] = [];
+      if (!usersSnap.empty) {
+        usersSnap.forEach((docSnap) => {
+          const d = docSnap.data();
+          loadedUsers.push({
+            id: docSnap.id,
+            name: d.name || d.displayName || 'Unnamed User',
+            email: d.email || '',
+            role: d.role || 'user',
+            mfaEnabled: d.mfaEnabled || false,
+          });
+        });
+      }
+      // Ensure the master admin is always listed
+      if (!loadedUsers.some(u => u.email === 'admin@onlinewishes.in')) {
+        loadedUsers.push({
+          id: 'admin-master-id',
+          name: 'Master Admin',
+          email: 'admin@onlinewishes.in',
+          role: 'admin',
+          mfaEnabled: true
+        });
+      }
+      setUsersList(loadedUsers);
+
+      // 2. Fetch Scrapbooks from Firestore
+      const scrapbooksSnap = await getDocs(collection(db, 'scrapbooks'));
+      if (!scrapbooksSnap.empty) {
+        const loadedWishes: SavedProject[] = [];
+        scrapbooksSnap.forEach((docSnap) => {
+          const d = docSnap.data();
+          loadedWishes.push({
+            id: docSnap.id,
+            title: d.title || `${d.recipientName || 'Bestie'}'s Surprise Page`,
+            recipientName: d.recipientName || 'Bestie',
+            templateId: d.occasion || 'bestie-21',
+            subdomain: d.subdomain || docSnap.id,
+            publishedUrl: `https://onlinewishes.in/p/${d.subdomain || docSnap.id}`,
+            createdAt: d.createdAt ? d.createdAt.substring(0, 16).replace('T', ' ') : new Date().toISOString().substring(0, 10),
+            status: 'published',
+            views: d.views || 1,
+          });
+        });
+        setPublishedWishes(loadedWishes);
+      } else {
+        setPublishedWishes([]);
+      }
+
+      // 3. Fetch Payments from Firestore
+      const paymentsSnap = await getDocs(collection(db, 'payments'));
+      if (!paymentsSnap.empty) {
+        const loadedTxns: PaymentTransaction[] = [];
+        paymentsSnap.forEach((docSnap) => {
+          const d = docSnap.data();
+          loadedTxns.push({
+            id: docSnap.id,
+            orderId: d.orderId || docSnap.id,
+            userEmail: d.userEmail || '',
+            userName: d.userName || 'Anonymous',
+            amount: d.amount || 199,
+            currency: d.currency || 'INR',
+            templateTitle: d.templateTitle || 'Surprise Website License',
+            paymentGateway: d.paymentGateway || 'Razorpay UPI',
+            status: d.status || 'SUCCESS',
+            createdAt: d.createdAt ? d.createdAt.replace('T', ' ').substring(0, 19) : new Date().toISOString().substring(0, 10),
+            receiptUrl: d.receiptUrl || '#',
+          });
+        });
+        setTransactions(loadedTxns);
+      } else {
+        setTransactions([]);
+      }
+    } catch (err) {
+      console.log('Admin dashboard cloud load note:', err);
+    }
+  };
 
   const loadCustomRequests = async () => {
     setIsLoadingRequests(true);
@@ -79,118 +163,10 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
   const [newOrderTemplate, setNewOrderTemplate] = useState('Box of 21 Wishes Premium');
   const [newOrderGateway, setNewOrderGateway] = useState<'Razorpay UPI' | 'PhonePe QR' | 'Credit/Debit Card' | 'NetBanking' | 'Google Pay'>('Razorpay UPI');
 
-  // Initial Mock Payment Transactions
-  const [transactions, setTransactions] = useState<PaymentTransaction[]>([
-    {
-      id: 'TXN-90211',
-      orderId: 'ORD-2026-8801',
-      userEmail: 'priya.sharma@gmail.com',
-      userName: 'Priya Sharma',
-      amount: 199,
-      currency: 'INR',
-      templateTitle: 'Box of 21 Wishes & Secrets',
-      paymentGateway: 'Razorpay UPI',
-      status: 'SUCCESS',
-      createdAt: '2026-07-28 01:15:22',
-      receiptUrl: '#receipt-8801',
-    },
-    {
-      id: 'TXN-90212',
-      orderId: 'ORD-2026-8802',
-      userEmail: 'rohit.verma@yahoo.com',
-      userName: 'Rohit Verma',
-      amount: 189,
-      currency: 'INR',
-      templateTitle: 'Interactive Love Story Timeline',
-      paymentGateway: 'PhonePe QR',
-      status: 'SUCCESS',
-      createdAt: '2026-07-28 00:48:10',
-      receiptUrl: '#receipt-8802',
-    },
-    {
-      id: 'TXN-90213',
-      orderId: 'ORD-2026-8803',
-      userEmail: 'ananya.k@hotmail.com',
-      userName: 'Ananya Kapoor',
-      amount: 300,
-      currency: 'INR',
-      templateTitle: 'VIP Bespoke Custom Website',
-      paymentGateway: 'Credit/Debit Card',
-      status: 'SUCCESS',
-      createdAt: '2026-07-27 23:12:05',
-      receiptUrl: '#receipt-8803',
-    },
-    {
-      id: 'TXN-90214',
-      orderId: 'ORD-2026-8804',
-      userEmail: 'kabir.singh@gmail.com',
-      userName: 'Kabir Singh',
-      amount: 169,
-      currency: 'INR',
-      templateTitle: 'Bestie Memory Scrapbook Wall',
-      paymentGateway: 'Google Pay',
-      status: 'PENDING',
-      createdAt: '2026-07-27 22:04:19',
-    },
-    {
-      id: 'TXN-90215',
-      orderId: 'ORD-2026-8805',
-      userEmail: 'sneha.patel@gmail.com',
-      userName: 'Sneha Patel',
-      amount: 179,
-      currency: 'INR',
-      templateTitle: 'Retro Arcade Memory Game',
-      paymentGateway: 'Razorpay UPI',
-      status: 'REFUNDED',
-      createdAt: '2026-07-27 19:30:00',
-    },
-  ]);
-
-  // Registered Users list
-  const [usersList, setUsersList] = useState<User[]>([
-    { id: 'usr-101', name: 'Priya Sharma', email: 'priya.sharma@gmail.com', role: 'user', mfaEnabled: false },
-    { id: 'usr-102', name: 'Rohit Verma', email: 'rohit.verma@yahoo.com', role: 'user', mfaEnabled: true },
-    { id: 'usr-103', name: 'System Admin', email: 'admin@onlinewishes.in', role: 'admin', mfaEnabled: true },
-    { id: 'usr-104', name: 'Ananya Kapoor', email: 'ananya.k@hotmail.com', role: 'user', mfaEnabled: false },
-    { id: 'usr-105', name: 'Kabir Singh', email: 'kabir.singh@gmail.com', role: 'user', mfaEnabled: false },
-  ]);
-
-  // Wish Projects list
-  const [publishedWishes, setPublishedWishes] = useState<SavedProject[]>([
-    {
-      id: 'wsh-1',
-      title: 'Priya & Riya Bestie Memory Wall',
-      recipientName: 'Riya Sharma',
-      templateId: 'box21',
-      subdomain: 'riya-forever',
-      publishedUrl: 'https://onlinewishes.in/v/riya-forever',
-      createdAt: '2026-07-28 01:15',
-      status: 'published',
-      views: 342,
-    },
-    {
-      id: 'wsh-2',
-      title: 'Happy 25th Birthday Rohit',
-      recipientName: 'Rohit Verma',
-      templateId: 'love_story',
-      subdomain: 'rohit-25th',
-      publishedUrl: 'https://onlinewishes.in/v/rohit-25th',
-      createdAt: '2026-07-28 00:48',
-      status: 'published',
-      views: 189,
-    },
-    {
-      id: 'wsh-3',
-      title: 'Anniversary Surprise for Sneha',
-      recipientName: 'Sneha Patel',
-      templateId: 'vintage',
-      subdomain: 'sneha-love',
-      publishedUrl: 'https://onlinewishes.in/v/sneha-love',
-      createdAt: '2026-07-27 21:00',
-      status: 'published',
-      views: 512,
-    },
-  ]);
+  // Initial Real-time/Cloud states instead of fake data
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
+  const [usersList, setUsersList] = useState<User[]>([]);
+  const [publishedWishes, setPublishedWishes] = useState<SavedProject[]>([]);
 
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -555,20 +531,6 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
                       ✉️ {emailStatusMessage}
                     </p>
                   )}
-                  <div className="bg-slate-950/90 p-2.5 rounded-xl border border-emerald-500/20 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Verification Code:</span>
-                      <span className="font-mono text-base font-black tracking-widest text-emerald-400">{generatedOtp}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleQuickFillOtp}
-                      className="text-xs bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold px-3 py-1.5 rounded-lg border border-emerald-500/40 transition-colors flex items-center space-x-1"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Auto Fill</span>
-                    </button>
-                  </div>
                 </div>
 
                 <div>

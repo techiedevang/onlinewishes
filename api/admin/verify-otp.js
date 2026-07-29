@@ -25,47 +25,71 @@ function getFirestoreConfig() {
 }
 
 async function getOtpFromFirestore(adminEmail) {
-  const { projectId, dbId, apiKey } = getFirestoreConfig();
-  if (!apiKey) {
-    throw new Error("Configuration Error: API Key not found");
+  // Try retrieving from in-memory cache first
+  global.localOtpStore = global.localOtpStore || new Map();
+  const memoryData = global.localOtpStore.get(adminEmail);
+  if (memoryData && Date.now() <= memoryData.expiresAt) {
+    console.log("Using valid in-memory OTP for verification");
+    return memoryData;
   }
 
-  const docId = encodeURIComponent(adminEmail);
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
+  // If not found in memory, retrieve from Firestore
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) {
+      console.warn("Firestore Warning: API Key not found. Cannot retrieve from Firestore.");
+      return null;
+    }
 
-  const response = await fetch(url);
-  if (response.status === 404) {
+    const docId = encodeURIComponent(adminEmail);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
+
+    const response = await fetch(url);
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn(`Firestore read warning: ${response.statusText} - ${errorText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const code = data.fields?.code?.stringValue;
+    const expiresAt = Number(data.fields?.expiresAt?.stringValue || "0");
+
+    return { code, expiresAt };
+  } catch (err) {
+    console.warn("Firestore read error (proceeding with in-memory check):", err);
     return null;
   }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Firestore read failed: ${response.statusText} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const code = data.fields?.code?.stringValue;
-  const expiresAt = Number(data.fields?.expiresAt?.stringValue || "0");
-
-  return { code, expiresAt };
 }
 
 async function deleteOtpFromFirestore(adminEmail) {
-  const { projectId, dbId, apiKey } = getFirestoreConfig();
-  if (!apiKey) {
-    throw new Error("Configuration Error: API Key not found");
-  }
+  // Delete from in-memory cache
+  global.localOtpStore = global.localOtpStore || new Map();
+  global.localOtpStore.delete(adminEmail);
 
-  const docId = encodeURIComponent(adminEmail);
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) {
+      return;
+    }
 
-  const response = await fetch(url, {
-    method: 'DELETE'
-  });
+    const docId = encodeURIComponent(adminEmail);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`Firestore delete failed: ${response.statusText} - ${errorText}`);
+    const response = await fetch(url, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn(`Firestore delete warning: ${response.statusText} - ${errorText}`);
+    }
+  } catch (err) {
+    console.warn("Firestore delete error:", err);
   }
 }
 

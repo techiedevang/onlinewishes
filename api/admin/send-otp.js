@@ -26,32 +26,43 @@ function getFirestoreConfig() {
 }
 
 async function saveOtpToFirestore(adminEmail, otpCode, expiresAt) {
-  const { projectId, dbId, apiKey } = getFirestoreConfig();
-  if (!apiKey) {
-    throw new Error("Configuration Error: API Key not found");
-  }
+  // Always save to in-memory store first as a fast fallback/cache
+  global.localOtpStore = global.localOtpStore || new Map();
+  global.localOtpStore.set(adminEmail, { code: otpCode, expiresAt });
 
-  const docId = encodeURIComponent(adminEmail);
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
-
-  const body = {
-    fields: {
-      code: { stringValue: otpCode },
-      expiresAt: { stringValue: String(expiresAt) }
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) {
+      console.warn("Firestore Warning: API Key not found. Proceeding with in-memory storage.");
+      return;
     }
-  };
 
-  const response = await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
+    const docId = encodeURIComponent(adminEmail);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}`;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Firestore save failed: ${response.statusText} - ${errorText}`);
+    const body = {
+      fields: {
+        code: { stringValue: otpCode },
+        expiresAt: { stringValue: String(expiresAt) }
+      }
+    };
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn(`Firestore save warning: ${response.statusText} - ${errorText}`);
+    } else {
+      console.log("Successfully saved OTP to Firestore.");
+    }
+  } catch (err) {
+    console.warn("Firestore save error (proceeding with in-memory fallback):", err);
   }
 }
 

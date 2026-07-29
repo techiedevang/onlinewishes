@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import Razorpay from "razorpay";
 import SpotifyWebApi from "spotify-web-api-node";
@@ -199,25 +200,54 @@ async function startServer() {
     }
   });
 
-  // Serve Sitemap and Robots explicitly with correct XML/Text MIME types
-  app.get("/sitemap*.xml", (req, res) => {
+  // Serve Sitemap explicitly with correct XML MIME types and robust error handling
+  app.get("/sitemap*.xml", (req, res, next) => {
     const filename = req.path.split("/").pop();
+    if (!filename) {
+      return res.status(404).send("Sitemap not found");
+    }
+
+    const publicPath = path.join(process.cwd(), "public", filename);
+    const distPath = path.join(process.cwd(), "dist", filename);
+
     res.type("application/xml");
-    const distSitemap = path.join(process.cwd(), "dist", filename);
-    const publicSitemap = path.join(process.cwd(), "public", filename);
-    res.sendFile(publicSitemap, (err) => {
-      if (err) res.sendFile(distSitemap);
-    });
+    res.setHeader("Cache-Control", "public, max-age=3600");
+
+    if (fs.existsSync(publicPath)) {
+      return res.sendFile(publicPath, (err) => {
+        if (err && !res.headersSent) {
+          next(err);
+        }
+      });
+    } else if (fs.existsSync(distPath)) {
+      return res.sendFile(distPath, (err) => {
+        if (err && !res.headersSent) {
+          next(err);
+        }
+      });
+    } else {
+      console.warn(`Sitemap file not found: ${filename}`);
+      return res.status(404).send(
+        `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`
+      );
+    }
   });
 
   // Old route kept for safety if needed, but above handles it
-  app.get("/old-sitemap.xml", (req, res) => {
+  app.get("/old-sitemap.xml", (req, res, next) => {
     res.type("application/xml");
     const distSitemap = path.join(process.cwd(), "dist", "sitemap.xml");
     const publicSitemap = path.join(process.cwd(), "public", "sitemap.xml");
-    res.sendFile(publicSitemap, (err) => {
-      if (err) res.sendFile(distSitemap);
-    });
+    
+    if (fs.existsSync(publicSitemap)) {
+      return res.sendFile(publicSitemap, (err) => {
+        if (err && !res.headersSent) next(err);
+      });
+    } else {
+      return res.sendFile(distSitemap, (err) => {
+        if (err && !res.headersSent) next(err);
+      });
+    }
   });
 
   // API route to fetch images from Firestore
@@ -250,13 +280,23 @@ async function startServer() {
     }
   });
 
-  app.get("/robots.txt", (req, res) => {
+  app.get("/robots.txt", (req, res, next) => {
     res.type("text/plain");
-    const distRobots = path.join(process.cwd(), "dist", "robots.txt");
+    res.setHeader("Cache-Control", "public, max-age=86400");
     const publicRobots = path.join(process.cwd(), "public", "robots.txt");
-    res.sendFile(publicRobots, (err) => {
-      if (err) res.sendFile(distRobots);
-    });
+    const distRobots = path.join(process.cwd(), "dist", "robots.txt");
+
+    if (fs.existsSync(publicRobots)) {
+      return res.sendFile(publicRobots, (err) => {
+        if (err && !res.headersSent) next(err);
+      });
+    } else if (fs.existsSync(distRobots)) {
+      return res.sendFile(distRobots, (err) => {
+        if (err && !res.headersSent) next(err);
+      });
+    } else {
+      return res.send("User-agent: *\nAllow: /\nSitemap: https://onlinewishes.in/sitemap.xml");
+    }
   });
 
   // Vite middleware for development

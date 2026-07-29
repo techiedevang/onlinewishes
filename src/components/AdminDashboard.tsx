@@ -343,9 +343,9 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
           setGeneratedOtp(data.fallbackOtp);
         }
         if (data.emailSent) {
-          setEmailStatusMessage(`Real verification email sent successfully! Please check your authorized inbox/spam.`);
+          setEmailStatusMessage(data.message || `Verification code sent successfully. Please check your authorized inbox or spam folder.`);
         } else {
-          setEmailStatusMessage(data.message || `OTP generated. (SMTP not configured)`);
+          setEmailStatusMessage(data.message || `Verification code generated successfully.`);
         }
         setOtpCountdown(60);
 

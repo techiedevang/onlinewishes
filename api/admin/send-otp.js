@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     
     global.adminOtpStore.set("admin@onlinewishes.in", { code: otpCode, expiresAt });
 
-    const recipientEmail = "codelearnpoint@gmail.com";
+    const recipientEmail = process.env.ADMIN_RECIPIENT_EMAIL || process.env.SMTP_USER || "itsmedevu16@gmail.com";
     const transporter = getTransporter();
     
     let emailSent = false;
@@ -80,8 +80,8 @@ export default async function handler(req, res) {
       emailError,
       recipient: recipientEmail,
       message: emailSent
-        ? `Real OTP email sent to ${recipientEmail}!`
-        : `OTP code generated for ${recipientEmail}.`,
+        ? "Verification code sent successfully to your authorized email address."
+        : "Verification code generated successfully.",
       fallbackOtp: emailSent ? undefined : otpCode,
     });
   } catch (err) {

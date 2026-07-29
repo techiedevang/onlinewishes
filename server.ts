@@ -63,7 +63,7 @@ async function startServer() {
 
       adminOtpStore.set("admin@onlinewishes.in", { code: otpCode, expiresAt });
 
-      const recipientEmail = "codelearnpoint@gmail.com";
+      const recipientEmail = process.env.ADMIN_RECIPIENT_EMAIL || process.env.SMTP_USER || "itsmedevu16@gmail.com";
       const transporter = getTransporter();
 
       let emailSent = false;
@@ -101,8 +101,8 @@ async function startServer() {
         emailError,
         recipient: "registered secure inbox",
         message: emailSent
-          ? `Real OTP email sent successfully!`
-          : `OTP code generated successfully.`,
+          ? "Verification code sent successfully to your authorized email address."
+          : "Verification code generated successfully.",
         fallbackOtp: emailSent ? undefined : otpCode,
       });
     } catch (err: any) {

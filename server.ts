@@ -7,8 +7,6 @@ import Razorpay from "razorpay";
 import SpotifyWebApi from "spotify-web-api-node";
 import nodemailer from "nodemailer";
 
-const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
-const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
 
 function getFirestoreConfig() {
   let projectId = process.env.FIRESTORE_PROJECT_ID;
@@ -18,8 +16,7 @@ function getFirestoreConfig() {
   try {
     const pathsToTry = [
       path.join(process.cwd(), "firebase-applet-config.json"),
-      path.join(_dirname, "firebase-applet-config.json"),
-      path.join(_dirname, "../firebase-applet-config.json")
+      path.join(process.cwd(), "../firebase-applet-config.json")
     ];
 
     let configContent = null;

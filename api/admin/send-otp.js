@@ -7,13 +7,12 @@ import { fileURLToPath } from "url";
 function getFirestoreConfig() {
   let projectId = process.env.FIRESTORE_PROJECT_ID;
   let dbId = process.env.FIRESTORE_DATABASE_ID;
-  let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
+  let apiKey = process.env.FIRESTORE_API_KEY;
 
   try {
     const pathsToTry = [
       path.join(process.cwd(), "firebase-applet-config.json"),
-      path.join(path.dirname(fileURLToPath(import.meta.url)), "../../firebase-applet-config.json"),
-      path.join(path.dirname(fileURLToPath(import.meta.url)), "../firebase-applet-config.json")
+      path.join(process.cwd(), "../firebase-applet-config.json")
     ];
 
     let configContent = null;

@@ -35,7 +35,7 @@ export function CustomAiIdeaModal({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [generatedBlueprint, setGeneratedBlueprint] = useState<CustomAiBlueprint | null>(null);
 
-  // Submit to Admin state
+  // Submit Request state
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedRequest, setSubmittedRequest] = useState<CustomWebsiteRequest | null>(null);
@@ -320,8 +320,8 @@ Respond strictly in valid JSON format.`;
       setSubmittedRequest(req);
       setIsSubmitted(true);
     } catch (err) {
-      console.error('Error sending request to admin:', err);
-      alert('Could not submit request to Admin. Please try again.');
+      console.error('Error sending request:', err);
+      alert('Could not submit request. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -364,31 +364,31 @@ Respond strictly in valid JSON format.`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-3xl shadow-2xl text-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pt-24 pb-12 px-4 flex items-center justify-center overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl shadow-2xl text-slate-900 dark:text-slate-100 overflow-hidden flex flex-col ">
         
         {/* Header */}
-        <div className="p-5 sm:p-6 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-rose-500 flex items-center justify-center text-white shadow-md shrink-0">
               <Bot className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg sm:text-xl font-extrabold flex items-center space-x-2">
+              <h3 className="text-lg sm:text-xl font-extrabold flex items-center space-x-2 text-slate-900 dark:text-white">
                 <span>Custom Website Idea Request</span>
                 <span className="bg-rose-500/20 text-rose-400 text-[10px] px-2 py-0.5 rounded-full border border-rose-500/30">
-                  ADMIN DIRECT
+                  CUSTOM AI
                 </span>
               </h3>
-              <p className="text-xs text-slate-400">
-                Write or record your idea — Admin will build your exact website & contact you on WhatsApp!
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Write or record your idea — Our team will build your exact custom website & contact you on WhatsApp!
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-xl"
+            className="p-2 text-slate-500 dark:text-slate-400 hover:text-white rounded-xl"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -407,37 +407,37 @@ Respond strictly in valid JSON format.`;
 
               <div>
                 <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 block mb-1">
-                  Request Received by Admin
+                  Request Received Successfully
                 </span>
                 <h4 className="text-xl font-black text-white">
                   🎉 Your Custom Website Request is Sent!
                 </h4>
-                <p className="text-xs text-slate-300 max-w-md mx-auto mt-2 leading-relaxed">
-                  Our Admin team has received your description{submittedRequest.audioUrl ? ' & voice note' : ''}.
+                <p className="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto mt-2 leading-relaxed">
+                  Our team has received your description{submittedRequest.audioUrl ? ' & voice note' : ''}.
                   We will contact you on WhatsApp at <span className="font-bold text-emerald-300">{submittedRequest.whatsappNumber}</span> shortly to design your custom website!
                 </p>
               </div>
 
-              <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-left space-y-2 text-xs">
-                <div className="flex justify-between border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Recipient Name:</span>
-                  <span className="font-bold text-slate-200">{submittedRequest.recipientName} ({submittedRequest.relationship})</span>
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 text-left space-y-2 text-xs">
+                <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <span className="text-slate-500 dark:text-slate-400">Recipient Name:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-200">{submittedRequest.recipientName} ({submittedRequest.relationship})</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">Requested Custom Link:</span>
+                <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <span className="text-slate-500 dark:text-slate-400">Requested Custom Link:</span>
                   <span className="font-bold text-rose-400 font-mono">onlinewishes.in/{submittedRequest.requestedSlug}</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">WhatsApp Contact:</span>
+                <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <span className="text-slate-500 dark:text-slate-400">WhatsApp Contact:</span>
                   <span className="font-bold text-emerald-400">{submittedRequest.whatsappNumber}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block mb-1">Written Idea Description:</span>
-                  <p className="bg-slate-900 p-2.5 rounded-lg text-slate-300 italic">{submittedRequest.clientPrompt}</p>
+                  <span className="text-slate-500 dark:text-slate-400 block mb-1">Written Idea Description:</span>
+                  <p className="bg-slate-100 dark:bg-slate-900 p-2.5 rounded-lg text-slate-600 dark:text-slate-300 italic">{submittedRequest.clientPrompt}</p>
                 </div>
                 {submittedRequest.audioUrl && (
                   <div className="pt-2">
-                    <span className="text-slate-400 block mb-1">Your Voice Note:</span>
+                    <span className="text-slate-500 dark:text-slate-400 block mb-1">Your Voice Note:</span>
                     <audio src={submittedRequest.audioUrl} controls className="w-full h-8" />
                   </div>
                 )}
@@ -446,7 +446,7 @@ Respond strictly in valid JSON format.`;
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                   onClick={onClose}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-colors"
+                  className="w-full py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors"
                 >
                   Done & Close
                 </button>
@@ -465,12 +465,12 @@ Respond strictly in valid JSON format.`;
             /* MAIN INPUT FORM */
             <div className="space-y-5">
               
-              <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50 space-y-4">
                 
                 {/* Recipient & Relationship */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
                       Recipient Name *
                     </label>
                     <input
@@ -478,12 +478,12 @@ Respond strictly in valid JSON format.`;
                       value={recipientName}
                       onChange={(e) => handleRecipientNameChange(e.target.value)}
                       placeholder="e.g. Ananya, Alex, Sarah"
-                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-100"
+                      className="w-full px-3.5 py-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-900 dark:text-slate-100"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
                       Relationship
                     </label>
                     <input
@@ -491,36 +491,36 @@ Respond strictly in valid JSON format.`;
                       value={relationship}
                       onChange={(e) => setRelationship(e.target.value)}
                       placeholder="e.g. Best Friend, Girlfriend, Sister"
-                      className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-100"
+                      className="w-full px-3.5 py-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-900 dark:text-slate-100"
                     />
                   </div>
                 </div>
 
                 {/* 1. WRITE FEATURE: Text Area */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1 flex items-center justify-between">
                     <span>1. Write Your Custom Idea & Demand *</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Text description</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">Text description</span>
                   </label>
                   <textarea
                     rows={3}
                     value={clientPrompt}
                     onChange={(e) => setClientPrompt(e.target.value)}
                     placeholder="Describe everything you want in detail: e.g. 'I want a retro cyberpunk gaming theme with neon glowing photos, 8-bit love song background, secret passcode quiz, and custom love timeline...'"
-                    className="w-full p-3.5 bg-slate-900 border border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-100 placeholder-slate-500"
+                    className="w-full p-3.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-900 dark:text-slate-100 placeholder-slate-500"
                   />
                 </div>
 
                 {/* Quick Prompts */}
                 <div className="space-y-1.5">
-                  <span className="text-[11px] font-bold text-slate-400">Click a sample idea prompt:</span>
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Click a sample idea prompt:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {sampleIdeas.map((idea, idx) => (
                       <button
                         key={idx}
                         type="button"
                         onClick={() => setClientPrompt(idea)}
-                        className="text-[10px] bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/70 px-2.5 py-1 rounded-lg text-left transition-colors"
+                        className="text-[10px] bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700/70 px-2.5 py-1 rounded-lg text-left transition-colors"
                       >
                         "{idea.slice(0, 42)}..."
                       </button>
@@ -529,8 +529,8 @@ Respond strictly in valid JSON format.`;
                 </div>
 
                 {/* 2. RECORD AUDIO FEATURE */}
-                <div className="pt-2 border-t border-slate-800">
-                  <label className="block text-xs font-bold text-slate-300 mb-2 flex items-center justify-between">
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2 flex items-center justify-between">
                     <span className="flex items-center space-x-1.5">
                       <Mic className="w-4 h-4 text-rose-400" />
                       <span>2. Record Audio Voice Note (Explain by speaking)</span>
@@ -540,7 +540,7 @@ Respond strictly in valid JSON format.`;
                     </span>
                   </label>
 
-                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col space-y-3">
+                  <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex flex-col space-y-3">
                     {!audioUrl ? (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
@@ -565,7 +565,7 @@ Respond strictly in valid JSON format.`;
                           )}
 
                           <div>
-                            <span className="text-xs font-bold text-slate-200 block">
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 block">
                               {isRecording ? (
                                 <span className="text-rose-400 animate-pulse flex items-center space-x-1.5">
                                   <span className="w-2 h-2 rounded-full bg-rose-500 inline-block animate-ping"></span>
@@ -575,7 +575,7 @@ Respond strictly in valid JSON format.`;
                                 'Click microphone to record voice note'
                               )}
                             </span>
-                            <span className="text-[11px] text-slate-400 block mt-0.5">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                               {isRecording ? 'Click stop button when finished speaking' : 'Explain your custom design request in your own words'}
                             </span>
                           </div>
@@ -602,7 +602,7 @@ Respond strictly in valid JSON format.`;
                           <button
                             type="button"
                             onClick={deleteAudio}
-                            className="text-slate-400 hover:text-rose-400 flex items-center space-x-1 text-[11px] transition-colors"
+                            className="text-slate-500 dark:text-slate-400 hover:text-rose-400 flex items-center space-x-1 text-[11px] transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Re-record</span>
@@ -619,37 +619,37 @@ Respond strictly in valid JSON format.`;
                 </div>
 
                 {/* 3. WHATSAPP NUMBER & REQUESTED LINK */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
                   
                   {/* WhatsApp Number */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center space-x-1.5">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1 flex items-center space-x-1.5">
                       <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>WhatsApp Number (Admin Contact) *</span>
+                      <span>WhatsApp Number for Contact *</span>
                     </label>
                     <div className="relative">
-                      <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                      <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-500 dark:text-slate-400" />
                       <input
                         type="tel"
                         value={whatsappNumber}
                         onChange={(e) => setWhatsappNumber(e.target.value)}
                         placeholder="e.g. +91 9876543210"
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs font-medium text-emerald-400 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium text-emerald-400 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">
-                      Admin will message you on this WhatsApp number with your finished website!
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">
+                      We will message you on this WhatsApp number with your finished website!
                     </span>
                   </div>
 
                   {/* Requested Link: onlinewishes.in/username */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center space-x-1.5">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1 flex items-center space-x-1.5">
                       <Globe className="w-3.5 h-3.5 text-purple-400" />
                       <span>Requested Website Link *</span>
                     </label>
-                    <div className="flex items-center bg-slate-900 border border-slate-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-purple-500">
-                      <span className="px-3 py-2.5 bg-slate-800/80 text-[11px] font-bold text-slate-400 border-r border-slate-700 shrink-0">
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-purple-500">
+                      <span className="px-3 py-2.5 bg-slate-200 dark:bg-slate-800/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 border-r border-slate-300 dark:border-slate-700 shrink-0">
                         onlinewishes.in/
                       </span>
                       <input
@@ -657,17 +657,17 @@ Respond strictly in valid JSON format.`;
                         value={requestedSlug}
                         onChange={(e) => setRequestedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                         placeholder="username"
-                        className="w-full px-3 py-2.5 bg-slate-900 text-xs font-mono font-bold text-purple-300 focus:outline-none"
+                        className="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-900 text-xs font-mono font-bold text-purple-300 focus:outline-none"
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-1 block">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">
                       Your website will be published live at <span className="text-purple-300 font-mono">onlinewishes.in/{requestedSlug || 'username'}</span>
                     </span>
                   </div>
 
                 </div>
 
-                {/* Primary Action Button: Submit to Admin */}
+                {/* Primary Action Button: Submit Request */}
                 <div className="pt-2 space-y-2">
                   <button
                     type="button"
@@ -683,12 +683,12 @@ Respond strictly in valid JSON format.`;
                     ) : isSaving ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
-                        <span>Sending Idea & Voice Note to Admin...</span>
+                        <span>Sending Idea & Voice Note...</span>
                       </>
                     ) : (
                       <>
                         <Send className="w-4 h-4 text-slate-950" />
-                        <span>Submit Idea to Admin & Request Website (Rs. 300)</span>
+                        <span>Submit Custom Idea & Request Website (Rs. 300)</span>
                       </>
                     )}
                   </button>
@@ -697,7 +697,7 @@ Respond strictly in valid JSON format.`;
                     type="button"
                     onClick={handleGenerateCustomIdea}
                     disabled={isAnalyzing || (!clientPrompt.trim() && !audioUrl)}
-                    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                    className="w-full py-2.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                   >
                     {isAnalyzing ? (
                       <>
@@ -719,7 +719,7 @@ Respond strictly in valid JSON format.`;
               {generatedBlueprint && (
                 <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-2xl border-2 border-rose-500/50 space-y-5 animate-fadeIn">
                   
-                  <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                     <div>
                       <div className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-1">
                         <Sparkles className="w-3 h-3" />
@@ -728,15 +728,15 @@ Respond strictly in valid JSON format.`;
                       <h4 className="text-xl font-extrabold text-white">
                         {generatedBlueprint.title}
                       </h4>
-                      <p className="text-xs text-slate-300 mt-1">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                         {generatedBlueprint.conceptDescription}
                       </p>
                     </div>
 
-                    <div className="bg-slate-800 p-3 rounded-2xl border border-slate-700 text-center min-w-[110px]">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Custom Charge</span>
+                    <div className="bg-slate-200 dark:bg-slate-800 p-3 rounded-2xl border border-slate-300 dark:border-slate-700 text-center min-w-[110px]">
+                      <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Custom Charge</span>
                       <span className="text-2xl font-black text-emerald-400">Rs. {generatedBlueprint.estimatedPrice}</span>
-                      <span className="text-[10px] text-slate-400 block">One-time payment</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">One-time payment</span>
                     </div>
                   </div>
 
@@ -747,7 +747,7 @@ Respond strictly in valid JSON format.`;
                     </h5>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {generatedBlueprint.features.map((feat, fIdx) => (
-                        <div key={fIdx} className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex items-center space-x-2 text-xs text-slate-200">
+                        <div key={fIdx} className="bg-slate-100 dark:bg-slate-900/80 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center space-x-2 text-xs text-slate-700 dark:text-slate-200">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                           <span>{feat}</span>
                         </div>
@@ -762,13 +762,13 @@ Respond strictly in valid JSON format.`;
                       disabled={isProcessingPayment || isSaving || !whatsappNumber.trim()}
                       className="w-full sm:flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                     >
-                      <span>{isProcessingPayment ? 'Processing Payment...' : isSaving ? 'Submitting...' : 'Submit to Admin with WhatsApp Contact'}</span>
+                      <span>{isProcessingPayment ? 'Processing Payment...' : isSaving ? 'Submitting...' : 'Submit with WhatsApp Contact'}</span>
                       {!isProcessingPayment && !isSaving && <ArrowRight className="w-4 h-4" />}
                       {(isProcessingPayment || isSaving) && <RefreshCw className="w-4 h-4 animate-spin" />}
                     </button>
                     <button
                       onClick={handleConfirmAndLoadStudio}
-                      className="w-full sm:flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-1.5"
+                      className="w-full sm:flex-1 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center space-x-1.5"
                     >
                       <span>Open in Studio Preview</span>
                     </button>

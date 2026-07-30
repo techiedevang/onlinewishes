@@ -102,9 +102,10 @@ export function CustomizerStudio({
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [promoCodeInput, setPromoCodeInput] = useState('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [finalPrice, setFinalPrice] = useState<number | null>(null);
   const [promoMessage, setPromoMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleApplyPromoCode = (e?: React.FormEvent) => {
+  const handleApplyPromoCode = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setPromoMessage(null);
     const cleaned = promoCodeInput.trim().toUpperCase();
@@ -112,9 +113,30 @@ export function CustomizerStudio({
       setPromoMessage({ type: 'error', text: 'Please enter a redeem code.' });
       return;
     }
-    if (cleaned === 'FIRST10') {
-      setDiscountPercent(99);
-      setPromoMessage({ type: 'success', text: 'Redeem code FIRST10 applied! 99% OFF unlocked.' });
+    if (cleaned === 'FIRSTWISH') {
+      if (!currentUser) {
+        setPromoMessage({ type: 'error', text: 'Please sign in to use this promo code.' });
+        return;
+      }
+      try {
+        setPromoMessage({ type: 'success', text: 'Verifying code...' });
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const { db } = await import('../lib/firebase');
+        
+        const qPay = query(collection(db, 'payments'), where('userEmail', '==', currentUser.email));
+        const paySnap = await getDocs(qPay);
+        
+        if (paySnap.size < 2) {
+          setFinalPrice(1);
+          setDiscountPercent(0);
+          setPromoMessage({ type: 'success', text: 'Redeem code FIRSTWISH applied! Price is Rs. 1.' });
+        } else {
+          setPromoMessage({ type: 'error', text: 'This promo code is only valid for your first 2 payments.' });
+        }
+      } catch (err) {
+        console.error(err);
+        setPromoMessage({ type: 'error', text: 'Failed to verify promo code.' });
+      }
     } else {
       setPromoMessage({ type: 'error', text: 'Invalid or expired redeem code.' });
     }
@@ -151,8 +173,8 @@ export function CustomizerStudio({
 
   const isCustomWebsite = customization.subdomain?.includes('custom') || selectedTemplate?.id?.includes('custom');
   const basePrice = isCustomWebsite ? 300 : (selectedTemplate?.price || TEMPLATES.find(t => t.id === customization.bgTheme)?.price || 199);
-  const discountAmount = discountPercent > 0 ? Math.round((basePrice * discountPercent) / 100) : 0;
-  const payablePrice = Math.max(1, basePrice - discountAmount);
+  const discountAmount = finalPrice !== null ? basePrice - finalPrice : (discountPercent > 0 ? Math.round((basePrice * discountPercent) / 100) : 0);
+  const payablePrice = finalPrice !== null ? finalPrice : Math.max(1, basePrice - discountAmount);
 
   const checkIsLoggedIn = (): boolean => {
     if (currentUser) return true;
@@ -2534,14 +2556,14 @@ export function CustomizerStudio({
           <div className="p-6">
             <div className="text-center mb-5">
               <p className="text-slate-500 text-xs font-medium mb-1">OnlineWishes Digital Scrapbook</p>
-              {discountPercent > 0 ? (
+              {(discountPercent > 0 || finalPrice !== null) ? (
                 <div className="space-y-1">
                   <div className="flex items-center justify-center space-x-2">
                     <span className="text-slate-400 text-lg line-through font-bold">Rs. {basePrice}.00</span>
                     <span className="text-3xl font-black text-emerald-600">Rs. {payablePrice}.00</span>
                   </div>
                   <p className="text-xs text-emerald-600 font-bold bg-emerald-50 py-1 px-2.5 rounded-full inline-block border border-emerald-200">
-                    🎉 You saved Rs. {discountAmount} (99% OFF)
+                    🎉 You saved Rs. {discountAmount} {finalPrice === 1 ? '' : '(99% OFF)'}
                   </p>
                 </div>
               ) : (
@@ -2556,12 +2578,12 @@ export function CustomizerStudio({
                   <label className="block text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                     Redeem Promo Code
                   </label>
-                  <span className="text-[10px] text-rose-500 font-bold">Code: FIRST10</span>
+                  
                 </div>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="e.g. FIRST10"
+                    placeholder="e.g. SAVE20"
                     value={promoCodeInput}
                     onChange={(e) => setPromoCodeInput(e.target.value)}
                     className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-blue-600 uppercase font-mono tracking-wider text-slate-900 bg-white"

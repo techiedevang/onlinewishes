@@ -5,8 +5,6 @@ import { User } from '../types';
 import { Logo } from './Logo';
 
 interface HeaderProps {
-  darkMode: boolean;
-  onToggleDarkMode: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   currentUser: User | null;
@@ -18,8 +16,6 @@ interface HeaderProps {
 }
 
 export function Header({
-  darkMode,
-  onToggleDarkMode,
   activeTab,
   setActiveTab,
   currentUser,
@@ -72,7 +68,7 @@ export function Header({
             return (
               <a
                 key={item.id}
-                href={`#${item.id}`}
+                href={item.id === 'home' ? '/' : `/${item.id}`}
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveTab(item.id);
@@ -105,15 +101,7 @@ export function Header({
         {/* Right Tools & User Actions */}
         <div className="flex items-center space-x-2">
           
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={onToggleDarkMode}
-            className="hidden lg:flex p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
+          
           {/* Admin Dashboard Trigger (If Admin user logged in) */}
           {currentUser && currentUser.role === 'admin' && (
             <button
@@ -219,7 +207,7 @@ export function Header({
             return (
               <a
                 key={item.id}
-                href={`#${item.id}`}
+                href={item.id === 'home' ? '/' : `/${item.id}`}
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveTab(item.id);
@@ -250,19 +238,7 @@ export function Header({
             </button>
           )}
 
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button
-              onClick={() => {
-                onToggleDarkMode();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
-          </div>
-
+          
           {currentUser && currentUser.role === 'admin' && (
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
               <button

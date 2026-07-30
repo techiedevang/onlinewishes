@@ -8,6 +8,7 @@ interface TemplateGalleryProps {
   onSelectTemplateToBuild: (template: Template) => void;
   onOpenReviewsModal: (template: Template) => void;
   onOpenCustomAiModal?: () => void;
+  onViewDetails?: (template: Template) => void;
 }
 
 export function TemplateGallery({
@@ -15,6 +16,7 @@ export function TemplateGallery({
   onSelectTemplateToBuild,
   onOpenReviewsModal,
   onOpenCustomAiModal,
+  onViewDetails,
 }: TemplateGalleryProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -166,11 +168,11 @@ export function TemplateGallery({
                 {/* Hover Preview Overlay Trigger */}
                 <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
                   <button
-                    onClick={() => onPreviewTemplate(template)}
+                    onClick={() => onViewDetails ? onViewDetails(template) : onPreviewTemplate(template)}
                     className="px-4 py-2.5 bg-white text-slate-900 font-bold text-xs rounded-xl shadow-lg hover:bg-rose-50 flex items-center space-x-2 transform translate-y-2 group-hover:translate-y-0 transition-transform"
                   >
                     <Maximize2 className="w-4 h-4 text-rose-500" />
-                    <span>Expand Full-Screen Preview</span>
+                    <span>View Details</span>
                   </button>
                 </div>
               </div>
@@ -218,21 +220,16 @@ export function TemplateGallery({
                 {/* Actions */}
                 <div className="pt-2 flex items-center gap-2">
                   <button
-                    onClick={() => onPreviewTemplate(template)}
+                    onClick={() => onViewDetails ? onViewDetails(template) : onPreviewTemplate(template)}
                     className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-700 hover:bg-rose-50 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 hover:text-rose-600 text-xs font-bold rounded-xl transition-colors flex items-center justify-center space-x-1"
-                    title="See a full-screen interactive demo"
+                    title="View details and features"
                   >
                     <Maximize2 className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Expand Preview</span>
+                    <span>View Details</span>
                   </button>
+                  
 
-                  <button
-                    onClick={() => onSelectTemplateToBuild(template)}
-                    className="flex-1 py-2 px-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-1"
-                  >
-                    <span>Customize & Buy (Rs. {template.price})</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  
                 </div>
 
               </div>

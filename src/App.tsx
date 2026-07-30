@@ -9,6 +9,7 @@ import { TEMPLATES, INITIAL_MEMORIES_21, getDefaultCustomization } from './data/
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { TemplateGallery } from './components/TemplateGallery';
+import { TemplateDetailsPage } from './components/TemplateDetailsPage';
 import { CustomizerStudio } from './components/CustomizerStudio';
 import { PricingSection } from './components/PricingSection';
 import { LivePreviewModal } from './components/LivePreviewModal';
@@ -23,7 +24,7 @@ import { UserDashboard } from './components/UserDashboard';
 import { OfflineBanner } from './components/OfflineBanner';
 import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
 import { GoogleAd } from './components/GoogleAd';
-import { updatePageMetadata, updateMetadataForTemplate } from './utils/seo';
+import { useDynamicSEO } from './hooks/useDynamicSEO';
 import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart, Instagram } from 'lucide-react';
 import { loadScrapbookFromCloud } from './lib/scrapbookService';
 import { InteractiveSurpriseTemplate } from './components/InteractiveSurpriseTemplate';
@@ -45,8 +46,38 @@ function AnimatedSection({ children, className = "", delay = 0 }: { children: Re
 }
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [rawActiveTab, setRawActiveTab] = useState<string>('home');
+
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  
+  useEffect(() => {
+    const handleLocationChange = () => setCurrentPath(window.location.pathname);
+    
+    // Monkey patch pushState/replaceState to detect all URL changes
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function(...args) {
+      const result = originalPushState.apply(this, args);
+      handleLocationChange();
+      return result;
+    };
+    
+    const originalReplaceState = window.history.replaceState;
+    window.history.replaceState = function(...args) {
+      const result = originalReplaceState.apply(this, args);
+      handleLocationChange();
+      return result;
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
+
+
+    const [rawActiveTab, setRawActiveTab] = useState<string>('home');
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem('onlinewishes_current_user');
@@ -57,20 +88,39 @@ export default function App() {
     return null;
   });
 
-  const setActiveTab = (newTab: string) => {
+    const setActiveTab = (newTab: string) => {
     setRawActiveTab(newTab);
-    if (!window.location.pathname.startsWith('/p/')) {
-      window.history.pushState({ tab: newTab }, "", `#${newTab}`);
+    
+    // Don't push a path if we are on a path that implies the tab
+    const path = window.location.pathname;
+    if (path.startsWith('/p/')) return;
+    
+    // If the path is /template-name and the tab is template-detail, don't change
+    if (newTab === 'template-detail' && path.length > 1 && !path.includes('/customize')) {
       window.scrollTo(0, 0);
+      return;
     }
+    
+    // If the path is /template-name/customize and the tab is customizer, don't change
+    if (newTab === 'customizer' && path.endsWith('/customize')) {
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Otherwise, push the clean path
+    const targetPath = newTab === 'home' ? '/' : `/${newTab}`;
+    if (path !== targetPath) {
+      window.history.pushState({ tab: newTab }, "", targetPath);
+    }
+    window.scrollTo(0, 0);
   };
 
   const activeTab = rawActiveTab;
 
   // Modals
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
+  const [templateDetail, setTemplateDetail] = useState<Template | null>(null);
   const [reviewTemplate, setReviewTemplate] = useState<Template | null>(null);
-  const [showCustomAiModal, setShowCustomAiModal] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authInitialMode, setAuthInitialMode] = useState<'signin' | 'signup'>('signin');
   const [showUserDashboard, setShowUserDashboard] = useState<boolean>(false);
@@ -78,50 +128,7 @@ export default function App() {
   const [policyTab, setPolicyTab] = useState<PolicyTab | null>(null);
   const [publishedToast, setPublishedToast] = useState<{ show: boolean; link: string } | null>(null);
 
-  useEffect(() => {
-    if (window.location.pathname.startsWith('/p/')) return;
-    
-    // Initialize hash based on state if missing
-    if (!window.location.hash) {
-      window.history.replaceState({ tab: rawActiveTab }, "", `#${rawActiveTab}`);
-    } else {
-      const initialTab = window.location.hash.replace('#', '');
-      if (initialTab) {
-        setRawActiveTab(initialTab);
-        window.history.replaceState({ tab: initialTab }, "", window.location.hash);
-      }
-    }
 
-    const handlePopState = (e: PopStateEvent) => {
-      // If any modal is open, close it, and DON'T change the tab.
-      if (previewTemplate || reviewTemplate || showCustomAiModal || showAuthModal || showUserDashboard || showAdminDashboard || policyTab) {
-        setPreviewTemplate(null);
-        setReviewTemplate(null);
-        setShowCustomAiModal(false);
-        setShowAuthModal(false);
-        setShowUserDashboard(false);
-        setShowAdminDashboard(false);
-        setPolicyTab(null);
-        // Push the current tab state back to keep history intact.
-        window.history.pushState({ tab: rawActiveTab }, "", `#${rawActiveTab}`);
-        return;
-      }
-
-      if (e.state && e.state.tab) {
-        setRawActiveTab(e.state.tab);
-      } else {
-        const hash = window.location.hash.replace('#', '');
-        if (hash) {
-          setRawActiveTab(hash);
-        } else {
-          setRawActiveTab('home');
-        }
-      }
-    };
-    
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [rawActiveTab, previewTemplate, reviewTemplate, showCustomAiModal, showAuthModal, showUserDashboard, showAdminDashboard, policyTab]);
 
   // Direct Scrapbook Loading States
   const [publishedScrapbook, setPublishedScrapbook] = useState<UserCustomization | null>(null);
@@ -172,24 +179,12 @@ export default function App() {
     }
   };
 
-  // Direct loading on mount
-  useEffect(() => {
-    const path = window.location.pathname;
-    let slug = '';
-    
-    if (path.startsWith('/p/')) {
-      slug = path.split('/p/')[1];
-    } else {
-      const searchParams = new URLSearchParams(window.location.search);
-      slug = searchParams.get('p') || searchParams.get('id') || searchParams.get('subdomain') || '';
-    }
+  
 
-    if (slug && slug.trim() !== '' && slug !== 'admin') {
-      loadSlug(slug.trim());
-    }
-  }, []);
+
 
   // Global Auth State Synchronization
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -330,58 +325,12 @@ A story forever to be told.`,
   });
 
   // Toggle Dark Mode
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  // Dynamic SEO Metadata updates
-  useLayoutEffect(() => {
-    if (publishedScrapbook) {
-      updatePageMetadata({
-        title: `${publishedScrapbook.recipientName}'s Custom Surprise Scrapbook`,
-        description: `Open this beautiful surprise scrapbook created with love for ${publishedScrapbook.recipientName} by ${publishedScrapbook.senderName || 'their friend'} on OnlineWishes.`,
-        ogTitle: `A Surprise for ${publishedScrapbook.recipientName}! ❤️`,
-        ogDescription: `Created by ${publishedScrapbook.senderName || 'their friend'} for ${publishedScrapbook.recipientName}. Open to unwrap the memories and messages!`,
-        ogImage: publishedScrapbook.ogImageUrl || (publishedScrapbook.memories && publishedScrapbook.memories.length > 0 ? publishedScrapbook.memories[0].imageUrl : undefined),
-        canonicalUrl: `https://onlinewishes.in/p/${publishedScrapbook.subdomain}`,
-        structuredData: {
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": `${publishedScrapbook.recipientName}'s Custom Surprise Scrapbook`,
-          "description": `Surprise scrapbook created for ${publishedScrapbook.recipientName}.`,
-          "url": `https://onlinewishes.in/p/${publishedScrapbook.subdomain}`,
-          "publisher": {
-            "@type": "Organization",
-            "name": "OnlineWishes",
-            "logo": {
-              "@type": "ImageObject",
-              "url": "https://onlinewishes.in/favicon.svg"
-            }
-          }
-        }
-      });
-    } else if (previewTemplate) {
-      updateMetadataForTemplate(previewTemplate.title, previewTemplate.category, previewTemplate.description, previewTemplate.thumbnail);
-    } else if (activeTab === 'customizer') {
-      updatePageMetadata({
-        title: `Customizing ${customization.recipientName}'s Surprise Page`,
-        description: `Personalize photos, custom love letters, background music, and secret passcode for ${customization.recipientName} on OnlineWishes.`,
-      });
-    } else if (showAdminDashboard) {
-      updatePageMetadata({
-        title: 'Admin Dashboard',
-        description: 'OnlineWishes administration dashboard and user management.',
-      });
-    } else {
-      updatePageMetadata(); // Default homepage metadata
-    }
-  }, [activeTab, previewTemplate, customization.recipientName, showAdminDashboard, publishedScrapbook]);
+  
 
   const handleSelectTemplateToBuild = (template: Template) => {
+    if (window.location.pathname !== `/${template.id}/customize`) {
+      window.history.pushState(null, '', `/${template.id}/customize`);
+    }
     let sound = 'rainy_cafe';
     if (template.id === 'romantic-love-story') sound = 'romantic_piano';
     else if (template.id === 'celestial-galaxy') sound = 'stargazing_night';
@@ -409,6 +358,63 @@ A story forever to be told.`,
     const elem = document.getElementById('customizer');
     if (elem) elem.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const path = window.location.pathname;
+      let slug = '';
+      
+      if (path.length > 1 && !path.startsWith('/p/') && !path.startsWith('/admin')) {
+        let isCustomize = false;
+        let possibleTemplateId = path.substring(1);
+        
+        if (possibleTemplateId.endsWith('/customize')) {
+           possibleTemplateId = possibleTemplateId.replace('/customize', '');
+           isCustomize = true;
+        }
+
+        const foundTemplate = TEMPLATES.find(t => t.id === possibleTemplateId);
+        if (foundTemplate) {
+          if (isCustomize) {
+            // Only set the tab and ensure we have the right template selected
+            setActiveTab('customizer');
+            if (customization.bgTheme !== foundTemplate.id) {
+               handleSelectTemplateToBuild(foundTemplate);
+            }
+          } else {
+            setTemplateDetail(foundTemplate);
+            setActiveTab('template-detail');
+          }
+          return;
+        }
+
+        // Handle other static routes
+        const knownTabs = ['templates', 'pricing', 'custom_AI', 'how-it-works', 'reviews', 'contact'];
+        if (knownTabs.includes(possibleTemplateId)) {
+           setActiveTab(possibleTemplateId);
+           return;
+        }
+      }
+
+      if (path === '/') {
+        setTemplateDetail(null);
+        setActiveTab('home');
+      }
+
+      if (path.startsWith('/p/')) {
+        slug = path.split('/p/')[1];
+      } else {
+        const searchParams = new URLSearchParams(window.location.search);
+        slug = searchParams.get('p') || searchParams.get('id') || searchParams.get('subdomain') || '';
+      }
+      if (slug && slug.trim() !== '' && slug !== 'admin') {
+        loadSlug(slug.trim());
+      }
+    };
+
+    handleLocationChange();
+  }, [currentPath]);
+
 
   const handleApplyAiBlueprint = (blueprint: CustomAiBlueprint, customData: UserCustomization) => {
     setCustomization(customData);
@@ -550,7 +556,7 @@ A story forever to be told.`,
   }
 
   return (
-    <div className={`min-h-screen max-w-full overflow-x-hidden bg-white dark:bg-zinc-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 font-sans relative ${darkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen max-w-full overflow-x-hidden bg-white dark:bg-zinc-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 font-sans relative`}>
       
       {/* Immersive Global Background Photo Wallpaper for Dark Mode */}
       <div 
@@ -567,15 +573,13 @@ A story forever to be told.`,
 
       {/* Persistent Navigation Header */}
       <Header
-        darkMode={darkMode}
-        onToggleDarkMode={() => setDarkMode(!darkMode)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         currentUser={currentUser}
         onOpenAuth={() => handleOpenAuth('signin')}
         onOpenUserDashboard={() => setShowUserDashboard(true)}
         onOpenAdmin={handleOpenAdmin}
-        onOpenCustomAiModal={() => setShowCustomAiModal(true)}
+        onOpenCustomAiModal={() => setActiveTab('custom_AI')}
       />
 
       {/* Main Container Views */}
@@ -598,14 +602,19 @@ A story forever to be told.`,
                 onPreviewTemplate={(tpl) => setPreviewTemplate(tpl)}
                 onSelectTemplateToBuild={handleSelectTemplateToBuild}
                 onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
-                onOpenCustomAiModal={() => setShowCustomAiModal(true)}
+                onOpenCustomAiModal={() => setActiveTab('custom_AI')}
+                onViewDetails={(tpl) => {
+                  window.history.pushState(null, '', '/' + tpl.id);
+                  setTemplateDetail(tpl);
+                  setActiveTab('template-detail');
+                }}
               />
             </AnimatedSection>
 
             <AnimatedSection delay={0.1}>
               <PricingSection
                 onSelectTemplateToBuild={handleSelectTemplateToBuild}
-                onOpenCustomAiModal={() => setShowCustomAiModal(true)}
+                onOpenCustomAiModal={() => setActiveTab('custom_AI')}
               />
             </AnimatedSection>
 
@@ -615,14 +624,35 @@ A story forever to be told.`,
           </>
         )}
 
+        
+        {activeTab === 'template-detail' && templateDetail && (
+          <AnimatedSection>
+            <TemplateDetailsPage
+              template={templateDetail}
+              onBack={() => {
+                window.history.pushState(null, '', '/');
+                setActiveTab('templates');
+              }}
+              onPreview={(tpl) => setPreviewTemplate(tpl)}
+              onSelectTemplateToBuild={handleSelectTemplateToBuild}
+              onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
+            />
+          </AnimatedSection>
+        )}
+
         {activeTab === 'templates' && (
           <AnimatedSection className="pt-4">
             <TemplateGallery
-              onPreviewTemplate={(tpl) => setPreviewTemplate(tpl)}
-              onSelectTemplateToBuild={handleSelectTemplateToBuild}
-              onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
-              onOpenCustomAiModal={() => setShowCustomAiModal(true)}
-            />
+                onPreviewTemplate={(tpl) => setPreviewTemplate(tpl)}
+                onSelectTemplateToBuild={handleSelectTemplateToBuild}
+                onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
+                onOpenCustomAiModal={() => setActiveTab('custom_AI')}
+                onViewDetails={(tpl) => {
+                  window.history.pushState(null, '', '/' + tpl.id);
+                  setTemplateDetail(tpl);
+                  setActiveTab('template-detail');
+                }}
+              />
           </AnimatedSection>
         )}
 
@@ -646,7 +676,16 @@ A story forever to be told.`,
           <AnimatedSection>
             <PricingSection
               onSelectTemplateToBuild={handleSelectTemplateToBuild}
-              onOpenCustomAiModal={() => setShowCustomAiModal(true)}
+              onOpenCustomAiModal={() => setActiveTab('custom_AI')}
+            />
+          </AnimatedSection>
+        )}
+
+        {activeTab === 'custom_AI' && (
+          <AnimatedSection>
+            <CustomAiIdeaModal
+              onClose={() => setActiveTab('home')}
+              onApplyBlueprint={handleApplyAiBlueprint}
             />
           </AnimatedSection>
         )}
@@ -696,14 +735,7 @@ A story forever to be told.`,
         />
       )}
 
-      {/* MODAL 3: CUSTOM AI IDEA ARCHITECT MODAL */}
-      {showCustomAiModal && (
-        <CustomAiIdeaModal
-          onClose={() => setShowCustomAiModal(false)}
-          onApplyBlueprint={handleApplyAiBlueprint}
-        />
-      )}
-
+      
       {/* MODAL 4: USER AUTH & MFA MODAL */}
       {showAuthModal && (
         <AuthModal
@@ -792,6 +824,21 @@ A story forever to be told.`,
           >
             Done
           </button>
+
+          <div className="pt-3 border-t border-slate-700/60 text-center space-y-2">
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              Thank you for visiting our website. We hope you enjoyed your experience and we'd love to hear your feedback!
+            </p>
+            <a
+              href="https://forms.gle/oqRTn9kFgxeR7VY18"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-colors gap-1.5 shadow-md"
+            >
+              <span>Give Feedback (Google Form)</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       )}
 

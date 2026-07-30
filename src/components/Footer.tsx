@@ -51,10 +51,10 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
               Templates
             </h4>
             <ul className="space-y-2 text-xs">
-              <li><a href="#templates" className="hover:text-rose-400 transition-colors">👭 Bestie 21-Photo Surprise</a></li>
-              <li><a href="#templates" className="hover:text-rose-400 transition-colors">❤️ Romantic Love Vault</a></li>
-              <li><a href="#templates" className="hover:text-rose-400 transition-colors">🎉 Birthday Confetti Cannon</a></li>
-              <li><a href="#templates" className="hover:text-rose-400 transition-colors">🌸 Sister Memory Tree</a></li>
+              <li><a href="/templates" className="hover:text-rose-400 transition-colors">👭 Bestie 21-Photo Surprise</a></li>
+              <li><a href="/templates" className="hover:text-rose-400 transition-colors">❤️ Romantic Love Vault</a></li>
+              <li><a href="/templates" className="hover:text-rose-400 transition-colors">🎉 Birthday Confetti Cannon</a></li>
+              <li><a href="/templates" className="hover:text-rose-400 transition-colors">🌸 Sister Memory Tree</a></li>
             </ul>
           </div>
 

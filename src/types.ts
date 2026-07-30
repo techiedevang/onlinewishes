@@ -148,6 +148,8 @@ export interface UserCustomization {
 }
 
 export interface User {
+  createdAt?: string;
+  lastLoginAt?: string;
   id: string;
   name: string;
   email: string;

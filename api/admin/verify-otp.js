@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -41,13 +42,7 @@ function getFirestoreConfig() {
 
 async function getOtpFromFirestore(adminEmail) {
   // Try retrieving from in-memory cache first
-  global.localOtpStore = global.localOtpStore || new Map();
-  const memoryData = global.localOtpStore.get(adminEmail);
-  if (memoryData && Date.now() <= memoryData.expiresAt) {
-    console.log("Using valid in-memory OTP for verification");
-    return memoryData;
-  }
-
+      
   // If not found in memory, retrieve from Firestore
   try {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
@@ -82,9 +77,7 @@ async function getOtpFromFirestore(adminEmail) {
 
 async function deleteOtpFromFirestore(adminEmail) {
   // Delete from in-memory cache
-  global.localOtpStore = global.localOtpStore || new Map();
-  global.localOtpStore.delete(adminEmail);
-
+    
   try {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) {
@@ -113,7 +106,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { adminEmail, otp } = req.body;
+    let bodyData = req.body || {};
+    if (typeof req.body === 'string') {
+      try { bodyData = JSON.parse(req.body); } catch(e) {}
+    }
+    const { adminEmail, otp } = bodyData;
     const targetAdmin = (adminEmail || "").trim().toLowerCase();
     
     if (targetAdmin !== "admin@onlinewishes.in") {
@@ -151,6 +148,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("Verify OTP Error:", err);
-    res.status(500).json({ error: "Failed to verify OTP" });
+    res.status(500).json({ error: "Failed to verify OTP: " + (err.message || String(err)) });
   }
 }

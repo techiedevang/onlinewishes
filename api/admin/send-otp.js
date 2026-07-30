@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
@@ -42,9 +43,7 @@ function getFirestoreConfig() {
 
 async function saveOtpToFirestore(adminEmail, otpCode, expiresAt) {
   // Always save to in-memory store first as a fast fallback/cache
-  global.localOtpStore = global.localOtpStore || new Map();
-  global.localOtpStore.set(adminEmail, { code: otpCode, expiresAt });
-
+    
   try {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) {
@@ -106,7 +105,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { adminEmail } = req.body;
+    let bodyData = req.body || {};
+    if (typeof req.body === 'string') {
+      try { bodyData = JSON.parse(req.body); } catch(e) {}
+    }
+    const { adminEmail } = bodyData;
     const targetAdmin = (adminEmail || "").trim().toLowerCase();
     
     if (targetAdmin !== "admin@onlinewishes.in") {
@@ -165,6 +168,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("Admin OTP Error:", err);
-    res.status(500).json({ error: "Failed to generate OTP" });
+    res.status(500).json({ error: "Failed to generate OTP: " + (err.message || String(err)) });
   }
 }

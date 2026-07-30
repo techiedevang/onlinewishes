@@ -190,15 +190,27 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        let role = 'user';
+        let savedRole = 'user';
+        try {
+          const cached = localStorage.getItem('onlinewishes_current_user');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed.id === firebaseUser.uid && parsed.role) {
+              savedRole = parsed.role;
+            }
+          }
+        } catch (_) {}
+
+        let role = savedRole;
         try {
           const userRef = doc(db, 'users', firebaseUser.uid);
-          const docSnap = await getDoc(userRef);
-          if (docSnap.exists()) {
-            role = docSnap.data().role || 'user';
+          const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000));
+          const docSnap = await Promise.race([getDoc(userRef).catch(() => null), timeoutPromise]);
+          if (docSnap && docSnap.exists()) {
+            role = docSnap.data().role || savedRole;
           }
         } catch (e) {
-          console.error('Failed to fetch user role:', e);
+          console.warn('User role sync note:', e);
         }
 
         const authenticatedUser: User = {

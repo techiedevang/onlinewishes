@@ -18,8 +18,8 @@ export function HeroSection({
       
       {/* Immersive Background Photo Collage with Sophisticated Vignette & Gradient Mask */}
       <div 
-        className="absolute inset-0 bg-cover bg-center -z-20 opacity-25 dark:opacity-15 mix-blend-soft-light dark:mix-blend-color-dodge filter brightness-105 saturate-110 pointer-events-none transition-all duration-1000"
-        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=2200&q=85')` }}
+        className="absolute inset-0 bg-cover bg-center -z-20 opacity-20 dark:opacity-15 mix-blend-soft-light dark:mix-blend-color-dodge filter brightness-105 saturate-110 pointer-events-none transition-all duration-1000"
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1000&q=70&fm=webp')` }}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-transparent to-white/60 dark:from-zinc-950/90 dark:via-zinc-950/50 dark:to-zinc-950/90 -z-15 pointer-events-none" />
 
@@ -34,20 +34,15 @@ export function HeroSection({
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             
             {/* Top Eyebrow Tag */}
-            <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
+            <div 
               className="inline-flex items-center space-x-2 bg-rose-100/80 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border border-rose-200 dark:border-rose-800 shadow-sm"
             >
               <Sparkles className="w-4 h-4 text-rose-500 animate-spin" style={{ animationDuration: '4s' }} />
               <span>Viral 21-Photo Surprise Box & Memory Website Builder</span>
-            </motion.div>
+            </div>
 
-            {/* Main Headline */}
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+            {/* Main Headline - Instant Paint for LCP */}
+            <h1 
               className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]"
             >
               Create Unforgettable <br className="hidden sm:inline" />
@@ -55,17 +50,14 @@ export function HeroSection({
                 Digital Gift Websites
               </span> <br />
               for Besties, GFs & Sisters
-            </motion.h1>
+            </h1>
 
             {/* Subtitle */}
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+            <p 
               className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
             >
               Turn your favorite memories into an interactive unboxing experience. Floating photo box, heart confetti, custom romantic poems, 3D flipbook scrapbook, and instant shareable domain links!
-            </motion.p>
+            </p>
 
             {/* CTA Buttons */}
             <motion.div 

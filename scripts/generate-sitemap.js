@@ -58,6 +58,7 @@ async function run() {
     templates.forEach(template => {
       allRoutes.push({ url: `/${template}`, priority: '0.9', changefreq: 'monthly' });
       allRoutes.push({ url: `/${template}/customize`, priority: '0.8', changefreq: 'monthly' });
+      allRoutes.push({ url: `/${template}/preview`, priority: '0.8', changefreq: 'monthly' });
     });
 
     try {

@@ -129,8 +129,9 @@ export default async function handler(req, res) {
     }
 
     if (storedData.code !== (otp || "").trim()) {
-      return res.status(400).json({ error: "Invalid 6-digit OTP code." });
-    }
+        console.log(`OTP mismatch for ${adminEmail}: expected ${storedData.code}, got ${(otp || "").trim()}`);
+        return res.status(400).json({ error: "Invalid 6-digit OTP code." });
+      }
 
     // OTP Verified
     await deleteOtpFromFirestore("admin@onlinewishes.in");

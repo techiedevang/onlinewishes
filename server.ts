@@ -58,22 +58,15 @@ async function saveOtpToFirestore(adminEmail: string, otpCode: string, expiresAt
 
     const docId = encodeURIComponent(adminEmail);
     // CRITICAL: Must append updateMask parameters so Firestore REST API actually writes/overwrites these specific fields!
-    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents:commit?key=${apiKey}`;
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}&updateMask.fieldPaths=code&updateMask.fieldPaths=expiresAt`;
     const body = {
-      writes: [
-        {
-          update: {
-            name: `projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}`,
-            fields: {
-              code: { stringValue: otpCode },
-              expiresAt: { stringValue: String(expiresAt) }
-            }
-          }
-        }
-      ]
+      fields: {
+        code: { stringValue: otpCode },
+        expiresAt: { stringValue: String(expiresAt) }
+      }
     };
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -285,6 +278,7 @@ async function startServer() {
       }
 
       if (storedData.code !== (otp || "").trim()) {
+        console.log(`OTP mismatch for ${adminEmail}: expected ${storedData.code}, got ${(otp || "").trim()}`);
         return res.status(400).json({ error: "Invalid 6-digit OTP code." });
       }
 

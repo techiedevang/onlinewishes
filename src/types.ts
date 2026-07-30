@@ -5,9 +5,13 @@ export interface Memory {
   date: string;
   fallbackUrl?: string;
   isBig?: boolean;
-  filter?: string; // e.g., 'none', 'sepia', 'grayscale', 'vintage'
+  filter?: string; // e.g., 'none', 'sepia', 'grayscale', 'vintage', 'contrast', 'bright', 'warm', 'cool'
   objectFit?: 'cover' | 'contain' | 'fill';
   objectPosition?: string;
+  rotation?: number; // 0, 90, 180, 270
+  flipHorizontal?: boolean;
+  flipVertical?: boolean;
+  zoom?: number; // 1 to 2.5
 }
 
 export type PageData =
@@ -218,6 +222,25 @@ export interface CustomWebsiteRequest {
   userEmail?: string;
   estimatedPrice: number;
   aiBlueprintTitle?: string;
+}
+
+export function getMemoryImageStyle(mem: Memory): React.CSSProperties {
+  const transform = `rotate(${mem.rotation || 0}deg) ${mem.flipHorizontal ? 'scaleX(-1)' : ''} ${mem.flipVertical ? 'scaleY(-1)' : ''} scale(${mem.zoom || 1})`;
+  let filter = 'none';
+  if (mem.filter === 'vintage') filter = 'sepia(0.5) hue-rotate(-30deg) contrast(1.2)';
+  else if (mem.filter === 'sepia') filter = 'sepia(1)';
+  else if (mem.filter === 'grayscale') filter = 'grayscale(1)';
+  else if (mem.filter === 'contrast') filter = 'contrast(1.5)';
+  else if (mem.filter === 'bright') filter = 'brightness(1.2) contrast(1.1)';
+  else if (mem.filter === 'warm') filter = 'sepia(0.3) saturate(1.4)';
+  else if (mem.filter === 'cool') filter = 'hue-rotate(180deg) saturate(0.8)';
+
+  return {
+    objectFit: mem.objectFit || 'cover',
+    objectPosition: mem.objectPosition || 'center',
+    transform,
+    filter,
+  };
 }
 
 

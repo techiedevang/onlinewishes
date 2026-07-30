@@ -25,7 +25,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
 import { GoogleAd } from './components/GoogleAd';
 import { useDynamicSEO } from './hooks/useDynamicSEO';
-import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart, Instagram } from 'lucide-react';
+import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart, Instagram, ArrowLeft, Maximize2 } from 'lucide-react';
 import { loadScrapbookFromCloud } from './lib/scrapbookService';
 import { InteractiveSurpriseTemplate } from './components/InteractiveSurpriseTemplate';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -132,6 +132,7 @@ export default function App() {
 
   // Direct Scrapbook Loading States
   const [publishedScrapbook, setPublishedScrapbook] = useState<UserCustomization | null>(null);
+  const [standalonePreviewTemplate, setStandalonePreviewTemplate] = useState<Template | null>(null);
   const [isScrapbookLoading, setIsScrapbookLoading] = useState<boolean>(false);
   const [scrapbookError, setScrapbookError] = useState<string | null>(null);
   const [isPasscodeLocked, setIsPasscodeLocked] = useState<boolean>(false);
@@ -366,11 +367,15 @@ A story forever to be told.`,
       
       if (path.length > 1 && !path.startsWith('/p/') && !path.startsWith('/admin')) {
         let isCustomize = false;
+        let isPreview = false;
         let possibleTemplateId = path.substring(1);
         
         if (possibleTemplateId.endsWith('/customize')) {
            possibleTemplateId = possibleTemplateId.replace('/customize', '');
            isCustomize = true;
+        } else if (possibleTemplateId.endsWith('/preview')) {
+           possibleTemplateId = possibleTemplateId.replace('/preview', '');
+           isPreview = true;
         }
 
         const foundTemplate = TEMPLATES.find(t => t.id === possibleTemplateId);
@@ -381,6 +386,8 @@ A story forever to be told.`,
             if (customization.bgTheme !== foundTemplate.id) {
                handleSelectTemplateToBuild(foundTemplate);
             }
+          } else if (isPreview) {
+            setStandalonePreviewTemplate(foundTemplate);
           } else {
             setTemplateDetail(foundTemplate);
             setActiveTab('template-detail');
@@ -541,6 +548,56 @@ A story forever to be told.`,
     );
   }
 
+  if (standalonePreviewTemplate) {
+    const isCustomizerContext = customization.bgTheme === standalonePreviewTemplate.id;
+    const activeCustomization = isCustomizerContext
+      ? customization
+      : { ...getDefaultCustomization(standalonePreviewTemplate.id), bgTheme: standalonePreviewTemplate.id };
+
+    return (
+      <ErrorBoundary>
+        <div className="w-full h-[100dvh] relative bg-slate-950">
+          <div className="absolute top-4 left-4 z-50 flex items-center space-x-3">
+            <button
+              onClick={() => {
+                const targetPath = isCustomizerContext ? `/${standalonePreviewTemplate.id}/customize` : `/${standalonePreviewTemplate.id}`;
+                window.history.pushState(null, '', targetPath);
+                setStandalonePreviewTemplate(null);
+                if (isCustomizerContext) {
+                  setActiveTab('customizer');
+                } else {
+                  setTemplateDetail(standalonePreviewTemplate);
+                  setActiveTab('template-detail');
+                }
+              }}
+              className="px-4 py-2 bg-black/70 hover:bg-black text-white rounded-full font-bold text-xs backdrop-blur-md border border-white/25 shadow-2xl flex items-center space-x-2 transition-all hover:scale-105"
+            >
+              <ArrowLeft className="w-4 h-4 text-rose-400" />
+              <span>Back</span>
+            </button>
+          </div>
+
+          <InteractiveSurpriseTemplate
+            key={`preview-standalone-${standalonePreviewTemplate.id}`}
+            customization={activeCustomization}
+            isStandaloneView={true}
+            onClose={() => {
+              const targetPath = isCustomizerContext ? `/${standalonePreviewTemplate.id}/customize` : `/${standalonePreviewTemplate.id}`;
+              window.history.pushState(null, '', targetPath);
+              setStandalonePreviewTemplate(null);
+              if (isCustomizerContext) {
+                setActiveTab('customizer');
+              } else {
+                setTemplateDetail(standalonePreviewTemplate);
+                setActiveTab('template-detail');
+              }
+            }}
+          />
+        </div>
+      </ErrorBoundary>
+    );
+  }
+
   if (publishedScrapbook) {
     return (
       <ErrorBoundary>
@@ -633,7 +690,10 @@ A story forever to be told.`,
                 window.history.pushState(null, '', '/');
                 setActiveTab('templates');
               }}
-              onPreview={(tpl) => setPreviewTemplate(tpl)}
+              onPreview={(tpl) => {
+                window.history.pushState(null, '', `/${tpl.id}/preview`);
+                setStandalonePreviewTemplate(tpl);
+              }}
               onSelectTemplateToBuild={handleSelectTemplateToBuild}
               onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
             />
@@ -664,7 +724,8 @@ A story forever to be told.`,
               onChangeCustomization={setCustomization}
               onOpenLivePreview={() => {
                 const currentTpl = TEMPLATES.find(t => t.id === customization.bgTheme) || TEMPLATES[0];
-                setPreviewTemplate(currentTpl);
+                window.history.pushState(null, '', `/${currentTpl.id}/preview`);
+                setStandalonePreviewTemplate(currentTpl);
               }}
               onPublish={handlePublishWebsite}
               onOpenAuth={handleOpenAuth}
@@ -711,6 +772,14 @@ A story forever to be told.`,
           template={previewTemplate}
           customization={customization}
           onClose={() => setPreviewTemplate(null)}
+          onFullScreen={() => {
+            const tpl = previewTemplate;
+            if (tpl) {
+              window.history.pushState(null, '', `/${tpl.id}/preview`);
+              setPreviewTemplate(null);
+              setStandalonePreviewTemplate(tpl);
+            }
+          }}
           onCustomizeThis={() => {
             let sound = 'rainy_cafe';
             if (previewTemplate.id === 'romantic-love-story') sound = 'romantic_piano';

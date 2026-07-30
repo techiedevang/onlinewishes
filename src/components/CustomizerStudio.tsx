@@ -5,8 +5,8 @@ import { auth } from '../lib/firebase';
 import imageCompression from 'browser-image-compression';
 
 // ... existing imports ...
-import { UserCustomization, Memory, OccasionType, User } from '../types';
-import { Heart, Sparkles, Upload, Music, Lock, Link as LinkIcon, Plus, Trash2, Check, ArrowRight, Eye, RefreshCw, Type, Image as ImageIcon, Save, Download, RotateCcw, Smartphone, LayoutGrid, GripVertical, Clock, Volume2, VolumeX, Play, Square, Smile, Database, Cloud, Search, Copy, Loader2, X, CreditCard, HelpCircle, Gamepad2, Star, Scroll, MessageSquare, LogIn, UserPlus, Shield } from 'lucide-react';
+import { UserCustomization, Memory, OccasionType, User, getMemoryImageStyle } from '../types';
+import { Heart, Sparkles, Upload, Music, Lock, Link as LinkIcon, Plus, Trash2, Check, ArrowRight, Eye, RefreshCw, Type, Image as ImageIcon, Save, Download, RotateCcw, Smartphone, LayoutGrid, GripVertical, Clock, Volume2, VolumeX, Play, Square, Smile, Database, Cloud, Search, Copy, Loader2, X, CreditCard, HelpCircle, Gamepad2, Star, Scroll, MessageSquare, LogIn, UserPlus, Shield, Pencil } from 'lucide-react';
 
 import { SafeImage } from './SafeImage';
 import { SpotifyIntegrator } from './SpotifyIntegrator';
@@ -17,6 +17,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { DigitalStickersPanel } from './DigitalStickersPanel';
 import { ImageCropper } from './ImageCropper';
 import { SignaturePanel } from './SignaturePanel';
+import PhotoEditorModal from './PhotoEditorModal';
 import { SOUNDSCAPE_OPTIONS, soundscapeEngine } from '../utils/soundscapes';
 import { saveScrapbookToCloud, loadScrapbookFromCloud, recordPaymentInCloud } from '../lib/scrapbookService';
 import { generateOgImage, saveGeneratedOgImage } from '../utils/ogGenerator';
@@ -87,6 +88,7 @@ export function CustomizerStudio({
     return 'split';
   });
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [editingMemoryIndex, setEditingMemoryIndex] = useState<number | null>(null);
   const [previewSoundId, setPreviewSoundId] = useState<string | null>(null);
   const selectedTemplate = TEMPLATES.find(t => t.id === customization.bgTheme);
   const targetPhotoCount = selectedTemplate?.photoCount || 21;
@@ -2109,12 +2111,19 @@ export function CustomizerStudio({
                               alt={`Slot ${index + 1}`} 
                               fallbackUrl={mem.fallbackUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300'}
                               className="w-full h-full transition-transform duration-500 group-hover:scale-110"
-                              style={{
-                                objectFit: mem.objectFit || 'cover',
-                                objectPosition: mem.objectPosition || 'center',
-                                filter: mem.filter === 'vintage' ? 'sepia(0.5) hue-rotate(-30deg) contrast(1.2)' : mem.filter === 'sepia' ? 'sepia(1)' : mem.filter === 'grayscale' ? 'grayscale(1)' : mem.filter === 'contrast' ? 'contrast(1.5)' : 'none'
-                              }}
+                              style={getMemoryImageStyle(mem)}
                             />
+                            
+                            {/* Edit / Crop / Rotate Button (Pencil Icon) */}
+                            <button
+                              type="button"
+                              onClick={() => setEditingMemoryIndex(index)}
+                              className="absolute top-2 left-2 z-20 flex items-center gap-1 px-2 py-1 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold uppercase rounded-lg shadow-lg pointer-events-auto transition-transform hover:scale-105"
+                              title="Crop, Rotate, Flip & Filter Photo"
+                            >
+                              <Pencil className="w-3 h-3" />
+                              <span>Edit</span>
+                            </button>
                             
                             <div className="absolute inset-0 bg-black/50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex flex-col justify-between p-1.5 pointer-events-none" />
 
@@ -2694,6 +2703,19 @@ export function CustomizerStudio({
 
         </div>
       </div>
+    )}
+
+    {editingMemoryIndex !== null && customization.memories[editingMemoryIndex] && (
+      <PhotoEditorModal
+        memory={customization.memories[editingMemoryIndex]}
+        onSave={(updated) => {
+          const updatedMems = [...customization.memories];
+          updatedMems[editingMemoryIndex] = updated;
+          updateField('memories', updatedMems);
+          setEditingMemoryIndex(null);
+        }}
+        onClose={() => setEditingMemoryIndex(null)}
+      />
     )}
   </div>
 );

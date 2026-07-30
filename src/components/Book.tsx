@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Memory, PhysicalPage, PageData, DigitalSticker } from '../types';
+import { Memory, PhysicalPage, PageData, DigitalSticker, getMemoryImageStyle } from '../types';
 import { Heart, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { SafeImage } from './SafeImage';
 
@@ -303,7 +303,7 @@ function PageContent({
 
       <div className="bg-white p-2 sm:p-3 md:p-5 pb-6 sm:pb-12 md:pb-20 rounded-sm shadow-xl rotate-1 w-full max-w-full relative">
         <div className="w-full aspect-square bg-gray-100 rounded-sm overflow-hidden mb-2 sm:mb-4">
-          <SafeImage src={m?.imageUrl || ''} fallbackUrl={m?.fallbackUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=600&fit=crop'} alt="Memory" className="w-full h-full object-cover" />
+          <SafeImage src={m?.imageUrl || ''} fallbackUrl={m?.fallbackUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=600&fit=crop'} alt="Memory" className="w-full h-full object-cover" style={getMemoryImageStyle(m)} />
         </div>
         <p className="font-handwriting text-[1rem] sm:text-2xl md:text-3xl text-gray-800 text-center leading-tight -mt-1 sm:-mt-2 px-1 sm:px-2 line-clamp-2 md:line-clamp-3">
           {m?.caption}

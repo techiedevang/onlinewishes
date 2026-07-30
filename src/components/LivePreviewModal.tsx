@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { Template, UserCustomization } from '../types';
 import { InteractiveSurpriseTemplate } from './InteractiveSurpriseTemplate';
 import { ErrorBoundary } from './ErrorBoundary';
-import { Smartphone, Monitor, Tablet, X, Share2, Copy, Check, ExternalLink } from 'lucide-react';
+import { Smartphone, Monitor, Tablet, X, Share2, Copy, Check, ExternalLink, Maximize2 } from 'lucide-react';
 
 interface LivePreviewModalProps {
   template: Template;
   customization: UserCustomization;
   onClose: () => void;
   onCustomizeThis: () => void;
+  onFullScreen?: () => void;
 }
 
 export function LivePreviewModal({
@@ -16,6 +17,7 @@ export function LivePreviewModal({
   customization,
   onClose,
   onCustomizeThis,
+  onFullScreen,
 }: LivePreviewModalProps) {
   const [deviceMode, setDeviceMode] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
   const [copied, setCopied] = useState(false);
@@ -88,6 +90,17 @@ export function LivePreviewModal({
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
             <span className="hidden sm:inline">{copied ? 'Copied Link!' : 'Share Link'}</span>
           </button>
+
+          {onFullScreen && (
+            <button
+              onClick={onFullScreen}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors flex items-center space-x-1.5"
+              title="Open Full Screen Preview"
+            >
+              <Maximize2 className="w-3.5 h-3.5 text-rose-400" />
+              <span className="hidden sm:inline">Full Screen</span>
+            </button>
+          )}
 
           <button
             onClick={onCustomizeThis}

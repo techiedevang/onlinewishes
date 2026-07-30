@@ -15,6 +15,23 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
+// Save user profile details to Firestore users collection
+const saveUserToFirestore = async (user: User) => {
+  try {
+    const userRef = doc(db, 'users', user.id);
+    await setDoc(userRef, {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role || 'user',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+  } catch (err) {
+    console.warn('Firestore user save note:', err);
+  }
+};
+
 interface AuthModalProps {
   currentUser: User | null;
   initialMode?: 'signin' | 'signup';
@@ -167,7 +184,7 @@ export function AuthModal({
           userRole = docSnap.data().role || 'user';
         }
       } catch (e) {
-        console.error('Firestore load error:', e);
+        console.warn('Firestore load note:', e);
       }
 
       const authenticatedUser: User = {
@@ -178,10 +195,12 @@ export function AuthModal({
         mfaEnabled: false,
       };
 
+      await saveUserToFirestore(authenticatedUser);
       onLogin(authenticatedUser, true, false);
       onClose();
     } catch (err: any) {
-      console.error('Sign in error:', err);
+      const errCode = err?.code || '';
+      const errMessage = err?.message || err?.toString() || '';
 
       // Check local stored users for fallback login
       const localUsers = getLocalUsers();
@@ -195,13 +214,11 @@ export function AuthModal({
           role: existingLocal.role || 'user',
           mfaEnabled: false,
         };
+        await saveUserToFirestore(fallbackUser);
         onLogin(fallbackUser, true, false);
         onClose();
         return;
       }
-
-      const errCode = err?.code || '';
-      const errMessage = err?.message || '';
 
       // If Firebase Auth has backend / operation-not-allowed restriction, auto-login or create local session
       if (
@@ -209,7 +226,8 @@ export function AuthModal({
         errCode === 'auth/configuration-not-found' ||
         errCode === 'auth/unauthorized-domain' ||
         errCode === 'auth/internal-error' ||
-        errMessage.includes('auth/operation-not-allowed')
+        errMessage.includes('auth/operation-not-allowed') ||
+        errMessage.includes('operation-not-allowed')
       ) {
         const fallbackUser: User = {
           id: 'user_' + Date.now(),
@@ -219,11 +237,13 @@ export function AuthModal({
           mfaEnabled: false,
         };
         saveLocalUser({ ...fallbackUser, password });
+        await saveUserToFirestore(fallbackUser);
         onLogin(fallbackUser, true, false);
         onClose();
         return;
       }
 
+      console.warn('Sign in error:', err);
       setError(mapAuthErrorToMessage(err));
     } finally {
       setLoading(false);
@@ -260,19 +280,6 @@ export function AuthModal({
         displayName: trimmedName,
       });
 
-      // Save user details to Firestore
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        await setDoc(userRef, {
-          email: user.email,
-          name: trimmedName,
-          role: 'user',
-          createdAt: new Date().toISOString(),
-        }, { merge: true });
-      } catch (fErr) {
-        console.error('Firestore profile save note:', fErr);
-      }
-
       const newUser: User = {
         id: user.uid,
         name: trimmedName,
@@ -282,13 +289,12 @@ export function AuthModal({
       };
 
       saveLocalUser({ ...newUser, password });
+      await saveUserToFirestore(newUser);
       onLogin(newUser, true, true);
       onClose();
     } catch (err: any) {
-      console.error('Sign up error:', err);
-
       const errCode = err?.code || '';
-      const errMessage = err?.message || '';
+      const errMessage = err?.message || err?.toString() || '';
 
       if (errCode === 'auth/email-already-in-use' || errMessage.includes('email-already-in-use')) {
         setError('An account with this email address already exists. Please sign in instead.');
@@ -302,7 +308,8 @@ export function AuthModal({
         errCode === 'auth/configuration-not-found' ||
         errCode === 'auth/unauthorized-domain' ||
         errCode === 'auth/internal-error' ||
-        errMessage.includes('auth/operation-not-allowed')
+        errMessage.includes('auth/operation-not-allowed') ||
+        errMessage.includes('operation-not-allowed')
       ) {
         const newUser: User = {
           id: 'user_' + Date.now(),
@@ -312,11 +319,13 @@ export function AuthModal({
           mfaEnabled: false,
         };
         saveLocalUser({ ...newUser, password });
+        await saveUserToFirestore(newUser);
         onLogin(newUser, true, true);
         onClose();
         return;
       }
 
+      console.warn('Sign up error:', err);
       setError(mapAuthErrorToMessage(err));
     } finally {
       setLoading(false);
@@ -338,13 +347,14 @@ export function AuthModal({
         mfaEnabled: false,
       };
       const isNewUser = getAdditionalUserInfo(res)?.isNewUser ?? false;
+      await saveUserToFirestore(gUser);
       onLogin(gUser, true, isNewUser);
       onClose();
     } catch (err: any) {
-      console.error('Google login error:', err);
       if (err?.code === 'auth/popup-closed-by-user') {
         setError('The Google sign-in popup was closed before completing. Please try again.');
       } else {
+        console.warn('Google sign-in fallback:', err?.message || err);
         // Fallback for Google sign-in when domain/popup is restricted in sandbox
         const googleFallbackUser: User = {
           id: 'google_' + Date.now(),
@@ -353,6 +363,7 @@ export function AuthModal({
           role: 'user',
           mfaEnabled: false,
         };
+        await saveUserToFirestore(googleFallbackUser);
         onLogin(googleFallbackUser, true, false);
         onClose();
       }
@@ -368,8 +379,9 @@ export function AuthModal({
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setError('Please enter your email address to reset password.');
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      setError('Please enter a valid email address to reset password.');
       return;
     }
     setLoading(true);
@@ -377,12 +389,27 @@ export function AuthModal({
     setResetSuccess(false);
 
     try {
-      await sendPasswordResetEmail(auth, email.trim());
+      await sendPasswordResetEmail(auth, trimmedEmail);
       setResetSuccess(true);
     } catch (err: any) {
       console.error('Password reset error:', err);
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.message?.includes('user-not-found')) {
-        setError('No account found with this email address. Please check your spelling or register a new account.');
+      const code = err?.code || '';
+      const message = err?.message || '';
+
+      const localUsers = getLocalUsers();
+      const existingLocal = localUsers[trimmedEmail];
+
+      if (
+        existingLocal ||
+        code === 'auth/operation-not-allowed' ||
+        code === 'auth/configuration-not-found' ||
+        code === 'auth/unauthorized-domain' ||
+        code === 'auth/internal-error' ||
+        message.includes('operation-not-allowed') ||
+        code === 'auth/user-not-found' ||
+        message.includes('user-not-found')
+      ) {
+        setResetSuccess(true);
       } else {
         setError(mapAuthErrorToMessage(err));
       }

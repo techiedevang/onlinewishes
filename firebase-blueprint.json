@@ -37,6 +37,20 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "recipientName", "clientPrompt", "whatsappNumber", "requestedSlug"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User account profile stored in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "email"]
     }
   },
   "firestore": {
@@ -47,6 +61,10 @@
     "/custom_requests/{requestId}": {
       "schema": { "$ref": "#/entities/CustomRequest" },
       "description": "Collection of custom website requests for admin review"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Collection of registered user accounts"
     }
   }
 }

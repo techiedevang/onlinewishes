@@ -10,14 +10,15 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  getAdditionalUserInfo
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 interface AuthModalProps {
   currentUser: User | null;
   initialMode?: 'signin' | 'signup';
-  onLogin: (user: User) => void;
+  onLogin: (user: User, isManualLogin?: boolean, isNewUser?: boolean) => void;
   onLogout: () => void;
   onClose: () => void;
   onOpenDashboard?: () => void;
@@ -137,7 +138,7 @@ export function AuthModal({
           mfaEnabled: false,
         };
 
-        onLogin(authenticatedUser);
+        onLogin(authenticatedUser, false, false);
       }
     });
     return () => unsubscribe();
@@ -177,7 +178,7 @@ export function AuthModal({
         mfaEnabled: false,
       };
 
-      onLogin(authenticatedUser);
+      onLogin(authenticatedUser, true, false);
       onClose();
     } catch (err: any) {
       console.error('Sign in error:', err);
@@ -194,7 +195,7 @@ export function AuthModal({
           role: existingLocal.role || 'user',
           mfaEnabled: false,
         };
-        onLogin(fallbackUser);
+        onLogin(fallbackUser, true, false);
         onClose();
         return;
       }
@@ -218,7 +219,7 @@ export function AuthModal({
           mfaEnabled: false,
         };
         saveLocalUser({ ...fallbackUser, password });
-        onLogin(fallbackUser);
+        onLogin(fallbackUser, true, false);
         onClose();
         return;
       }
@@ -281,7 +282,7 @@ export function AuthModal({
       };
 
       saveLocalUser({ ...newUser, password });
-      onLogin(newUser);
+      onLogin(newUser, true, true);
       onClose();
     } catch (err: any) {
       console.error('Sign up error:', err);
@@ -311,7 +312,7 @@ export function AuthModal({
           mfaEnabled: false,
         };
         saveLocalUser({ ...newUser, password });
-        onLogin(newUser);
+        onLogin(newUser, true, true);
         onClose();
         return;
       }
@@ -336,7 +337,8 @@ export function AuthModal({
         role: 'user',
         mfaEnabled: false,
       };
-      onLogin(gUser);
+      const isNewUser = getAdditionalUserInfo(res)?.isNewUser ?? false;
+      onLogin(gUser, true, isNewUser);
       onClose();
     } catch (err: any) {
       console.error('Google login error:', err);
@@ -351,7 +353,7 @@ export function AuthModal({
           role: 'user',
           mfaEnabled: false,
         };
-        onLogin(googleFallbackUser);
+        onLogin(googleFallbackUser, true, false);
         onClose();
       }
     } finally {

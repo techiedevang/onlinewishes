@@ -25,7 +25,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
 import { GoogleAd } from './components/GoogleAd';
 import { useDynamicSEO } from './hooks/useDynamicSEO';
-import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart, Instagram, ArrowLeft, Maximize2 } from 'lucide-react';
+import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart, Instagram, ArrowLeft, Maximize2, Copy } from 'lucide-react';
 import { loadScrapbookFromCloud } from './lib/scrapbookService';
 import { InteractiveSurpriseTemplate } from './components/InteractiveSurpriseTemplate';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -127,6 +127,7 @@ export default function App() {
   const [showAdminDashboard, setShowAdminDashboard] = useState<boolean>(false);
   const [policyTab, setPolicyTab] = useState<PolicyTab | null>(null);
   const [publishedToast, setPublishedToast] = useState<{ show: boolean; link: string } | null>(null);
+  const [welcomeMessage, setWelcomeMessage] = useState<{ title: string; body: string; isNewUser: boolean } | null>(null);
 
 
 
@@ -810,9 +811,30 @@ A story forever to be told.`,
         <AuthModal
           currentUser={currentUser}
           initialMode={authInitialMode}
-          onLogin={(user) => {
+          onLogin={(user, isManualLogin, isNewUser) => {
             localStorage.setItem('onlinewishes_current_user', JSON.stringify(user));
             setCurrentUser(user);
+            if (isManualLogin) {
+              if (isNewUser) {
+                setWelcomeMessage({
+                  title: 'Thank you for joining us! 💖',
+                  body: 'Every beautiful surprise starts with a single step. Let\'s create memories that your loved ones will never forget.',
+                  isNewUser: true
+                });
+              } else {
+                setWelcomeMessage({
+                  title: '🎉 Welcome Back!',
+                  body: 'You\'ve successfully signed in.\nGreat to have you back! Everything is ready for you—jump in and enjoy your experience.\n💙 Have a great time!',
+                  isNewUser: false
+                });
+              }
+              confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 },
+                zIndex: 2000
+              });
+            }
           }}
           onLogout={handleLogout}
           onClose={() => setShowAuthModal(false)}
@@ -844,6 +866,36 @@ A story forever to be told.`,
       )}
 
       {/* PUBLISHED TOAST MODAL */}
+      
+      {/* WELCOME / THANK YOU MODAL */}
+      {welcomeMessage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 border-2 border-rose-100 dark:border-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 max-w-sm text-center relative overflow-hidden transform transition-all duration-300 scale-100 animate-slideUp">
+            <button
+              onClick={() => setWelcomeMessage(null)}
+              className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full transition-colors"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+            <div className={`mx-auto w-16 h-16 rounded-full mb-4 flex items-center justify-center shadow-lg ${welcomeMessage.isNewUser ? 'bg-rose-100 text-rose-500' : 'bg-blue-100 text-blue-500'}`}>
+              <Sparkles className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white mb-3 font-display">
+              {welcomeMessage.title}
+            </h2>
+            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line mb-6 font-medium">
+              {welcomeMessage.body}
+            </p>
+            <button
+              onClick={() => setWelcomeMessage(null)}
+              className={`w-full py-3 px-4 text-white font-bold rounded-xl shadow-lg transition-transform hover:scale-105 active:scale-95 ${welcomeMessage.isNewUser ? 'bg-gradient-to-r from-rose-400 to-rose-600' : 'bg-gradient-to-r from-blue-400 to-blue-600'}`}
+            >
+              Let's Go!
+            </button>
+          </div>
+        </div>
+      )}
+
       {publishedToast?.show && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-slate-700 text-white rounded-2xl p-5 shadow-2xl max-w-sm space-y-3 animate-bounce">
           <div className="flex items-center space-x-2 text-emerald-400 font-bold text-sm">
@@ -862,6 +914,17 @@ A story forever to be told.`,
             <span>{publishedToast.link}</span>
             <ExternalLink className="w-3.5 h-3.5 ml-1" />
           </a>
+
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(publishedToast.link);
+              alert('Link copied to clipboard successfully!');
+            }}
+            className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center space-x-1.5"
+          >
+            <Copy className="w-4 h-4" />
+            <span>Copy Link to Clipboard</span>
+          </button>
           
           <div className="pt-2 border-t border-slate-700/50">
             <p className="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center space-x-1">

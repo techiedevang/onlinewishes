@@ -120,6 +120,7 @@ export interface UserCustomization {
   subdomain: string;
   signatureUrl?: string;
   confettiOnLoad?: boolean;
+  ogImageUrl?: string;
 
   // Template-Specific Interactive Customization Features
   targetDate?: string; // For countdowns & anniversary counters

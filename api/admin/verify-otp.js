@@ -34,6 +34,7 @@ function getFirestoreConfig() {
 
   projectId = projectId || "gen-lang-client-0123999783";
   dbId = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+  apiKey = apiKey || "AIzaSyAAsl785OWTeliRX3BvzybSWnI7thRCoBI";
 
   return { projectId, dbId, apiKey };
 }
@@ -65,8 +66,7 @@ async function getOtpFromFirestore(adminEmail) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.warn(`Firestore read warning: ${response.statusText} - ${errorText}`);
-      return null;
+      throw new Error(`Firestore read failed: ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -75,8 +75,8 @@ async function getOtpFromFirestore(adminEmail) {
 
     return { code, expiresAt };
   } catch (err) {
-    console.warn("Firestore read error (proceeding with in-memory check):", err);
-    return null;
+    console.error("Firestore read error:", err);
+    throw err;
   }
 }
 

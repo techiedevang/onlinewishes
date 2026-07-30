@@ -1,10 +1,14 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from "vite";
 import Razorpay from "razorpay";
 import SpotifyWebApi from "spotify-web-api-node";
 import nodemailer from "nodemailer";
+
+const _filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
+const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_filename);
 
 function getFirestoreConfig() {
   let projectId = process.env.FIRESTORE_PROJECT_ID;
@@ -14,8 +18,8 @@ function getFirestoreConfig() {
   try {
     const pathsToTry = [
       path.join(process.cwd(), "firebase-applet-config.json"),
-      path.join(__dirname, "firebase-applet-config.json"),
-      path.join(__dirname, "../firebase-applet-config.json")
+      path.join(_dirname, "firebase-applet-config.json"),
+      path.join(_dirname, "../firebase-applet-config.json")
     ];
 
     let configContent = null;
@@ -38,6 +42,7 @@ function getFirestoreConfig() {
 
   projectId = projectId || "gen-lang-client-0123999783";
   dbId = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+  apiKey = apiKey || "AIzaSyAAsl785OWTeliRX3BvzybSWnI7thRCoBI";
 
   return { projectId, dbId, apiKey };
 }
@@ -75,12 +80,13 @@ async function saveOtpToFirestore(adminEmail: string, otpCode: string, expiresAt
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.warn(`Firestore save warning: ${response.statusText} - ${errorText}`);
+      throw new Error(`Firestore save failed: ${response.statusText} - ${errorText}`);
     } else {
       console.log("Successfully saved OTP to Firestore.");
     }
   } catch (err) {
-    console.warn("Firestore save error (proceeding with in-memory fallback):", err);
+    console.error("Firestore save error:", err);
+    throw err;
   }
 }
 
@@ -111,8 +117,7 @@ async function getOtpFromFirestore(adminEmail: string) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.warn(`Firestore read warning: ${response.statusText} - ${errorText}`);
-      return null;
+      throw new Error(`Firestore read failed: ${response.statusText} - ${errorText}`);
     }
 
     const data: any = await response.json();
@@ -121,8 +126,8 @@ async function getOtpFromFirestore(adminEmail: string) {
 
     return { code, expiresAt };
   } catch (err) {
-    console.warn("Firestore read error (proceeding with in-memory check):", err);
-    return null;
+    console.error("Firestore read error:", err);
+    throw err;
   }
 }
 
@@ -461,6 +466,148 @@ async function startServer() {
       });
     } else {
       return res.send("User-agent: *\nAllow: /\nSitemap: https://onlinewishes.in/sitemap.xml");
+    }
+  });
+
+  // Dynamic SEO metadata injection middleware for published scrapbooks
+  app.get("/p/:id", async (req, res, next) => {
+    try {
+      const docId = req.params.id;
+      if (!docId || docId === "admin" || docId.startsWith("api") || docId.includes(".")) {
+        return next();
+      }
+
+      let projectId = process.env.FIRESTORE_PROJECT_ID;
+      let dbId = process.env.FIRESTORE_DATABASE_ID;
+      let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
+
+      try {
+        const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+        if (fs.existsSync(configPath)) {
+          const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+          if (!projectId) projectId = config.projectId;
+          if (!dbId) dbId = config.firestoreDatabaseId;
+          if (!apiKey) apiKey = config.apiKey;
+        }
+      } catch (err) {
+        console.error("Failed to read firebase config file", err);
+      }
+
+      projectId = projectId || "gen-lang-client-0123999783";
+      dbId = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+
+      if (!apiKey) {
+        return next();
+      }
+
+      // Try fetching direct document first
+      const directUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/scrapbooks/${docId}?key=${apiKey}`;
+      let response = await fetch(directUrl);
+      let data = await response.json();
+      let fields = data && data.fields;
+
+      // Fallback: Query by subdomain if direct fetch 404s
+      if (!fields) {
+        const queryUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents:runQuery?key=${apiKey}`;
+        const queryBody = {
+          structuredQuery: {
+            from: [{ collectionId: "scrapbooks" }],
+            where: {
+              fieldFilter: {
+                field: { fieldPath: "subdomain" },
+                op: "EQUAL",
+                value: { stringValue: docId }
+              }
+            },
+            limit: 1
+          }
+        };
+
+        const queryRes = await fetch(queryUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(queryBody)
+        });
+        
+        if (queryRes.ok) {
+          const queryResult = await queryRes.json();
+          if (queryResult && queryResult[0] && queryResult[0].document) {
+            fields = queryResult[0].document.fields;
+          }
+        }
+      }
+
+      // Read template index.html
+      let htmlPath = path.join(process.cwd(), "dist", "index.html");
+      if (!fs.existsSync(htmlPath)) {
+        htmlPath = path.join(process.cwd(), "index.html");
+      }
+
+      if (!fs.existsSync(htmlPath)) {
+        return next();
+      }
+
+      let html = fs.readFileSync(htmlPath, "utf8");
+
+      if (fields) {
+        const getFieldString = (f: any, name: string): string | null => {
+          if (f && f[name] && f[name].stringValue) return f[name].stringValue;
+          return null;
+        };
+
+        const recipientName = getFieldString(fields, "recipientName") || "Sarah";
+        const occasion = getFieldString(fields, "occasion") || "special-day";
+        const senderName = getFieldString(fields, "senderName") || "Your Friend";
+        let ogImageUrl = getFieldString(fields, "ogImageUrl");
+
+        // Format occasion nicely
+        const formatOccasion = (occ: string): string => {
+          const map: Record<string, string> = {
+            bestie: "Best Friend 💖",
+            girlfriend: "Love & Romance 🌹",
+            sister: "Sisterhood 🌸",
+            birthday: "Birthday Celebration 🎂",
+            anniversary: "Anniversary Surprises 🥂",
+            wedding: "Wedding Scrapbook 💍",
+            friendship: "Friendship Day 🤝"
+          };
+          return map[occ.toLowerCase()] || "Special Day!";
+        };
+
+        if (ogImageUrl && ogImageUrl.startsWith("/")) {
+          ogImageUrl = `https://${req.get("host")}${ogImageUrl}`;
+        } else if (!ogImageUrl) {
+          ogImageUrl = `https://${req.get("host")}/favicon.svg`;
+        }
+
+        const title = `${recipientName}'s Custom Surprise Scrapbook | OnlineWishes`;
+        const description = `Open this beautiful personalized digital memory scrapbook created with love for ${recipientName} by ${senderName} on OnlineWishes.in.`;
+        const ogTitle = `A Surprise for ${recipientName}! ❤️`;
+        const ogDescription = `Created with love by ${senderName} for ${recipientName} for the occasion of ${formatOccasion(occasion)}. Open to unwrap the memories and messages!`;
+
+        // String replacements
+        const currentUrl = `https://${req.get("host")}/p/${docId}`;
+        html = html.replace(/<link rel="canonical" href="[^"]*"/g, `<link rel="canonical" href="${currentUrl}"`);
+        html = html.replace(/<meta property="og:url" content="[^"]*"/g, `<meta property="og:url" content="${currentUrl}"`);
+        html = html.replace(/<meta property="twitter:url" content="[^"]*"/g, `<meta property="twitter:url" content="${currentUrl}"`);
+
+        html = html.replace(/<title>[^<]*<\/title>/g, `<title>${title}</title>`);
+        html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${ogTitle}"`);
+        html = html.replace(/<meta property="twitter:title" content="[^"]*"/g, `<meta property="twitter:title" content="${ogTitle}"`);
+
+        html = html.replace(/<meta name="description" content="[^"]*"/g, `<meta name="description" content="${description}"`);
+        html = html.replace(/<meta property="og:description" content="[^"]*"/g, `<meta property="og:description" content="${ogDescription}"`);
+        html = html.replace(/<meta property="twitter:description" content="[^"]*"/g, `<meta property="twitter:description" content="${ogDescription}"`);
+
+        html = html.replace(/<meta property="og:image" content="[^"]*"/g, `<meta property="og:image" content="${ogImageUrl}"`);
+        html = html.replace(/<meta property="twitter:image" content="[^"]*"/g, `<meta property="twitter:image" content="${ogImageUrl}"`);
+      }
+
+      res.setHeader("Content-Type", "text/html");
+      return res.send(html);
+    } catch (err) {
+      console.error("SEO Metadata Dynamic Injection Error:", err);
+      return next();
     }
   });
 

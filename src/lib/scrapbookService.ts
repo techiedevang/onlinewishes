@@ -36,7 +36,8 @@ export async function testFirestoreConnection() {
  * Uses E2E AES Encryption if a passcode is provided.
  */
 export async function saveScrapbookToCloud(
-  customization: UserCustomization
+  customization: UserCustomization,
+  explicitUserId?: string
 ): Promise<string> {
   const scrapbookId = customization.subdomain || `sb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const path = `scrapbooks/${scrapbookId}`;
@@ -46,12 +47,13 @@ export async function saveScrapbookToCloud(
   
   let payload: any = {
     id: scrapbookId,
-    userId: auth.currentUser?.uid || null,
+    userId: explicitUserId || auth.currentUser?.uid || null,
     recipientName: customization.recipientName || 'Bestie',
     occasion: customization.occasion || 'Special Day',
     senderName: customization.senderName || 'Your Friend',
     subdomain: customization.subdomain || scrapbookId,
     isLocked: isEncrypted,
+    ogImageUrl: customization.ogImageUrl || null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -132,12 +134,13 @@ export async function recordPaymentInCloud(
   orderId: string,
   paymentId: string,
   amount: number,
-  templateTitle: string
+  templateTitle: string,
+  explicitUser?: { id: string, email: string, name: string } | null
 ): Promise<void> {
   const path = `payments/${paymentId}`;
   const currentUser = auth.currentUser;
-  const userEmail = currentUser?.email || 'guest@onlinewishes.in';
-  const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Guest User';
+  const userEmail = explicitUser?.email || currentUser?.email || 'guest@onlinewishes.in';
+  const userName = explicitUser?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Guest User';
 
   const payload = {
     id: paymentId,

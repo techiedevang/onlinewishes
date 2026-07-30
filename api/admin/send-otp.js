@@ -35,6 +35,7 @@ function getFirestoreConfig() {
 
   projectId = projectId || "gen-lang-client-0123999783";
   dbId = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+  apiKey = apiKey || "AIzaSyAAsl785OWTeliRX3BvzybSWnI7thRCoBI";
 
   return { projectId, dbId, apiKey };
 }
@@ -72,12 +73,13 @@ async function saveOtpToFirestore(adminEmail, otpCode, expiresAt) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.warn(`Firestore save warning: ${response.statusText} - ${errorText}`);
+      throw new Error(`Firestore save failed: ${response.statusText} - ${errorText}`);
     } else {
       console.log("Successfully saved OTP to Firestore.");
     }
   } catch (err) {
-    console.warn("Firestore save error (proceeding with in-memory fallback):", err);
+    console.error("Firestore save error:", err);
+    throw err;
   }
 }
 

@@ -19,6 +19,7 @@ import { ImageCropper } from './ImageCropper';
 import { SignaturePanel } from './SignaturePanel';
 import { SOUNDSCAPE_OPTIONS, soundscapeEngine } from '../utils/soundscapes';
 import { saveScrapbookToCloud, loadScrapbookFromCloud, recordPaymentInCloud } from '../lib/scrapbookService';
+import { generateOgImage, saveGeneratedOgImage } from '../utils/ogGenerator';
 import { TEMPLATES, getDefaultCustomization } from '../data/templates';
 
 interface CustomizerStudioProps {
@@ -203,7 +204,13 @@ export function CustomizerStudio({
         alert('Notice: Razorpay API keys are not configured on the server. Simulating a successful mock payment for testing.');
         const mockPayId = `pay_mock_${Date.now()}`;
         try {
-          await recordPaymentInCloud(order.id, mockPayId, payablePrice, `Premium License for ${customization.recipientName || 'Bestie'}'s Surprise Page`);
+          await recordPaymentInCloud(
+            order.id, 
+            mockPayId, 
+            payablePrice, 
+            `Premium License for ${customization.recipientName || 'Bestie'}'s Surprise Page`,
+            currentUser
+          );
         } catch (payErr) {
           console.error("Failed to write mock payment record to cloud:", payErr);
         }
@@ -231,7 +238,13 @@ export function CustomizerStudio({
             body: JSON.stringify(response)
           });
           try {
-            await recordPaymentInCloud(order.id, response.razorpay_payment_id || `pay_${Date.now()}`, payablePrice, `Premium License for ${customization.recipientName || 'Bestie'}'s Surprise Page`);
+            await recordPaymentInCloud(
+              order.id, 
+              response.razorpay_payment_id || `pay_${Date.now()}`, 
+              payablePrice, 
+              `Premium License for ${customization.recipientName || 'Bestie'}'s Surprise Page`,
+              currentUser
+            );
           } catch (payErr) {
             console.error("Failed to write payment record to cloud:", payErr);
           }
@@ -285,9 +298,19 @@ export function CustomizerStudio({
   // Save customization to Cloud Firestore Database
   const handleSaveToCloudDatabase = async () => {
     setIsSavingCloud(true);
-    setCloudMessage(null);
+    setCloudMessage('Generating dynamic social preview thumbnail...');
     try {
-      const recordId = await saveScrapbookToCloud(customization);
+      let updatedCustomization = { ...customization };
+      try {
+        const base64Og = await generateOgImage(customization);
+        const ogImageUrl = await saveGeneratedOgImage(base64Og, customization.subdomain || `sb_${Date.now()}`);
+        updatedCustomization.ogImageUrl = ogImageUrl;
+        onChangeCustomization(updatedCustomization);
+      } catch (ogErr) {
+        console.error('Failed to generate dynamic OG image:', ogErr);
+      }
+
+      const recordId = await saveScrapbookToCloud(updatedCustomization, currentUser?.id);
       setCloudSavedId(recordId);
       setCloudMessage(`Successfully saved to Cloud Firestore! Record ID: ${recordId}`);
     } catch (err) {

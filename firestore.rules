@@ -32,7 +32,16 @@ service cloud.firestore {
     }
 
     // Custom requests collection rules
-    match /uploaded_images/{imageId} { allow read, write: if true; } match /custom_requests/{requestId} {
+    match /uploaded_images/{imageId} { 
+      allow read, write: if true; 
+    } 
+    match /custom_requests/{requestId} {
+      allow read, write: if true;
+    }
+    match /payments/{paymentId} {
+      allow read, write: if true;
+    }
+    match /users/{userId} {
       allow read, write: if true;
     }
 

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { motion } from 'motion/react';
 import { User, UserCustomization, Template, CustomAiBlueprint } from './types';
-import { auth } from './lib/firebase';
-import { signOut } from 'firebase/auth';
+import { auth, db } from './lib/firebase';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { TEMPLATES, INITIAL_MEMORIES_21, getDefaultCustomization } from './data/templates';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
@@ -133,6 +134,39 @@ export default function App() {
     }
   }, []);
 
+  // Global Auth State Synchronization
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        let role = 'user';
+        try {
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          const docSnap = await getDoc(userRef);
+          if (docSnap.exists()) {
+            role = docSnap.data().role || 'user';
+          }
+        } catch (e) {
+          console.error('Failed to fetch user role:', e);
+        }
+
+        const authenticatedUser: User = {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || 'Valued User',
+          email: firebaseUser.email || 'user@example.com',
+          role: role as 'user' | 'admin',
+          mfaEnabled: false,
+        };
+        setCurrentUser(authenticatedUser);
+        localStorage.setItem('onlinewishes_current_user', JSON.stringify(authenticatedUser));
+      } else {
+        setCurrentUser(null);
+        localStorage.removeItem('onlinewishes_current_user');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -251,7 +285,16 @@ A story forever to be told.`,
 
   // Dynamic SEO Metadata updates
   useEffect(() => {
-    if (previewTemplate) {
+    if (publishedScrapbook) {
+      updatePageMetadata({
+        title: `${publishedScrapbook.recipientName}'s Custom Surprise Scrapbook`,
+        description: `Open this beautiful surprise scrapbook created with love for ${publishedScrapbook.recipientName} by ${publishedScrapbook.senderName || 'their friend'} on OnlineWishes.`,
+        ogTitle: `A Surprise for ${publishedScrapbook.recipientName}! ❤️`,
+        ogDescription: `Created by ${publishedScrapbook.senderName || 'their friend'} for ${publishedScrapbook.recipientName}. Open to unwrap the memories and messages!`,
+        ogImage: publishedScrapbook.ogImageUrl || (publishedScrapbook.memories && publishedScrapbook.memories.length > 0 ? publishedScrapbook.memories[0].imageUrl : undefined),
+        canonicalUrl: `https://onlinewishes.in/p/${publishedScrapbook.subdomain}`,
+      });
+    } else if (previewTemplate) {
       updateMetadataForTemplate(previewTemplate.title, previewTemplate.category, previewTemplate.description, previewTemplate.thumbnail);
     } else if (activeTab === 'customizer') {
       updatePageMetadata({
@@ -266,7 +309,7 @@ A story forever to be told.`,
     } else {
       updatePageMetadata(); // Default homepage metadata
     }
-  }, [activeTab, previewTemplate, customization.recipientName, showAdminDashboard]);
+  }, [activeTab, previewTemplate, customization.recipientName, showAdminDashboard, publishedScrapbook]);
 
   const handleSelectTemplateToBuild = (template: Template) => {
     let sound = 'rainy_cafe';
@@ -425,11 +468,13 @@ A story forever to be told.`,
   if (publishedScrapbook) {
     return (
       <ErrorBoundary>
-        <InteractiveSurpriseTemplate
-          key={`${publishedScrapbook.subdomain}-${publishedScrapbook.bgTheme}`}
-          customization={publishedScrapbook}
-          isStandaloneView={true}
-        />
+        <div className="w-full h-[100dvh]">
+          <InteractiveSurpriseTemplate
+            key={`${publishedScrapbook.subdomain}-${publishedScrapbook.bgTheme}`}
+            customization={publishedScrapbook}
+            isStandaloneView={true}
+          />
+        </div>
       </ErrorBoundary>
     );
   }
@@ -514,6 +559,7 @@ A story forever to be told.`,
         {activeTab === 'customizer' && (
           <AnimatedSection>
             <CustomizerStudio
+              currentUser={currentUser}
               customization={customization}
               onChangeCustomization={setCustomization}
               onOpenLivePreview={() => {
@@ -522,7 +568,6 @@ A story forever to be told.`,
               }}
               onPublish={handlePublishWebsite}
               onOpenAuth={handleOpenAuth}
-              currentUser={currentUser}
             />
           </AnimatedSection>
         )}

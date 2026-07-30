@@ -110,21 +110,22 @@ export function LivePreviewModal({
       {/* Frame Container */}
       <div className="flex-1 w-full flex items-center justify-center overflow-hidden py-2">
         <div
-          className={`h-full transition-all duration-300 rounded-3xl overflow-hidden shadow-2xl border border-slate-800 relative bg-slate-900 ${
+          className={`h-full transition-all duration-300 overflow-hidden shadow-2xl relative bg-slate-900 ${
             deviceMode === 'mobile'
-              ? 'w-[375px] max-h-[700px] border-[10px] border-slate-800 rounded-[40px]'
+              ? 'w-full max-w-[375px] max-h-[700px] sm:border-[10px] border-slate-800 rounded-2xl sm:rounded-[40px]'
               : deviceMode === 'tablet'
-              ? 'w-[720px] max-h-[750px] border-[12px] border-slate-800 rounded-[30px]'
-              : 'w-full max-w-5xl h-full'
+              ? 'w-full max-w-[720px] max-h-[750px] sm:border-[12px] border-slate-800 rounded-2xl sm:rounded-[30px]'
+              : 'w-full max-w-5xl h-full rounded-2xl sm:rounded-3xl border border-slate-800'
           }`}
         >
-          {/* Top Notch for mobile frame */}
+          {/* Top Notch for mobile frame (hidden on real mobile screens) */}
           {deviceMode === 'mobile' && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-4 bg-slate-800 rounded-b-xl z-50 pointer-events-none" />
+            <div className="hidden sm:block absolute top-0 left-1/2 -translate-x-1/2 w-32 h-4 bg-slate-800 rounded-b-xl z-50 pointer-events-none" />
           )}
 
-          <ErrorBoundary>
-            <InteractiveSurpriseTemplate
+          <div className="w-full h-full">
+            <ErrorBoundary>
+              <InteractiveSurpriseTemplate
               key={`${customization.bgTheme || template.id}-${customization.enablePasscode}-${customization.secretPasscode}`}
               customization={{
                 ...customization,
@@ -138,6 +139,7 @@ export function LivePreviewModal({
               isStandaloneView={true}
             />
           </ErrorBoundary>
+          </div>
         </div>
       </div>
 

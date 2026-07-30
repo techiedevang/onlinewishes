@@ -257,7 +257,7 @@ async function startServer() {
       });
     } catch (err: any) {
       console.error("Admin OTP Error:", err);
-      res.status(500).json({ error: "Failed to generate OTP" });
+      res.status(500).json({ error: "Failed to generate OTP: " + (err.message || String(err)) });
     }
   });
 

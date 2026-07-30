@@ -53,17 +53,22 @@ async function saveOtpToFirestore(adminEmail, otpCode, expiresAt) {
 
     const docId = encodeURIComponent(adminEmail);
     // CRITICAL: Must append updateMask parameters so Firestore REST API actually writes/overwrites these specific fields!
-    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}?key=${apiKey}&updateMask.fieldPaths=code&updateMask.fieldPaths=expiresAt`;
-
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents:commit?key=${apiKey}`;
     const body = {
-      fields: {
-        code: { stringValue: otpCode },
-        expiresAt: { stringValue: String(expiresAt) }
-      }
+      writes: [
+        {
+          update: {
+            name: `projects/${projectId}/databases/${dbId}/documents/admin_otps/${docId}`,
+            fields: {
+              code: { stringValue: otpCode },
+              expiresAt: { stringValue: String(expiresAt) }
+            }
+          }
+        }
+      ]
     };
-
     const response = await fetch(url, {
-      method: 'PATCH',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },

@@ -51,10 +51,10 @@ export function Header({
           <Logo className="w-10 h-10 group-hover:scale-105 transition-transform drop-shadow-md" />
           <div>
             <div className="flex items-center space-x-1">
-              <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
                 Online<span className="text-rose-500">Wishes</span>
               </span>
-              <span className="bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+              <span className="bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800 shrink-0">
                 PRO
               </span>
             </div>
@@ -65,14 +65,18 @@ export function Header({
         </button>
 
         {/* Desktop Navigation */}
-        <nav aria-label="Main Navigation" className="hidden md:flex items-center space-x-1">
+        <nav aria-label="Main Navigation" className="hidden lg:flex items-center space-x-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
-              <button
+              <a
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                href={`#${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveTab(item.id);
+                }}
                 className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                   isActive
                     ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60 shadow-sm'
@@ -82,7 +86,7 @@ export function Header({
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-rose-500' : ''}`} />
                 <span>{item.label}</span>
-              </button>
+              </a>
             );
           })}
 
@@ -100,12 +104,21 @@ export function Header({
 
         {/* Right Tools & User Actions */}
         <div className="flex items-center space-x-2">
+          
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={onToggleDarkMode}
+            className="hidden lg:flex p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
 
           {/* Admin Dashboard Trigger (If Admin user logged in) */}
           {currentUser && currentUser.role === 'admin' && (
             <button
               onClick={onOpenAdmin}
-              className="hidden sm:flex items-center space-x-1 px-2.5 py-1.5 text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 rounded-lg hover:bg-amber-500/20 transition-colors"
+              className="hidden lg:flex items-center space-x-1 px-2.5 py-1.5 text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 rounded-lg hover:bg-amber-500/20 transition-colors"
               title="Admin Panel"
             >
               <Shield className="w-3.5 h-3.5" />
@@ -114,7 +127,7 @@ export function Header({
           )}
 
           {/* Desktop User Auth Action (Hidden on mobile, moved into 3-lines mobile menu) */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden lg:flex items-center space-x-2">
             {currentUser ? (
               <button
                 onClick={onOpenUserDashboard || onOpenAuth}
@@ -145,7 +158,7 @@ export function Header({
           {/* Mobile Menu Button (3 lines icon) */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+            className="lg:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
             aria-label="Toggle mobile menu"
             aria-expanded={mobileMenuOpen}
           >
@@ -156,7 +169,7 @@ export function Header({
 
       {/* Mobile Menu Drawer (3-lines menu) */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-rose-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-3 shadow-xl">
+        <div className="lg:hidden border-b border-rose-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-3 shadow-xl">
           
           {/* User Sign In / Profile in Mobile Drawer */}
           <div className="pb-2 border-b border-slate-100 dark:border-slate-800">
@@ -204,9 +217,11 @@ export function Header({
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
-              <button
+              <a
                 key={item.id}
-                onClick={() => {
+                href={`#${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
                   setActiveTab(item.id);
                   setMobileMenuOpen(false);
                 }}
@@ -218,7 +233,7 @@ export function Header({
               >
                 <Icon className="w-5 h-5" />
                 <span>{item.label}</span>
-              </button>
+              </a>
             );
           })}
 
@@ -234,6 +249,19 @@ export function Header({
               <span>Request AI Custom Idea</span>
             </button>
           )}
+
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button
+              onClick={() => {
+                onToggleDarkMode();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+            </button>
+          </div>
 
           {currentUser && currentUser.role === 'admin' && (
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800">

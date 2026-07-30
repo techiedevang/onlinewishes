@@ -115,6 +115,11 @@ export function ContactAndNewsletter() {
             <div className="pt-2 space-y-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
               <p>📍 OnlineWishes Inc. - Global Digital Platform</p>
               <p>✉️ codelearnpoint@gmail.com</p>
+              <p>
+                <a href="https://instagram.com/onlinewishes.in" target="_blank" rel="noopener noreferrer" className="hover:text-rose-500 transition-colors inline-flex items-center space-x-1">
+                  <span>📸 @onlinewishes.in</span>
+                </a>
+              </p>
               <p>⚡ Average response time: &lt; 2 hours</p>
             </div>
           </div>

@@ -13,7 +13,7 @@ const _dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(_fi
 function getFirestoreConfig() {
   let projectId = process.env.FIRESTORE_PROJECT_ID;
   let dbId = process.env.FIRESTORE_DATABASE_ID;
-  let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
+  let apiKey = process.env.FIRESTORE_API_KEY;
 
   try {
     const pathsToTry = [
@@ -406,7 +406,7 @@ async function startServer() {
       const docId = req.params.id;
       let projectId = process.env.FIRESTORE_PROJECT_ID;
       let dbId = process.env.FIRESTORE_DATABASE_ID;
-      let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
+      let apiKey = process.env.FIRESTORE_API_KEY;
 
       try {
         const configPath = path.join(process.cwd(), "firebase-applet-config.json");
@@ -479,7 +479,7 @@ async function startServer() {
 
       let projectId = process.env.FIRESTORE_PROJECT_ID;
       let dbId = process.env.FIRESTORE_DATABASE_ID;
-      let apiKey = process.env.FIRESTORE_API_KEY || process.env.GEMINI_API_KEY;
+      let apiKey = process.env.FIRESTORE_API_KEY;
 
       try {
         const configPath = path.join(process.cwd(), "firebase-applet-config.json");

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { motion } from 'motion/react';
 import { User, UserCustomization, Template, CustomAiBlueprint } from './types';
@@ -24,7 +24,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
 import { GoogleAd } from './components/GoogleAd';
 import { updatePageMetadata, updateMetadataForTemplate } from './utils/seo';
-import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart } from 'lucide-react';
+import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart, Instagram } from 'lucide-react';
 import { loadScrapbookFromCloud } from './lib/scrapbookService';
 import { InteractiveSurpriseTemplate } from './components/InteractiveSurpriseTemplate';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -46,7 +46,7 @@ function AnimatedSection({ children, className = "", delay = 0 }: { children: Re
 
 export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>('home');
+  const [rawActiveTab, setRawActiveTab] = useState<string>('home');
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem('onlinewishes_current_user');
@@ -56,6 +56,16 @@ export default function App() {
     }
     return null;
   });
+
+  const setActiveTab = (newTab: string) => {
+    setRawActiveTab(newTab);
+    if (!window.location.pathname.startsWith('/p/')) {
+      window.history.pushState({ tab: newTab }, "", `#${newTab}`);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const activeTab = rawActiveTab;
 
   // Modals
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
@@ -67,6 +77,51 @@ export default function App() {
   const [showAdminDashboard, setShowAdminDashboard] = useState<boolean>(false);
   const [policyTab, setPolicyTab] = useState<PolicyTab | null>(null);
   const [publishedToast, setPublishedToast] = useState<{ show: boolean; link: string } | null>(null);
+
+  useEffect(() => {
+    if (window.location.pathname.startsWith('/p/')) return;
+    
+    // Initialize hash based on state if missing
+    if (!window.location.hash) {
+      window.history.replaceState({ tab: rawActiveTab }, "", `#${rawActiveTab}`);
+    } else {
+      const initialTab = window.location.hash.replace('#', '');
+      if (initialTab) {
+        setRawActiveTab(initialTab);
+        window.history.replaceState({ tab: initialTab }, "", window.location.hash);
+      }
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      // If any modal is open, close it, and DON'T change the tab.
+      if (previewTemplate || reviewTemplate || showCustomAiModal || showAuthModal || showUserDashboard || showAdminDashboard || policyTab) {
+        setPreviewTemplate(null);
+        setReviewTemplate(null);
+        setShowCustomAiModal(false);
+        setShowAuthModal(false);
+        setShowUserDashboard(false);
+        setShowAdminDashboard(false);
+        setPolicyTab(null);
+        // Push the current tab state back to keep history intact.
+        window.history.pushState({ tab: rawActiveTab }, "", `#${rawActiveTab}`);
+        return;
+      }
+
+      if (e.state && e.state.tab) {
+        setRawActiveTab(e.state.tab);
+      } else {
+        const hash = window.location.hash.replace('#', '');
+        if (hash) {
+          setRawActiveTab(hash);
+        } else {
+          setRawActiveTab('home');
+        }
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [rawActiveTab, previewTemplate, reviewTemplate, showCustomAiModal, showAuthModal, showUserDashboard, showAdminDashboard, policyTab]);
 
   // Direct Scrapbook Loading States
   const [publishedScrapbook, setPublishedScrapbook] = useState<UserCustomization | null>(null);
@@ -284,7 +339,7 @@ A story forever to be told.`,
   }, [darkMode]);
 
   // Dynamic SEO Metadata updates
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (publishedScrapbook) {
       updatePageMetadata({
         title: `${publishedScrapbook.recipientName}'s Custom Surprise Scrapbook`,
@@ -293,6 +348,21 @@ A story forever to be told.`,
         ogDescription: `Created by ${publishedScrapbook.senderName || 'their friend'} for ${publishedScrapbook.recipientName}. Open to unwrap the memories and messages!`,
         ogImage: publishedScrapbook.ogImageUrl || (publishedScrapbook.memories && publishedScrapbook.memories.length > 0 ? publishedScrapbook.memories[0].imageUrl : undefined),
         canonicalUrl: `https://onlinewishes.in/p/${publishedScrapbook.subdomain}`,
+        structuredData: {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": `${publishedScrapbook.recipientName}'s Custom Surprise Scrapbook`,
+          "description": `Surprise scrapbook created for ${publishedScrapbook.recipientName}.`,
+          "url": `https://onlinewishes.in/p/${publishedScrapbook.subdomain}`,
+          "publisher": {
+            "@type": "Organization",
+            "name": "OnlineWishes",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://onlinewishes.in/favicon.svg"
+            }
+          }
+        }
       });
     } else if (previewTemplate) {
       updateMetadataForTemplate(previewTemplate.title, previewTemplate.category, previewTemplate.description, previewTemplate.thumbnail);
@@ -697,17 +767,20 @@ A story forever to be told.`,
               <Share2 className="w-3 h-3" />
               <span>Share With {customization.recipientName}</span>
             </p>
-            <div className="grid grid-cols-4 gap-2">
-              <a href={`https://api.whatsapp.com/send?text=I made a surprise website for you! Check it out: ${encodeURIComponent(publishedToast.link)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-2 bg-[#25D366] hover:bg-[#128C7E] rounded-lg transition-colors">
+            <div className="grid grid-cols-5 gap-2">
+              <a href={`https://api.whatsapp.com/send?text=I made a surprise website for you! Check it out: ${encodeURIComponent(publishedToast.link)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-2 bg-[#25D366] hover:bg-[#128C7E] rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-sm">
                 <MessageCircle className="w-4 h-4 text-white" />
               </a>
-              <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publishedToast.link)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-2 bg-[#1877F2] hover:bg-[#166FE5] rounded-lg transition-colors">
+              <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(publishedToast.link)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-2 bg-[#1877F2] hover:bg-[#166FE5] rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-sm">
                 <Facebook className="w-4 h-4 text-white" />
               </a>
-              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(publishedToast.link)}&text=I made a surprise website!`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors">
+              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(publishedToast.link)}&text=I made a surprise website!`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-sm">
                 <Twitter className="w-4 h-4 text-white fill-white" />
               </a>
-              <button onClick={() => { navigator.clipboard.writeText(publishedToast.link); alert('Link copied to clipboard!'); }} className="flex items-center justify-center p-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+              <a href="https://instagram.com/onlinewishes.in" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center p-2 bg-gradient-to-tr from-yellow-400 via-rose-500 to-fuchsia-600 hover:opacity-90 rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-sm">
+                <Instagram className="w-4 h-4 text-white" />
+              </a>
+              <button onClick={() => { navigator.clipboard.writeText(publishedToast.link); alert('Link copied to clipboard!'); }} className="flex items-center justify-center p-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-transform hover:scale-105 active:scale-95 shadow-sm">
                 <Link className="w-4 h-4 text-white" />
               </button>
             </div>

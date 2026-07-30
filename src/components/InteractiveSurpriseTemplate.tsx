@@ -192,9 +192,31 @@ export function InteractiveSurpriseTemplate({
   // Enable passcode gate for any template theme if enabled in customization
   const shouldShowPasscode = Boolean(customization.enablePasscode) && Boolean(customization.secretPasscode);
 
-  const [stage, setStage] = useState<Stage>(
+  const [rawStage, setRawStage] = useState<Stage>(
     shouldShowPasscode ? 'passcode' : 'greeting'
   );
+
+  const setStage = (newStage: Stage) => {
+    setRawStage(newStage);
+    window.history.pushState({ stage: newStage }, "", "");
+  };
+
+  const stage = rawStage;
+
+  useEffect(() => {
+    // Initialize history state on mount
+    window.history.replaceState({ stage: rawStage }, "", "");
+    
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state && e.state.stage) {
+        setRawStage(e.state.stage);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const [passcodeAttempt, setPasscodeAttempt] = useState('');
   const [passcodeError, setPasscodeError] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);

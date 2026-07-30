@@ -11,6 +11,7 @@ export interface MetaDataOptions {
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
+  structuredData?: any;
 }
 
 const DEFAULT_TITLE = 'OnlineWishes - Personalized Digital Surprises & Scrapbooks';
@@ -55,14 +56,51 @@ export function updatePageMetadata(options: MetaDataOptions = {}) {
 
   setMetaTag('meta[name="description"]', 'name', 'description', description);
   setMetaTag('meta[name="keywords"]', 'name', 'keywords', keywords);
+  
   setMetaTag('meta[property="og:title"]', 'property', 'og:title', ogTitle);
   setMetaTag('meta[property="og:description"]', 'property', 'og:description', ogDescription);
   setMetaTag('meta[property="og:image"]', 'property', 'og:image', ogImage);
   setMetaTag('meta[property="og:url"]', 'property', 'og:url', url);
+
   setMetaTag('meta[property="twitter:title"]', 'property', 'twitter:title', ogTitle);
   setMetaTag('meta[property="twitter:description"]', 'property', 'twitter:description', ogDescription);
   setMetaTag('meta[property="twitter:image"]', 'property', 'twitter:image', ogImage);
+
   setLinkTag('canonical', url);
+
+  // Structured Data (JSON-LD)
+  let scriptEl = document.querySelector('script[type="application/ld+json"]') as HTMLScriptElement | null;
+  if (!scriptEl) {
+    scriptEl = document.createElement('script');
+    scriptEl.setAttribute('type', 'application/ld+json');
+    document.head.appendChild(scriptEl);
+  }
+  
+  if (options.structuredData) {
+    scriptEl.textContent = JSON.stringify(options.structuredData);
+  } else {
+    // Default Schema
+    scriptEl.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "OnlineWishes",
+      "url": "https://onlinewishes.in/",
+      "description": DEFAULT_DESC,
+      "publisher": {
+        "@type": "Organization",
+        "name": "OnlineWishes",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://onlinewishes.in/favicon.svg"
+        }
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://onlinewishes.in/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    });
+  }
 }
 
 /**

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, ShieldCheck, Mail, Info, FileText, RefreshCw, Lock } from 'lucide-react';
+import { Heart, ShieldCheck, Mail, Info, FileText, RefreshCw, Lock, Instagram } from 'lucide-react';
 import { Logo } from './Logo';
 import { PolicyTab } from './PolicyModal';
 
@@ -30,6 +30,18 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
             <div className="flex items-center space-x-2 text-[11px] text-emerald-400 font-semibold pt-1">
               <Lock className="w-3 h-3" />
               <span>256-Bit SSL Passcode Protected</span>
+            </div>
+            <div className="pt-2">
+              <a 
+                href="https://instagram.com/onlinewishes.in" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-flex items-center space-x-1.5 text-xs text-slate-400 hover:text-rose-400 transition-all transform hover:scale-105 active:scale-95 origin-left"
+                aria-label="Follow us on Instagram"
+              >
+                <Instagram className="w-4 h-4" />
+                <span>@onlinewishes.in</span>
+              </a>
             </div>
           </div>
 

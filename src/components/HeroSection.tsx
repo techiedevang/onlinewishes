@@ -118,17 +118,17 @@ export function HeroSection({
           </div>
 
           {/* Right Column - Interactive Hero Card & Preview Graphic */}
-          <div className="lg:col-span-5 relative">
+          <div className="lg:col-span-5 relative mt-6 lg:mt-0">
             
             {/* Parallax Floating Photo Stack Graphic */}
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6 }}
-              className="relative mx-auto max-w-md lg:max-w-none"
+              className="relative mx-auto max-w-[95%] sm:max-w-md lg:max-w-none"
             >
               {/* Main Card Frame */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-rose-100 dark:border-slate-800 relative z-10 overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 shadow-2xl border border-rose-100 dark:border-slate-800 relative z-10 overflow-hidden w-full">
                 
                 {/* Header Badge */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
@@ -196,7 +196,7 @@ export function HeroSection({
               </div>
 
               {/* Floating Decorative Pill */}
-              <div className="absolute -bottom-5 -left-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 shadow-xl flex items-center space-x-3 z-20">
+              <div className="absolute -bottom-5 left-4 sm:-left-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 shadow-xl flex items-center space-x-3 z-20">
                 <div className="w-9 h-9 rounded-xl bg-pink-100 dark:bg-pink-950 flex items-center justify-center text-pink-500 font-bold text-sm">
                   21
                 </div>

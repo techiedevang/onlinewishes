@@ -45,42 +45,61 @@ async function run() {
     const distDir = path.join(process.cwd(), 'dist');
 
     // Remove old sitemap files
-    const oldFiles = [
-      'sitemap-pages.xml',
-      'sitemap-features.xml',
-      'sitemap-scrapbooks-1.xml',
-      'sitemap-template-box21-surprise.xml', // Just clean up by regenerating the flat one
-    ];
     fs.readdirSync(publicDir).forEach(file => {
       if (file.startsWith('sitemap') && file !== 'sitemap.xml') {
-        fs.unlinkSync(path.join(publicDir, file));
+        try {
+          fs.unlinkSync(path.join(publicDir, file));
+        } catch (_) {}
       }
     });
 
-    let allRoutes = [...mainRoutes];
-
-    templates.forEach(template => {
-      allRoutes.push({ url: `/${template}`, priority: '0.9', changefreq: 'monthly' });
-      allRoutes.push({ url: `/${template}/customize`, priority: '0.8', changefreq: 'monthly' });
-      allRoutes.push({ url: `/${template}/preview`, priority: '0.8', changefreq: 'monthly' });
-    });
-
-    // User scrapbooks (/p/...) are private and excluded from public sitemaps per privacy requirement.
-
-    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${allRoutes.map(
+    // 1. Generate sitemap-pages.xml
+    const pagesXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${mainRoutes.map(
       (route) => `  <url>\n    <loc>${SITE_URL}${route.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`
     ).join('\n')}\n</urlset>`;
+    fs.writeFileSync(path.join(publicDir, 'sitemap-pages.xml'), pagesXml, 'utf8');
 
-    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapXml, 'utf8');
+    const sitemapsList = ['sitemap-pages.xml'];
+
+    // 2. Generate sitemap-template-*.xml for each template
+    templates.forEach(template => {
+      const templateRoutes = [
+        { url: `/${template}`, priority: '0.9', changefreq: 'weekly' },
+        { url: `/${template}/customize`, priority: '0.8', changefreq: 'monthly' },
+        { url: `/${template}/preview`, priority: '0.8', changefreq: 'monthly' }
+      ];
+
+      const templateXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${templateRoutes.map(
+        (route) => `  <url>\n    <loc>${SITE_URL}${route.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`
+      ).join('\n')}\n</urlset>`;
+
+      const filename = `sitemap-template-${template}.xml`;
+      fs.writeFileSync(path.join(publicDir, filename), templateXml, 'utf8');
+      sitemapsList.push(filename);
+    });
+
+    // 3. Generate master sitemap.xml as Sitemap Index
+    const sitemapIndexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapsList.map(
+      (filename) => `  <sitemap>\n    <loc>${SITE_URL}/${filename}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
+    ).join('\n')}\n</sitemapindex>`;
+
+    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapIndexXml, 'utf8');
 
     const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml`;
     fs.writeFileSync(path.join(publicDir, 'robots.txt'), robotsTxt, 'utf8');
 
-    console.log(`[SEO] Generated flat sitemap.xml and robots.txt in public/`);
+    console.log(`[SEO] Generated Sitemap Index and sub-sitemaps in public/`);
 
     if (fs.existsSync(distDir)) {
+      fs.readdirSync(distDir).forEach(file => {
+        if (file.startsWith('sitemap') && file !== 'sitemap.xml') {
+          try {
+            fs.unlinkSync(path.join(distDir, file));
+          } catch (_) {}
+        }
+      });
       fs.cpSync(publicDir, distDir, { recursive: true });
-      console.log(`[SEO] Copied sitemap.xml and robots.txt to dist/`);
+      console.log(`[SEO] Copied sitemaps and robots.txt to dist/`);
     }
 
   } catch (err) {

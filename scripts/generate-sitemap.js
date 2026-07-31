@@ -100,26 +100,18 @@ async function run() {
 
     fs.writeFileSync(path.join(publicDir, 'sitemap-flat.xml'), consolidatedSitemapXml, 'utf8');
 
-    // 5. Generate master sitemap-index.xml as Sitemap Index (containing all <sitemap> tags)
+    // 5. Generate master sitemap-index.xml and sitemap.xml as clean, valid Sitemap Indexes (containing all <sitemap> tags, compliant with Google standards)
     const sitemapIndexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapsList.map(
       (filename) => `  <sitemap>\n    <loc>${SITE_URL}/${filename}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
     ).join('\n')}\n</sitemapindex>`;
 
     fs.writeFileSync(path.join(publicDir, 'sitemap-index.xml'), sitemapIndexXml, 'utf8');
-
-    // 6. Generate custom combined sitemap.xml containing BOTH <url> tags and <sitemap> tags
-    const combinedSitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <!-- Website URLs -->\n${consolidatedRoutes.map(
-      (route) => `  <url>\n    <loc>${SITE_URL}${route.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`
-    ).join('\n')}\n\n  <!-- Sitemap Index Entries -->\n${sitemapsList.map(
-      (filename) => `  <sitemap>\n    <loc>${SITE_URL}/${filename}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
-    ).join('\n')}\n</urlset>`;
-
-    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), combinedSitemapXml, 'utf8');
+    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapIndexXml, 'utf8');
 
     const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nSitemap: ${SITE_URL}/sitemap-index.xml\nSitemap: ${SITE_URL}/sitemap-flat.xml`;
     fs.writeFileSync(path.join(publicDir, 'robots.txt'), robotsTxt, 'utf8');
 
-    console.log(`[SEO] Generated flat consolidated sitemap-flat.xml, custom combined sitemap.xml, sitemap-index.xml (Index), and sub-sitemaps in public/`);
+    console.log(`[SEO] Generated flat consolidated sitemap-flat.xml, clean sitemap.xml (Index), sitemap-index.xml (Index), and sub-sitemaps in public/`);
 
     if (fs.existsSync(distDir)) {
       fs.readdirSync(distDir).forEach(file => {

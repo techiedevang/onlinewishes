@@ -46,7 +46,7 @@ async function run() {
 
     // Remove old sitemap files
     fs.readdirSync(publicDir).forEach(file => {
-      if (file.startsWith('sitemap') && file !== 'sitemap.xml' && file !== 'sitemap-index.xml') {
+      if (file.startsWith('sitemap') && file !== 'sitemap.xml' && file !== 'sitemap-index.xml' && file !== 'sitemap-flat.xml') {
         try {
           fs.unlinkSync(path.join(publicDir, file));
         } catch (_) {}
@@ -93,28 +93,29 @@ async function run() {
       }
     } catch (_) {}
 
-    // 4. Generate master sitemap.xml as a consolidated flat urlset containing all URLs of your website
+    // 4. Generate master sitemap-flat.xml as a consolidated flat urlset containing all URLs of your website
     const consolidatedSitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${consolidatedRoutes.map(
       (route) => `  <url>\n    <loc>${SITE_URL}${route.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`
     ).join('\n')}\n</urlset>`;
 
-    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), consolidatedSitemapXml, 'utf8');
+    fs.writeFileSync(path.join(publicDir, 'sitemap-flat.xml'), consolidatedSitemapXml, 'utf8');
 
-    // 5. Generate sitemap-index.xml containing all modular sub-sitemaps
+    // 5. Generate master sitemap.xml as Sitemap Index (containing all <sitemap> tags)
     const sitemapIndexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapsList.map(
       (filename) => `  <sitemap>\n    <loc>${SITE_URL}/${filename}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
     ).join('\n')}\n</sitemapindex>`;
 
+    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapIndexXml, 'utf8');
     fs.writeFileSync(path.join(publicDir, 'sitemap-index.xml'), sitemapIndexXml, 'utf8');
 
-    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nSitemap: ${SITE_URL}/sitemap-index.xml`;
+    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nSitemap: ${SITE_URL}/sitemap-index.xml\nSitemap: ${SITE_URL}/sitemap-flat.xml`;
     fs.writeFileSync(path.join(publicDir, 'robots.txt'), robotsTxt, 'utf8');
 
-    console.log(`[SEO] Generated flat consolidated sitemap.xml, sitemap-index.xml, and sub-sitemaps in public/`);
+    console.log(`[SEO] Generated flat consolidated sitemap-flat.xml, sitemap.xml (Index), sitemap-index.xml (Index), and sub-sitemaps in public/`);
 
     if (fs.existsSync(distDir)) {
       fs.readdirSync(distDir).forEach(file => {
-        if (file.startsWith('sitemap') && file !== 'sitemap.xml' && file !== 'sitemap-index.xml') {
+        if (file.startsWith('sitemap') && file !== 'sitemap.xml' && file !== 'sitemap-index.xml' && file !== 'sitemap-flat.xml') {
           try {
             fs.unlinkSync(path.join(distDir, file));
           } catch (_) {}

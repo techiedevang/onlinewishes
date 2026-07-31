@@ -55,12 +55,12 @@ export function PricingSection({
               Want a Completely Custom Design Built From Scratch?
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Share your exact idea or vision with our AI Architect. We will generate a bespoke custom concept, personalized color scheme, custom soundboard, and interactive features built just for you (Flat Price: Rs. 300).
+              Share your exact idea or vision with our AI Architect. We will generate a bespoke custom concept, personalized color scheme, custom soundboard, and interactive features built just for you (Flat Price: Rs. 79).
             </p>
           </div>
 
           <div className="flex-shrink-0 text-center md:text-right w-full md:w-auto">
-            <div className="text-2xl font-black text-emerald-400 mb-2">Rs. 300</div>
+            <div className="text-2xl font-black text-emerald-400 mb-2">Rs. 79</div>
             <button
               onClick={onOpenCustomAiModal}
               className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-xl transition-all flex items-center justify-center space-x-2"

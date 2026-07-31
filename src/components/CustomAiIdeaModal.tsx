@@ -133,8 +133,8 @@ Analyze the user's custom gift website request and return a JSON object with:
 - "conceptDescription": a 2-sentence summary of the custom visual & interactive experience
 - "suggestedThemeColor": Tailwind color string or hex color like "#ec4899"
 - "suggestedMusic": background music style name
-- "estimatedPrice": 300
-- "complexityLevel": "Custom Website" (Rs. 300)
+- "estimatedPrice": 79
+- "complexityLevel": "Custom Website" (Rs. 79)
 - "features": array of 4 bespoke custom feature strings
 - "initialPoem": a custom 4-line poem tailored to recipient and theme
 - "initialParagraph": a warm 2-sentence personal message
@@ -151,7 +151,7 @@ Respond strictly in valid JSON format.`;
 
         if (response.text) {
           aiResult = JSON.parse(response.text);
-          if (aiResult) aiResult.estimatedPrice = 300;
+          if (aiResult) aiResult.estimatedPrice = 79;
         }
       }
 
@@ -162,7 +162,7 @@ Respond strictly in valid JSON format.`;
           conceptDescription: `A custom-engineered website built specifically around your request. Combines unique typography, custom interactive animations, and personalized memory galleries.`,
           suggestedThemeColor: promptLower.includes('neon') ? '#10b981' : promptLower.includes('cyber') ? '#8b5cf6' : '#ec4899',
           suggestedMusic: promptLower.includes('lofi') ? 'lofi_vibes' : promptLower.includes('jazz') ? 'jazz_cafe' : 'acoustic_love',
-          estimatedPrice: 300,
+          estimatedPrice: 79,
           complexityLevel: 'Advanced Bespoke',
           features: [
             `Tailored visual layout designed around your custom request`,
@@ -183,7 +183,7 @@ Respond strictly in valid JSON format.`;
         conceptDescription: `Custom designed website tailored to your idea: "${promptText.slice(0, 50)}...". Includes personalized color palette, custom interactive sections, and unlimited photo support.`,
         suggestedThemeColor: '#ec4899',
         suggestedMusic: 'acoustic_love',
-        estimatedPrice: 300,
+        estimatedPrice: 79,
         complexityLevel: 'Advanced Bespoke',
         features: [
           'Custom layout tailored to your specific theme idea',
@@ -214,7 +214,7 @@ Respond strictly in valid JSON format.`;
     setIsProcessingPayment(true);
     
     try {
-      const price = generatedBlueprint?.estimatedPrice || 300;
+      const price = generatedBlueprint?.estimatedPrice || 79;
       const res = await fetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -313,7 +313,7 @@ Respond strictly in valid JSON format.`;
         audioDuration: recordingTime > 0 ? recordingTime : undefined,
         whatsappNumber: whatsappNumber.trim(),
         requestedSlug: cleanSlug,
-        estimatedPrice: generatedBlueprint?.estimatedPrice || 300,
+        estimatedPrice: generatedBlueprint?.estimatedPrice || 79,
         aiBlueprintTitle: generatedBlueprint?.title || `${recipientName}'s Custom Website`,
       });
 
@@ -688,7 +688,7 @@ Respond strictly in valid JSON format.`;
                     ) : (
                       <>
                         <Send className="w-4 h-4 text-slate-950" />
-                        <span>Submit Custom Idea & Request Website (Rs. 300)</span>
+                        <span>Submit Custom Idea & Request Website (Rs. 79)</span>
                       </>
                     )}
                   </button>

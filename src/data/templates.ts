@@ -130,7 +130,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-pink-500 to-rose-600',
     interactivePreviewType: 'box21',
     photoCount: 15,
-    price: 199,
+    price: 49,
     reviews: SAMPLE_REVIEWS_BOX21,
   },
   {
@@ -146,7 +146,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-rose-500 to-red-600',
     interactivePreviewType: 'love_story',
     photoCount: 12,
-    price: 189,
+    price: 49,
     reviews: [
       {
         id: 'r4',
@@ -173,7 +173,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-purple-500 to-pink-500',
     interactivePreviewType: 'bestie_wall',
     photoCount: 18,
-    price: 169,
+    price: 49,
     reviews: [
       {
         id: 'r5',
@@ -200,7 +200,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-amber-500 to-orange-500',
     interactivePreviewType: 'sister_tree',
     photoCount: 12,
-    price: 159,
+    price: 49,
     reviews: [
       {
         id: 'r6',
@@ -227,7 +227,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-sky-500 to-indigo-600',
     interactivePreviewType: 'birthday_party',
     photoCount: 20,
-    price: 199,
+    price: 49,
     reviews: [
       {
         id: 'r7',
@@ -254,7 +254,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-emerald-500 to-teal-600',
     interactivePreviewType: 'retro_arcade',
     photoCount: 16,
-    price: 179,
+    price: 49,
     reviews: [
       {
         id: 'r8',
@@ -281,7 +281,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-indigo-600 to-purple-800',
     interactivePreviewType: 'galaxy',
     photoCount: 14,
-    price: 189,
+    price: 49,
     reviews: [
       {
         id: 'r9',
@@ -308,7 +308,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-stone-600 to-slate-800',
     interactivePreviewType: 'editorial',
     photoCount: 10,
-    price: 150,
+    price: 49,
     reviews: [
       {
         id: 'r10',
@@ -335,7 +335,7 @@ export const TEMPLATES: Template[] = [
     themeColor: 'from-amber-700 to-amber-900',
     interactivePreviewType: 'vintage',
     photoCount: 15,
-    price: 175,
+    price: 49,
     reviews: [
       {
         id: 'r11',

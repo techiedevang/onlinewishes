@@ -78,7 +78,24 @@ async function run() {
       sitemapsList.push(filename);
     });
 
-    // 3. Generate master sitemap.xml as Sitemap Index
+    // 3. Generate sitemap-sizesnap.xml with external pages requested by user
+    const sizesnapRoutes = [
+      {
+        loc: 'https://sizesnap.in/resize-image/to-10kb',
+        lastmod: '2026-06-18T00:00:00.000Z',
+        changefreq: 'monthly',
+        priority: '0.8'
+      }
+    ];
+
+    const sizesnapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sizesnapRoutes.map(
+      (route) => `  <url>\n    <loc>${route.loc}</loc>\n    <lastmod>${route.lastmod}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`
+    ).join('\n')}\n</urlset>`;
+
+    fs.writeFileSync(path.join(publicDir, 'sitemap-sizesnap.xml'), sizesnapXml, 'utf8');
+    sitemapsList.push('sitemap-sizesnap.xml');
+
+    // 4. Generate master sitemap.xml as Sitemap Index
     const sitemapIndexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapsList.map(
       (filename) => `  <sitemap>\n    <loc>${SITE_URL}/${filename}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
     ).join('\n')}\n</sitemapindex>`;

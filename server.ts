@@ -346,12 +346,9 @@ async function startServer() {
     }
   });
 
-  // Serve Sitemap explicitly with correct XML MIME types and robust error handling
+  // Serve Sitemap with correct XML MIME types and robust error handling
   app.get("/sitemap*.xml", (req, res, next) => {
-    const filename = req.path.split("/").pop();
-    if (!filename) {
-      return res.status(404).send("Sitemap not found");
-    }
+    const filename = req.path.split("/").pop() || "sitemap.xml";
 
     const publicPath = path.join(process.cwd(), "public", filename);
     const distPath = path.join(process.cwd(), "dist", filename);
@@ -372,10 +369,7 @@ async function startServer() {
         }
       });
     } else {
-      console.warn(`Sitemap file not found: ${filename}`);
-      return res.status(404).send(
-        `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`
-      );
+      return res.status(404).type("application/xml").send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`);
     }
   });
 

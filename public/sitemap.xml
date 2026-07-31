@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Core Platform Pages -->
   <url>
     <loc>https://onlinewishes.in/</loc>
     <lastmod>2026-07-30</lastmod>
@@ -25,9 +26,35 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://onlinewishes.in/box21-surprise</loc>
+    <loc>https://onlinewishes.in/contact</loc>
     <lastmod>2026-07-30</lastmod>
     <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://onlinewishes.in/privacy-policy</loc>
+    <lastmod>2026-07-30</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://onlinewishes.in/terms-of-service</loc>
+    <lastmod>2026-07-30</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://onlinewishes.in/refund-policy</loc>
+    <lastmod>2026-07-30</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Template 1: Surprise Box & 3D Interactive Flipbook -->
+  <url>
+    <loc>https://onlinewishes.in/box21-surprise</loc>
+    <lastmod>2026-07-30</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -36,10 +63,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 2: Romantic Sunset & Love Letter Vault -->
   <url>
     <loc>https://onlinewishes.in/romantic-love-story</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -48,10 +77,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 3: Bestie Chaos & Polaroid Scrapbook -->
   <url>
     <loc>https://onlinewishes.in/bestie-chaos-polaroid</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -60,10 +91,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 4: Sisterhood Gratitude Tree -->
   <url>
     <loc>https://onlinewishes.in/sisterhood-gratitude-tree</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -72,10 +105,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 5: Virtual Birthday Party -->
   <url>
     <loc>https://onlinewishes.in/birthday-confetti-party</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -84,10 +119,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 6: Retro 90s Arcade -->
   <url>
     <loc>https://onlinewishes.in/retro-90s-arcade</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -96,10 +133,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 7: Celestial Galaxy -->
   <url>
     <loc>https://onlinewishes.in/celestial-galaxy</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -108,10 +147,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 8: Minimalist Editorial -->
   <url>
     <loc>https://onlinewishes.in/minimalist-editorial</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -120,10 +161,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 9: Vintage Parchment -->
   <url>
     <loc>https://onlinewishes.in/vintage-parchment</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -132,10 +175,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 10: Sunset Romance -->
   <url>
     <loc>https://onlinewishes.in/sunset-romance</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -144,10 +189,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 11: Neon Cyberpunk -->
   <url>
     <loc>https://onlinewishes.in/neon-cyberpunk</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -156,10 +203,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 12: Fairy Tale -->
   <url>
     <loc>https://onlinewishes.in/fairy-tale</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -168,10 +217,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 13: Elegant Wedding -->
   <url>
     <loc>https://onlinewishes.in/elegant-wedding</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
@@ -180,10 +231,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Template 14: Graduation Memories -->
   <url>
     <loc>https://onlinewishes.in/graduation-memories</loc>
     <lastmod>2026-07-30</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>

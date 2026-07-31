@@ -9,7 +9,11 @@ const mainRoutes = [
   { url: '/', priority: '1.0', changefreq: 'daily' },
   { url: '/templates', priority: '0.9', changefreq: 'weekly' },
   { url: '/pricing', priority: '0.8', changefreq: 'monthly' },
-  { url: '/custom_AI', priority: '0.8', changefreq: 'monthly' }
+  { url: '/custom_AI', priority: '0.8', changefreq: 'monthly' },
+  { url: '/contact', priority: '0.6', changefreq: 'monthly' },
+  { url: '/privacy-policy', priority: '0.5', changefreq: 'yearly' },
+  { url: '/terms-of-service', priority: '0.5', changefreq: 'yearly' },
+  { url: '/refund-policy', priority: '0.5', changefreq: 'yearly' }
 ];
 
 const templates = [
@@ -61,22 +65,7 @@ async function run() {
       allRoutes.push({ url: `/${template}/preview`, priority: '0.8', changefreq: 'monthly' });
     });
 
-    try {
-      const firebaseConfig = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-      const snapshot = await getDocs(collection(db, 'scrapbooks'));
-      
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.subdomain && !data.isLocked) {
-           allRoutes.push({ url: `/p/${data.subdomain}`, priority: '0.8', changefreq: 'weekly' });
-        }
-      });
-      console.log(`[SEO] Fetched public scrapbooks for sitemap.`);
-    } catch (err) {
-      console.error('[SEO] Error fetching scrapbooks, skipping:', err);
-    }
+    // User scrapbooks (/p/...) are private and excluded from public sitemaps per privacy requirement.
 
     const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${allRoutes.map(
       (route) => `  <url>\n    <loc>${SITE_URL}${route.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`

@@ -60,6 +60,7 @@ async function run() {
     fs.writeFileSync(path.join(publicDir, 'sitemap-pages.xml'), pagesXml, 'utf8');
 
     const sitemapsList = ['sitemap-pages.xml'];
+    let consolidatedRoutes = [...mainRoutes];
 
     // 2. Generate sitemap-template-*.xml for each template
     templates.forEach(template => {
@@ -68,6 +69,8 @@ async function run() {
         { url: `/${template}/customize`, priority: '0.8', changefreq: 'monthly' },
         { url: `/${template}/preview`, priority: '0.8', changefreq: 'monthly' }
       ];
+
+      consolidatedRoutes.push(...templateRoutes);
 
       const templateXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${templateRoutes.map(
         (route) => `  <url>\n    <loc>${SITE_URL}${route.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`
@@ -78,34 +81,29 @@ async function run() {
       sitemapsList.push(filename);
     });
 
-    // 3. Generate sitemap-sizesnap.xml with external pages requested by user
-    const sizesnapRoutes = [
-      {
-        loc: 'https://sizesnap.in/resize-image/to-10kb',
-        lastmod: '2026-06-18T00:00:00.000Z',
-        changefreq: 'monthly',
-        priority: '0.8'
+    // 3. Delete sizesnap sitemaps if they exist
+    try {
+      const sizesnapPublicPath = path.join(publicDir, 'sitemap-sizesnap.xml');
+      if (fs.existsSync(sizesnapPublicPath)) {
+        fs.unlinkSync(sizesnapPublicPath);
       }
-    ];
+      const sizesnapDistPath = path.join(distDir, 'sitemap-sizesnap.xml');
+      if (fs.existsSync(sizesnapDistPath)) {
+        fs.unlinkSync(sizesnapDistPath);
+      }
+    } catch (_) {}
 
-    const sizesnapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sizesnapRoutes.map(
-      (route) => `  <url>\n    <loc>${route.loc}</loc>\n    <lastmod>${route.lastmod}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`
+    // 4. Generate master sitemap.xml as a consolidated flat urlset containing all URLs of your website
+    const consolidatedSitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${consolidatedRoutes.map(
+      (route) => `  <url>\n    <loc>${SITE_URL}${route.url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${route.changefreq}</changefreq>\n    <priority>${route.priority}</priority>\n  </url>`
     ).join('\n')}\n</urlset>`;
 
-    fs.writeFileSync(path.join(publicDir, 'sitemap-sizesnap.xml'), sizesnapXml, 'utf8');
-    sitemapsList.push('sitemap-sizesnap.xml');
-
-    // 4. Generate master sitemap.xml as Sitemap Index
-    const sitemapIndexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapsList.map(
-      (filename) => `  <sitemap>\n    <loc>${SITE_URL}/${filename}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
-    ).join('\n')}\n</sitemapindex>`;
-
-    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapIndexXml, 'utf8');
+    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), consolidatedSitemapXml, 'utf8');
 
     const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml`;
     fs.writeFileSync(path.join(publicDir, 'robots.txt'), robotsTxt, 'utf8');
 
-    console.log(`[SEO] Generated Sitemap Index and sub-sitemaps in public/`);
+    console.log(`[SEO] Generated flat consolidated sitemap.xml and sub-sitemaps in public/`);
 
     if (fs.existsSync(distDir)) {
       fs.readdirSync(distDir).forEach(file => {

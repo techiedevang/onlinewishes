@@ -46,7 +46,7 @@ async function run() {
 
     // Remove old sitemap files
     fs.readdirSync(publicDir).forEach(file => {
-      if (file.startsWith('sitemap') && file !== 'sitemap.xml') {
+      if (file.startsWith('sitemap') && file !== 'sitemap.xml' && file !== 'sitemap-index.xml') {
         try {
           fs.unlinkSync(path.join(publicDir, file));
         } catch (_) {}
@@ -100,14 +100,21 @@ async function run() {
 
     fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), consolidatedSitemapXml, 'utf8');
 
-    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml`;
+    // 5. Generate sitemap-index.xml containing all modular sub-sitemaps
+    const sitemapIndexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapsList.map(
+      (filename) => `  <sitemap>\n    <loc>${SITE_URL}/${filename}</loc>\n    <lastmod>${today}</lastmod>\n  </sitemap>`
+    ).join('\n')}\n</sitemapindex>`;
+
+    fs.writeFileSync(path.join(publicDir, 'sitemap-index.xml'), sitemapIndexXml, 'utf8');
+
+    const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nSitemap: ${SITE_URL}/sitemap-index.xml`;
     fs.writeFileSync(path.join(publicDir, 'robots.txt'), robotsTxt, 'utf8');
 
-    console.log(`[SEO] Generated flat consolidated sitemap.xml and sub-sitemaps in public/`);
+    console.log(`[SEO] Generated flat consolidated sitemap.xml, sitemap-index.xml, and sub-sitemaps in public/`);
 
     if (fs.existsSync(distDir)) {
       fs.readdirSync(distDir).forEach(file => {
-        if (file.startsWith('sitemap') && file !== 'sitemap.xml') {
+        if (file.startsWith('sitemap') && file !== 'sitemap.xml' && file !== 'sitemap-index.xml') {
           try {
             fs.unlinkSync(path.join(distDir, file));
           } catch (_) {}

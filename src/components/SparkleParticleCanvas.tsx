@@ -67,7 +67,7 @@ export function SparkleParticleCanvas({
     window.addEventListener('resize', updateBounds, { passive: true });
 
     const spawnSparkle = (clientX: number, clientY: number, count = 1) => {
-      if (particles.length > 30) return; // Cap maximum active particles
+      if (particles.length > 60) return; // Cap maximum active particles
 
       const x = (clientX - cachedRect.left) * cachedDpr;
       const y = (clientY - cachedRect.top) * cachedDpr;
@@ -99,20 +99,41 @@ export function SparkleParticleCanvas({
     // Throttled pointer move handler
     const handlePointerMove = (e: PointerEvent) => {
       const now = performance.now();
-      if (now - lastSpawnTime < 60) return; // Throttle to max ~16fps spawn
+      if (now - lastSpawnTime < 40) return; // Throttle to ~25fps spawn
       lastSpawnTime = now;
       spawnSparkle(e.clientX, e.clientY, 2);
     };
 
-    // Throttled touch move
+    // Throttled touch move for mobile
     const handleTouchMove = (e: TouchEvent) => {
       const now = performance.now();
-      if (now - lastSpawnTime < 80) return;
+      if (now - lastSpawnTime < 50) return;
       lastSpawnTime = now;
 
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        spawnSparkle(touch.clientX, touch.clientY, 1);
+        spawnSparkle(touch.clientX, touch.clientY, 2);
+      }
+    };
+
+    // Scroll event handler for mobile and desktop scroll trails
+    let lastScrollY = window.scrollY;
+    let lastScrollTime = 0;
+
+    const handleScroll = () => {
+      const now = performance.now();
+      if (now - lastScrollTime < 45) return; // ~22fps responsive scroll trail
+      lastScrollTime = now;
+
+      const currentScrollY = window.scrollY;
+      const scrollDiff = Math.abs(currentScrollY - lastScrollY);
+      lastScrollY = currentScrollY;
+
+      if (scrollDiff > 2) {
+        // Spawn 2 sparkles across random visible viewport coordinates
+        const rx = cachedRect.left + Math.random() * cachedRect.width;
+        const ry = Math.random() * (window.innerHeight * 0.75) + (window.innerHeight * 0.1);
+        spawnSparkle(rx, ry, 2);
       }
     };
 
@@ -120,6 +141,7 @@ export function SparkleParticleCanvas({
 
     targetElement.addEventListener('pointermove', handlePointerMove as any, { passive: true });
     targetElement.addEventListener('touchmove', handleTouchMove as any, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     // Light ambient background sparkles
     const ambientInterval = setInterval(() => {
@@ -204,6 +226,7 @@ export function SparkleParticleCanvas({
       cancelAnimationFrame(animationFrameId);
       clearInterval(ambientInterval);
       window.removeEventListener('resize', updateBounds);
+      window.removeEventListener('scroll', handleScroll);
       targetElement.removeEventListener('pointermove', handlePointerMove as any);
       targetElement.removeEventListener('touchmove', handleTouchMove as any);
     };

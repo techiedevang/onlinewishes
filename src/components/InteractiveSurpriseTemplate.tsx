@@ -8,6 +8,7 @@ import Book from './Book';
 import { SafeImage } from './SafeImage';
 import { SparkleParticleCanvas } from './SparkleParticleCanvas';
 import { soundscapeEngine } from '../utils/soundscapes';
+import { FriendshipDayGreetView } from './FriendshipDayGreetView';
 
 export type Stage = 'passcode' | 'greeting' | 'question' | 'no_error' | 'paragraph' | 'poem' | 'gift_box' | 'floating_photos' | 'collage' | 'book' | 'final' | 'love_letter' | 'birthday_cake' | 'polaroid_wall' | 'arcade_screen' | 'gratitude_tree' | 'celestial_wishes' | 'editorial_gallery' | 'vintage_letter' | 'anniversary_counter' | 'friendship_quiz' | 'inside_jokes' | 'downloadable_poster' | 'nostalgic_timeline' | 'gratitude_cards' | 'sisterhood_oath' | 'high_res_export' | 'birthday_countdown' | 'interactive_candles' | 'group_wishes_wall' | 'confetti_burst' | 'arcade_level_quest' | 'arcade_pixel_cards' | 'arcade_high_score' | 'star_constellations' | 'shooting_star_wish' | 'editorial_cover' | 'editorial_story' | 'vintage_botanical_gallery';
 
@@ -15,6 +16,7 @@ interface InteractiveSurpriseTemplateProps {
   customization: UserCustomization;
   onClose?: () => void;
   isStandaloneView?: boolean;
+  isPreviewMode?: boolean;
 }
 
 // Helper to compute Spotify embed link
@@ -167,6 +169,18 @@ const getThemeConfig = (themeKey?: string, occasion?: string) => {
         stageGradients: 'bg-gradient-to-br from-amber-950 via-stone-950 to-amber-900',
         icon: '📜',
       };
+    case 'friendship-day-greet':
+    case 'friendship_greet':
+      return {
+        greetingBg: 'bg-emerald-900 text-emerald-100',
+        cardBg: 'bg-white/95 text-slate-800 border-2 border-emerald-300 shadow-2xl',
+        accentBtn: 'bg-emerald-500 hover:bg-emerald-600 text-white font-bold',
+        titleFont: 'font-serif',
+        primaryText: 'text-emerald-900',
+        subText: 'text-emerald-700',
+        stageGradients: 'bg-[#f0fdf4]',
+        icon: '✿',
+      };
     default:
       // Default Pink / Box21 Classic
       return {
@@ -186,11 +200,16 @@ export function InteractiveSurpriseTemplate({
   customization,
   onClose,
   isStandaloneView = false,
+  isPreviewMode = false,
 }: InteractiveSurpriseTemplateProps) {
+  if (customization.bgTheme === 'friendship-day-greet') {
+    return <FriendshipDayGreetView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+
   const [quizAnswered, setQuizAnswered] = useState(false);
   
   // Enable passcode gate for any template theme if enabled in customization
-  const shouldShowPasscode = Boolean(customization.enablePasscode) && Boolean(customization.secretPasscode);
+  const shouldShowPasscode = Boolean(customization.enablePasscode) && Boolean(customization.secretPasscode) && !isPreviewMode;
 
   const [rawStage, setRawStage] = useState<Stage>(
     shouldShowPasscode ? 'passcode' : 'greeting'
@@ -894,7 +913,7 @@ A story forever to be told.`}
                 ))}
               </div>
 
-              <div className="fixed bottom-6 z-30">
+              <div className="absolute bottom-6 z-30">
                 <button
                   onClick={handleNextStage}
                   className="px-6 py-3 bg-slate-900 text-white font-bold rounded-full shadow-2xl hover:bg-slate-800 transition-all flex items-center space-x-2 text-sm"

@@ -120,14 +120,17 @@ export function TemplateDetailsPage({ template, onBack, onPreview, onSelectTempl
                   <InteractiveSurpriseTemplate
                     customization={sampleCustomization}
                     isStandaloneView={true}
+                    isPreviewMode={true}
                   />
                 </div>
 
                 {/* Overlay Fullscreen Button */}
-                <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 bg-slate-900/40 backdrop-blur-sm transition-opacity flex items-center justify-center rounded-[2rem]">
+                <div 
+                  className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 bg-slate-900/40 backdrop-blur-sm transition-opacity flex items-center justify-center rounded-[2rem] cursor-pointer"
+                  onClick={() => onPreview(template)}
+                >
                   <button
-                    onClick={() => onPreview(template)}
-                    className="px-6 py-3 bg-white text-slate-900 font-bold text-sm rounded-xl shadow-2xl hover:scale-105 transition-transform flex items-center space-x-2"
+                    className="px-6 py-3 bg-white text-slate-900 font-bold text-sm rounded-xl shadow-2xl hover:scale-105 transition-transform flex items-center space-x-2 pointer-events-none"
                   >
                     <Maximize2 className="w-4 h-4 text-rose-500" />
                     <span>View Full Screen</span>

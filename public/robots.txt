@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://onlinewishes.in/sitemap.xml
+Sitemap: https://onlinewishes.in/sitemap-index.xml
+Sitemap: https://onlinewishes.in/sitemap-flat.xml

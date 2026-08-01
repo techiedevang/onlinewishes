@@ -6,7 +6,7 @@ import imageCompression from 'browser-image-compression';
 
 // ... existing imports ...
 import { UserCustomization, Memory, OccasionType, User, getMemoryImageStyle } from '../types';
-import { Heart, Sparkles, Upload, Music, Lock, Link as LinkIcon, Plus, Trash2, Check, ArrowRight, Eye, RefreshCw, Type, Image as ImageIcon, Save, Download, RotateCcw, Smartphone, LayoutGrid, GripVertical, Clock, Volume2, VolumeX, Play, Square, Smile, Database, Cloud, Search, Copy, Loader2, X, CreditCard, HelpCircle, Gamepad2, Star, Scroll, MessageSquare, LogIn, UserPlus, Shield, Pencil } from 'lucide-react';
+import { Heart, Sparkles, Upload, Music, Lock, Link as LinkIcon, Plus, Trash2, Check, ArrowRight, Eye, RefreshCw, Type, Image as ImageIcon, Save, Download, RotateCcw, Smartphone, LayoutGrid, GripVertical, Clock, Volume2, VolumeX, Play, Square, Smile, Database, Cloud, Search, Copy, Loader2, X, CreditCard, HelpCircle, Gamepad2, Star, Scroll, MessageSquare, LogIn, UserPlus, Shield, Pencil, Camera } from 'lucide-react';
 
 import { SafeImage } from './SafeImage';
 import { SpotifyIntegrator } from './SpotifyIntegrator';
@@ -1413,7 +1413,215 @@ export function CustomizerStudio({
                 </div>
               )}
 
-              {/* 4. SISTERHOOD GRATITUDE TREE */}
+              {/* 5. FRIENDSHIP DAY GREET */}
+              {selectedTemplate?.id === 'friendship-day-greet' && (
+                <div className="space-y-6">
+                  {/* 6 Little Truths (Scratch Cards) */}
+                  <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 space-y-5">
+                    <div className="flex items-center justify-between">
+                      <h5 className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center space-x-2">
+                        <Star className="w-4 h-4 text-emerald-500 fill-emerald-500" />
+                        <span>Six Secret Scratch Cards (Truths & Covers)</span>
+                      </h5>
+                      <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                        6 Interactive Cards
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Customize the secret <strong>Truth text</strong> hidden under each scratch card. Optionally add a <strong>Cover Photo</strong> or <strong>Sticker Emoji</strong> on top of the scratch surface!
+                    </p>
+
+                    <div className="space-y-4">
+                      {Array.from({ length: 6 }).map((_, idx) => {
+                        const currentReasons = customization.gratitudeReasons && customization.gratitudeReasons.length > 0 
+                          ? customization.gratitudeReasons 
+                          : [
+                              'you always show up no matter what',
+                              "you're genuinely the funniest person I know",
+                              'you keep every secret safe with your life',
+                              'best late-night unhinged advisor',
+                              'you make everyday chaos feel like an adventure',
+                              'a rare, beautiful & genuine soul forever'
+                            ];
+                        
+                        const attachments = customization.scratchCardAttachments || [{}, {}, {}, {}, {}, {}];
+                        const currentAtt = attachments[idx] || {};
+
+                        const updateAttachment = (photoUrl?: string, sticker?: string) => {
+                          const updatedAtts = [...attachments];
+                          updatedAtts[idx] = { photoUrl, sticker };
+                          updateField('scratchCardAttachments', updatedAtts);
+                        };
+
+                        return (
+                          <div key={idx} className="p-3.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-black text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
+                                <span>Truth #{idx + 1}</span>
+                              </label>
+                              <div className="flex items-center gap-1">
+                                {currentAtt.photoUrl && (
+                                  <span className="text-[10px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded">
+                                    Cover Photo Set
+                                  </span>
+                                )}
+                                {currentAtt.sticker && (
+                                  <span className="text-sm">
+                                    {currentAtt.sticker}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Hidden Secret Truth Input */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                                Secret Truth Text (Revealed on Scratch)
+                              </label>
+                              <input
+                                type="text"
+                                value={currentReasons[idx] || ''}
+                                onChange={(e) => {
+                                  const updated = [...currentReasons];
+                                  updated[idx] = e.target.value;
+                                  updateField('gratitudeReasons', updated);
+                                }}
+                                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                                placeholder={`e.g. Secret message #${idx + 1}`}
+                              />
+                            </div>
+
+                            {/* Optional Scratch Cover Photo & Sticker Controls */}
+                            <div className="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {/* Cover Photo Upload */}
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                                  Top Cover Photo (Optional)
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  {currentAtt.photoUrl ? (
+                                    <div className="flex items-center gap-2 w-full">
+                                      <img src={currentAtt.photoUrl} alt="Cover" className="w-9 h-9 rounded-md object-cover border border-emerald-300 shrink-0" />
+                                      <button
+                                        type="button"
+                                        onClick={() => updateAttachment(undefined, currentAtt.sticker)}
+                                        className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-1 rounded border border-rose-200"
+                                      >
+                                        Remove Photo
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <label className="cursor-pointer px-2.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition-colors">
+                                      <Camera className="w-3.5 h-3.5 text-emerald-500" />
+                                      <span>Upload Cover Photo</span>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            try {
+                                              const reader = new FileReader();
+                                              reader.onload = (ev) => {
+                                                const dataUrl = ev.target?.result as string;
+                                                updateAttachment(dataUrl, currentAtt.sticker);
+                                              };
+                                              reader.readAsDataURL(file);
+                                            } catch (err) {
+                                              console.error(err);
+                                            }
+                                          }
+                                        }}
+                                      />
+                                    </label>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Cover Sticker Emoji Picker */}
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                                  Cover Sticker Emoji (Optional)
+                                </label>
+                                <div className="flex flex-wrap items-center gap-1">
+                                  {['📸', '💖', '🌸', '🎨', '🎁', '🚀', '☕', '🎂', '💌', '⭐', '🍦', '🔮'].map((emoji) => (
+                                    <button
+                                      key={emoji}
+                                      type="button"
+                                      onClick={() => updateAttachment(currentAtt.photoUrl, currentAtt.sticker === emoji ? undefined : emoji)}
+                                      className={`text-sm p-1 rounded-md transition-transform ${
+                                        currentAtt.sticker === emoji
+                                          ? 'bg-emerald-500 text-white scale-125 shadow-xs'
+                                          : 'hover:bg-slate-200 dark:hover:bg-slate-700'
+                                      }`}
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                  {currentAtt.sticker && (
+                                    <button
+                                      type="button"
+                                      onClick={() => updateAttachment(currentAtt.photoUrl, undefined)}
+                                      className="text-[9px] text-slate-400 hover:text-rose-500 font-bold ml-1"
+                                    >
+                                      Clear
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Hero Section Title
+                    </label>
+                    <input
+                      type="text"
+                      value={customization.finalHeading || ''}
+                      onChange={(e) => updateField('finalHeading', e.target.value)}
+                      placeholder="To My Favourite Person 💖"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Hero Section Message
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={customization.finalMessage || ''}
+                      onChange={(e) => updateField('finalMessage', e.target.value)}
+                      placeholder="Every year this day comes around and I think the same thing: I got so lucky with you..."
+                      className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
+
+                  <SpeechPoemRecorder
+                    currentPoemText={customization.customParagraph || ''}
+                    onTranscribed={(text) => updateField('customParagraph', text)}
+                  />
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Friendship Letter (Lined Notebook)
+                    </label>
+                    <textarea
+                      rows={6}
+                      value={customization.customParagraph}
+                      onChange={(e) => updateField('customParagraph', e.target.value)}
+                      placeholder="Thank you for being the most incredible friend I could ever ask for..."
+                      className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
+                </div>
+              )}
               {selectedTemplate?.id === 'sisterhood-gratitude-tree' && (
                 <div className="space-y-6">
                   {/* Nostalgic Timeline Milestones Widget */}

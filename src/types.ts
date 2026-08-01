@@ -62,7 +62,7 @@ export interface Template {
   thumbnail: string;
   features: string[];
   themeColor: string;
-  interactivePreviewType: 'box21' | 'love_story' | 'bestie_wall' | 'sister_tree' | 'birthday_party' | 'retro_arcade' | 'galaxy' | 'editorial' | 'vintage';
+  interactivePreviewType: 'box21' | 'love_story' | 'bestie_wall' | 'sister_tree' | 'birthday_party' | 'retro_arcade' | 'galaxy' | 'editorial' | 'vintage' | 'friendship_greet';
   photoCount: number;
   price: number;
   reviews?: TemplateReview[];
@@ -137,6 +137,7 @@ export interface UserCustomization {
   timelineEvents?: TimelineEvent[];
   sisterhoodPromises?: string[];
   gratitudeReasons?: string[];
+  scratchCardAttachments?: Array<{ photoUrl?: string; sticker?: string }>;
   arcadeGamerTag?: string;
   arcadeMissionName?: string;
   arcadeHighScore?: string;

@@ -150,6 +150,7 @@ export function LivePreviewModal({
               }}
               onClose={onClose}
               isStandaloneView={true}
+              isPreviewMode={true}
             />
           </ErrorBoundary>
           </div>

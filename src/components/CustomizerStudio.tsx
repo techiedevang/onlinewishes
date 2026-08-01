@@ -1691,19 +1691,19 @@ export function CustomizerStudio({
                     </div>
                   </div>
 
-                  {/* MEMORY CAPTIONS EDITOR FOR FRIENDSHIP DAY GREET */}
+                  {/* MEMORY PHOTOS & CAPTIONS EDITOR FOR FRIENDSHIP DAY GREET */}
                   <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 space-y-4">
                     <div className="flex items-center justify-between">
                       <h5 className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center space-x-2">
                         <Camera className="w-4 h-4 text-emerald-500" />
-                        <span>Memory Card Captions (Back Side of Flip Cards)</span>
+                        <span>Memory Card Photos & Captions (Text Under Photo)</span>
                       </h5>
                       <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-200">
                         {customization.memories?.length || 6} Memory Cards
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Edit the captions that appear on the back of each memory card when flipped by your bestie!
+                      Upload photos for each memory card and write the custom caption that displays right under the photo!
                     </p>
 
                     <div className="space-y-3">
@@ -1721,31 +1721,61 @@ export function CustomizerStudio({
                         const mem = currentMems[idx] || { id: String(idx + 1), imageUrl: '', caption: '' };
 
                         return (
-                          <div key={idx} className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-300">
-                              {mem.imageUrl ? (
-                                <img src={mem.imageUrl} alt={`Memory ${idx + 1}`} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
-                                  #{idx + 1}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <label className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-0.5">
-                                Memory #{idx + 1} Caption
+                          <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                                Memory Card #{idx + 1}
+                              </span>
+                              <label className="cursor-pointer text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 bg-emerald-100 dark:bg-emerald-950/60 hover:bg-emerald-200 px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 border border-emerald-300 dark:border-emerald-700">
+                                <Camera className="w-3 h-3 text-emerald-600" />
+                                <span>{mem.imageUrl ? 'Change Photo' : 'Upload Photo'}</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        const dataUrl = ev.target?.result as string;
+                                        const updated = [...currentMems];
+                                        updated[idx] = { ...updated[idx], imageUrl: dataUrl };
+                                        updateField('memories', updated);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
                               </label>
-                              <input
-                                type="text"
-                                value={mem.caption || ''}
-                                onChange={(e) => {
-                                  const updated = [...currentMems];
-                                  updated[idx] = { ...updated[idx], caption: e.target.value };
-                                  updateField('memories', updated);
-                                }}
-                                className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-400"
-                                placeholder={`Custom caption for memory #${idx + 1}...`}
-                              />
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-300">
+                                {mem.imageUrl ? (
+                                  <img src={mem.imageUrl} alt={`Memory ${idx + 1}`} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                    #{idx + 1}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">
+                                  Photo Caption (Text written under photo)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={mem.caption || ''}
+                                  onChange={(e) => {
+                                    const updated = [...currentMems];
+                                    updated[idx] = { ...updated[idx], caption: e.target.value };
+                                    updateField('memories', updated);
+                                  }}
+                                  className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-400"
+                                  placeholder={`e.g. Best day at the beach 🌊`}
+                                />
+                              </div>
                             </div>
                           </div>
                         );

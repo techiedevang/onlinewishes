@@ -929,7 +929,7 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
                       >
                         {/* FRONT SIDE */}
                         <div className="absolute inset-0 w-full h-full bg-white rounded-2xl p-2 sm:p-3 border-2 border-emerald-200 shadow-[3px_3px_0px_0px_rgba(167,243,208,0.8)] [backface-visibility:hidden] flex flex-col justify-between">
-                          <div className="w-full h-32 sm:h-44 rounded-xl overflow-hidden border border-emerald-100 bg-amber-50">
+                          <div className="w-full h-28 sm:h-40 rounded-xl overflow-hidden border border-emerald-100 bg-amber-50">
                             <SafeImage
                               src={mem.imageUrl}
                               fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=600&q=80"
@@ -937,9 +937,13 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold text-emerald-700 px-0.5 pt-0.5">
-                            <span>Memory #{idx + 1} ✿</span>
-                            <span className="text-rose-400">Flip 🔄</span>
+                          <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold px-0.5 pt-1 min-w-0">
+                            <span className="truncate pr-1 text-slate-800 font-serif italic text-[11px] sm:text-xs">
+                              {mem.caption || `Memory #${idx + 1}`}
+                            </span>
+                            <span className="text-rose-500 shrink-0 text-[9px] sm:text-[10px] bg-rose-50 px-1.5 py-0.5 rounded-full border border-rose-200">
+                              Flip 🔄
+                            </span>
                           </div>
                         </div>
 

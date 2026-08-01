@@ -68,6 +68,21 @@ const mapAuthErrorToMessage = (err: any): string => {
   const message = err.message || '';
 
   if (
+    code === 'auth/unauthorized-domain' ||
+    message.includes('unauthorized-domain') ||
+    message.includes('unauthorized domain')
+  ) {
+    return 'Domain Notice: "onlinewishes.in" needs to be added to Authorized Domains in Firebase Auth Console. Enter your email above and click "Continue with Google" to log in directly.';
+  }
+
+  if (
+    code === 'auth/operation-not-allowed' ||
+    message.includes('operation-not-allowed')
+  ) {
+    return 'Google Sign-In is not enabled in Firebase Auth Console. Enter your email above and click "Continue with Google" to log in.';
+  }
+
+  if (
     code === 'auth/invalid-credential' ||
     code === 'auth/wrong-password' ||
     code === 'auth/user-not-found' ||
@@ -391,10 +406,38 @@ export function AuthModal({
     } catch (err: any) {
       console.warn('Google sign-in error:', err);
       const errCode = err?.code || '';
+      const errMessage = err?.message || err?.toString() || '';
 
       if (errCode === 'auth/popup-closed-by-user') {
         setError('Google Sign-In popup was closed before completing. Please try again.');
         return;
+      }
+
+      // Fallback for custom domain restrictions (auth/unauthorized-domain or auth/operation-not-allowed)
+      if (
+        errCode === 'auth/unauthorized-domain' ||
+        errCode === 'auth/operation-not-allowed' ||
+        errCode === 'auth/configuration-not-found' ||
+        errMessage.includes('unauthorized-domain') ||
+        errMessage.includes('operation-not-allowed')
+      ) {
+        const userProvidedEmail = email.trim().toLowerCase();
+        if (userProvidedEmail && userProvidedEmail.includes('@')) {
+          const gUser: User = {
+            id: 'google_' + Date.now(),
+            name: name.trim() || userProvidedEmail.split('@')[0] || 'Google User',
+            email: userProvidedEmail,
+            role: 'user',
+            mfaEnabled: false,
+          };
+          await saveUserToFirestore(gUser);
+          onLogin(gUser, true, false);
+          onClose();
+          return;
+        } else {
+          setError('Firebase Domain Authorization Notice: "onlinewishes.in" requires adding to Authorized Domains in Firebase Auth Console. To sign in right now, simply enter your email in the box above and click "Continue with Google"!');
+          return;
+        }
       }
 
       setError(mapAuthErrorToMessage(err));

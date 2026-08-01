@@ -16,7 +16,23 @@ export function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCropperProps) 
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
+  // Refs for pinch-to-zoom
+  const pinchStartDist = useRef<number | null>(null);
+  const pinchStartScale = useRef<number>(1);
+  
   const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e && e.touches.length === 2) {
+      // It's a pinch
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      pinchStartDist.current = dist;
+      pinchStartScale.current = scale;
+      setIsDragging(false); // Stop dragging while pinching
+      return;
+    }
+
     setIsDragging(true);
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -27,6 +43,18 @@ export function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCropperProps) 
   };
 
   const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if ('touches' in e && e.touches.length === 2) {
+      if (pinchStartDist.current !== null) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const newScale = Math.min(Math.max(0.1, pinchStartScale.current * (dist / pinchStartDist.current)), 5); // Increased max scale for pinch to 5
+        setScale(newScale);
+      }
+      return;
+    }
+
     if (!isDragging) return;
     const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
@@ -35,10 +63,11 @@ export function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCropperProps) 
       x: clientX - dragStart.x,
       y: clientY - dragStart.y
     });
-  }, [isDragging, dragStart]);
+  }, [isDragging, dragStart, setScale]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    pinchStartDist.current = null;
   }, []);
 
   useEffect(() => {

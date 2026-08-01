@@ -264,39 +264,41 @@ export function SpotifyIntegrator({
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             </div>
           </div>
-          {customization.spotifyPreviewUrl ? (
-            <div className="p-3 bg-slate-950 rounded-lg">
-              <div className="flex items-center space-x-3 mb-2">
-                <Music className="w-4 h-4 text-emerald-500" />
-                <div className="flex-1 truncate">
-                  <p className="text-xs font-bold text-white truncate">{customization.spotifyTrackName}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{customization.spotifyArtistName}</p>
-                </div>
+          <div className="p-3 bg-slate-950 rounded-lg space-y-2">
+            <div className="flex items-center space-x-3 mb-1">
+              <Music className="w-4 h-4 text-emerald-500" />
+              <div className="flex-1 truncate flex flex-col gap-1.5">
+                <input
+                  type="text"
+                  value={customization.spotifyTrackName || ''}
+                  onChange={(e) => onChangeCustomization({ ...customization, spotifyTrackName: e.target.value, musicTrack: e.target.value })}
+                  placeholder="Song Title..."
+                  className="bg-transparent border-b border-emerald-900 focus:border-emerald-500 text-xs font-bold text-white placeholder-slate-500 outline-none w-full pb-0.5"
+                />
+                <input
+                  type="text"
+                  value={customization.spotifyArtistName || ''}
+                  onChange={(e) => onChangeCustomization({ ...customization, spotifyArtistName: e.target.value })}
+                  placeholder="Artist Name..."
+                  className="bg-transparent border-b border-slate-800 focus:border-slate-600 text-[10px] text-slate-400 placeholder-slate-600 outline-none w-full pb-0.5"
+                />
               </div>
+            </div>
+            {customization.spotifyPreviewUrl ? (
               <audio controls src={customization.spotifyPreviewUrl} className="w-full h-8" autoPlay />
-            </div>
-          ) : getMediaEmbedUrl(customization.spotifyTrackUrl) ? (
-            <iframe
-              src={getMediaEmbedUrl(customization.spotifyTrackUrl)!}
-              width="100%"
-              height="80"
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              className="rounded-lg"
-              title="Media Audio Player"
-            />
-          ) : (
-             <div className="p-3 bg-slate-950 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Music className="w-4 h-4 text-emerald-500" />
-                <div className="flex-1 truncate">
-                  <p className="text-xs font-bold text-white truncate">{customization.spotifyTrackName || 'Audio Track'}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{customization.spotifyArtistName || 'Selected'}</p>
-                </div>
-              </div>
-            </div>
-          )}
+            ) : getMediaEmbedUrl(customization.spotifyTrackUrl) ? (
+              <iframe
+                src={getMediaEmbedUrl(customization.spotifyTrackUrl)!}
+                width="100%"
+                height="80"
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                className="rounded-lg"
+                title="Media Audio Player"
+              />
+            ) : null}
+          </div>
         </div>
       )}
 

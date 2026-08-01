@@ -483,9 +483,9 @@ A story forever to be told.`,
     }, 250);
   };
 
-  const handlePublishWebsite = () => {
+  const handlePublishWebsite = (finalSubdomain?: string) => {
     triggerPublishConfetti();
-    const generatedUrl = `https://onlinewishes.in/p/${customization.subdomain || 'bestie-surprise'}`;
+    const generatedUrl = `https://onlinewishes.in/p/${finalSubdomain || customization.subdomain || 'bestie-surprise'}`;
     setPublishedToast({
       show: true,
       link: generatedUrl,

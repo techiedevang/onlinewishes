@@ -27,7 +27,7 @@ interface CustomizerStudioProps {
   customization: UserCustomization;
   onChangeCustomization: (updated: UserCustomization) => void;
   onOpenLivePreview: () => void;
-  onPublish: () => void;
+  onPublish: (finalSubdomain?: string) => void;
   onOpenAuth?: (initialMode?: 'signin' | 'signup') => void;
   currentUser?: User | null;
 }
@@ -241,8 +241,8 @@ export function CustomizerStudio({
         setTimeout(async () => {
           setIsProcessingPayment(false);
           setShowPaymentModal(false);
-          await handleSaveToCloudDatabase();
-          onPublish();
+          const finalId = await handleSaveToCloudDatabase();
+          onPublish(finalId);
         }, 1500);
         return;
       }
@@ -274,8 +274,8 @@ export function CustomizerStudio({
           }
           setIsProcessingPayment(false);
           setShowPaymentModal(false);
-          await handleSaveToCloudDatabase();
-          onPublish();
+          const finalId = await handleSaveToCloudDatabase();
+          onPublish(finalId);
         },
         prefill: {
           name: customization.senderName || 'Sender'
@@ -323,18 +323,23 @@ export function CustomizerStudio({
   const handleSaveToCloudDatabase = async () => {
     setIsSavingCloud(true);
     setCloudMessage('Generating dynamic social preview thumbnail...');
+    let recordId: string | undefined;
     try {
       let updatedCustomization = { ...customization };
+      if (!updatedCustomization.subdomain) {
+        updatedCustomization.subdomain = `sb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      }
       try {
         const base64Og = await generateOgImage(customization);
-        const ogImageUrl = await saveGeneratedOgImage(base64Og, customization.subdomain || `sb_${Date.now()}`);
+        const ogImageUrl = await saveGeneratedOgImage(base64Og, updatedCustomization.subdomain);
         updatedCustomization.ogImageUrl = ogImageUrl;
-        onChangeCustomization(updatedCustomization);
       } catch (ogErr) {
         console.error('Failed to generate dynamic OG image:', ogErr);
       }
 
-      const recordId = await saveScrapbookToCloud(updatedCustomization, currentUser?.id);
+      onChangeCustomization(updatedCustomization);
+
+      recordId = await saveScrapbookToCloud(updatedCustomization, currentUser?.id);
       setCloudSavedId(recordId);
       setCloudMessage(`Successfully saved to Cloud Firestore! Record ID: ${recordId}`);
     } catch (err) {
@@ -343,6 +348,7 @@ export function CustomizerStudio({
     } finally {
       setIsSavingCloud(false);
     }
+    return recordId;
   };
 
   // Search and restore saved scrapbook from Cloud Firestore Database
@@ -485,6 +491,31 @@ export function CustomizerStudio({
     }
   };
 
+  const handleUploadCoverPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!checkIsLoggedIn()) {
+      setShowAuthUploadModal(true);
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgressMsg('Compressing and uploading cover photo...');
+    try {
+      const compressedFile = await imageCompression(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1600, useWebWorker: true });
+      const scrapbookId = customization.subdomain || `sb_${Date.now()}`;
+      const url = await uploadImageToStorage(compressedFile, scrapbookId);
+      updateField('coverPhotoUrl', url);
+      updateField('heroPhotoUrl', url);
+    } catch (err) {
+      console.error('Failed to upload cover photo:', err);
+      alert('Failed to upload cover photo. Please try again.');
+    } finally {
+      setIsUploading(false);
+      setUploadProgressMsg('');
+    }
+  };
+
   const [cropperFile, setCropperFile] = useState<{ file: File; url: string; index: number } | null>(null);
 
   const handleSingleFileSelected = async (file: File, index: number) => {
@@ -517,7 +548,12 @@ export function CustomizerStudio({
       const compressedFile = await imageCompression(croppedFile, { maxSizeMB: 0.5, maxWidthOrHeight: 1200, useWebWorker: true });
       const url = await uploadImageToStorage(compressedFile, scrapbookId);
       
-      const newMemory: Memory = {
+      const existingMemory = customization.memories[index];
+      const newMemory: Memory = existingMemory ? {
+        ...existingMemory,
+        imageUrl: url,
+        fallbackUrl: existingMemory.fallbackUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800',
+      } : {
         id: `${Date.now()}-${index}-${Math.random().toString(36).substring(2, 6)}`,
         imageUrl: url,
         caption: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ") || `Memory #${index + 1}`,
@@ -1441,8 +1477,11 @@ export function CustomizerStudio({
                         value={customization.musicTrack ?? customization.spotifyTrackName ?? ''}
                         onChange={(e) => {
                           const val = e.target.value;
-                          updateField('musicTrack', val);
-                          updateField('spotifyTrackName', val);
+                          onChangeCustomization({
+                            ...customization,
+                            musicTrack: val,
+                            spotifyTrackName: val
+                          });
                         }}
                         placeholder="e.g. Our Favourite Song 🎵"
                         className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-emerald-900 dark:text-white"
@@ -1472,8 +1511,14 @@ export function CustomizerStudio({
                             const defaultPresetName = trackNames[newSoundscape] || 'Our Special Song';
                             // If user hasn't typed a custom song title, auto-fill with preset name
                             if (!customization.musicTrack || customization.musicTrack === 'Kawaii Cafe Beats ☕' || customization.musicTrack === 'Acoustic Friendship Anthem 🎸' || customization.musicTrack === 'Lofi Sunset Chill 🌅' || customization.musicTrack === 'Piano Memory Lane 🎹' || customization.musicTrack === 'Stargazing Night ✨' || customization.musicTrack === 'No Music') {
-                              updateField('musicTrack', defaultPresetName);
-                              updateField('spotifyTrackName', defaultPresetName);
+                              onChangeCustomization({
+                                ...customization,
+                                ambientSoundscape: newSoundscape,
+                                musicTrack: defaultPresetName,
+                                spotifyTrackName: defaultPresetName
+                              });
+                            } else {
+                              updateField('ambientSoundscape', newSoundscape);
                             }
                           }}
                           className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200"
@@ -1505,11 +1550,14 @@ export function CustomizerStudio({
                                 const reader = new FileReader();
                                 reader.onload = (ev) => {
                                   const audioDataUrl = ev.target?.result as string;
-                                  updateField('spotifyPreviewUrl', audioDataUrl);
-                                  updateField('spotifyTrackUrl', audioDataUrl);
                                   const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
-                                  updateField('musicTrack', nameWithoutExt);
-                                  updateField('spotifyTrackName', nameWithoutExt);
+                                  onChangeCustomization({
+                                    ...customization,
+                                    spotifyPreviewUrl: audioDataUrl,
+                                    spotifyTrackUrl: audioDataUrl,
+                                    musicTrack: nameWithoutExt,
+                                    spotifyTrackName: nameWithoutExt
+                                  });
                                 };
                                 reader.readAsDataURL(file);
                               }
@@ -1522,8 +1570,11 @@ export function CustomizerStudio({
                             <button
                               type="button"
                               onClick={() => {
-                                updateField('spotifyPreviewUrl', undefined);
-                                updateField('spotifyTrackUrl', undefined);
+                                onChangeCustomization({
+                                  ...customization,
+                                  spotifyPreviewUrl: undefined,
+                                  spotifyTrackUrl: undefined
+                                });
                               }}
                               className="text-rose-500 hover:text-rose-700 font-bold ml-2 cursor-pointer"
                             >
@@ -1731,28 +1782,42 @@ export function CustomizerStudio({
                               <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
                                 Memory Card #{idx + 1}
                               </span>
-                              <label className="cursor-pointer text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 bg-emerald-100 dark:bg-emerald-950/60 hover:bg-emerald-200 px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 border border-emerald-300 dark:border-emerald-700">
-                                <Camera className="w-3 h-3 text-emerald-600" />
-                                <span>{mem.imageUrl ? 'Change Photo' : 'Upload Photo'}</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (ev) => {
-                                        const dataUrl = ev.target?.result as string;
-                                        const updated = [...currentMems];
-                                        updated[idx] = { ...updated[idx], imageUrl: dataUrl };
-                                        updateField('memories', updated);
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  }}
-                                />
-                              </label>
+                              <div className="flex items-center gap-1.5">
+                                {mem.imageUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (!customization.memories || customization.memories.length === 0) {
+                                        updateField('memories', currentMems);
+                                      }
+                                      setEditingMemoryIndex(idx);
+                                    }}
+                                    className="px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 rounded-md text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center gap-1 shadow-sm"
+                                    title="Edit & Apply Filters"
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                    <span>Edit</span>
+                                  </button>
+                                )}
+                                <label className="cursor-pointer text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 bg-emerald-100 dark:bg-emerald-950/60 hover:bg-emerald-200 px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 border border-emerald-300 dark:border-emerald-700">
+                                  <Camera className="w-3 h-3 text-emerald-600" />
+                                  <span>{mem.imageUrl ? 'Change Photo' : 'Upload Photo'}</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        if (!customization.memories || customization.memories.length === 0) {
+                                          updateField('memories', currentMems);
+                                        }
+                                        handleSingleFileSelected(file, idx);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              </div>
                             </div>
 
                             <div className="flex items-start gap-3">
@@ -1821,18 +1886,7 @@ export function CustomizerStudio({
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                const dataUrl = ev.target?.result as string;
-                                updateField('coverPhotoUrl', dataUrl);
-                                updateField('heroPhotoUrl', dataUrl);
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
+                          onChange={handleUploadCoverPhoto}
                         />
                       </label>
                     </div>
@@ -1957,18 +2011,7 @@ export function CustomizerStudio({
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                const dataUrl = ev.target?.result as string;
-                                updateField('coverPhotoUrl', dataUrl);
-                                updateField('heroPhotoUrl', dataUrl);
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
+                          onChange={handleUploadCoverPhoto}
                         />
                       </label>
                     </div>

@@ -784,11 +784,18 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
                 {/* Cute Washi Tape */}
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-emerald-200/80 border border-emerald-300 transform -rotate-1 shadow-sm rounded-sm" />
                 
-                <div className="w-full h-48 sm:h-56 rounded-xl overflow-hidden border border-amber-200">
+                <div className="w-full h-48 sm:h-56 rounded-xl overflow-hidden border border-amber-200 relative">
+                  {/* Top Friendship Day Header Banner over Image */}
+                  <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-slate-950/85 via-slate-900/50 to-transparent pt-2 pb-5 px-2 text-center z-10">
+                    <span className="text-white font-serif font-black text-[11px] sm:text-xs tracking-widest uppercase drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] flex items-center justify-center gap-1.5">
+                      <span className="text-amber-300">✨</span> HAPPY FRIENDSHIP DAY <span className="text-amber-300">✨</span>
+                    </span>
+                  </div>
+
                   <SafeImage
-                    src={customization.coverPhotoUrl || customization.heroPhotoUrl || memoriesList[0]?.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=800&q=80'}
-                    fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=800&q=80"
-                    alt="To the best one"
+                    src={customization.coverPhotoUrl || customization.heroPhotoUrl || memoriesList[0]?.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=1200&q=80'}
+                    fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=1200&q=80"
+                    alt="Happy Friendship Day Best Friends"
                     className="w-full h-full object-cover"
                   />
                 </div>

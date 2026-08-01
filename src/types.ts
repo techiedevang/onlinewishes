@@ -3,7 +3,7 @@ export interface Memory {
   imageUrl: string;
   caption: string;
   backNote?: string;
-  date: string;
+  date?: string;
   fallbackUrl?: string;
   isBig?: boolean;
   filter?: string; // e.g., 'none', 'sepia', 'grayscale', 'vintage', 'contrast', 'bright', 'warm', 'cool'
@@ -63,7 +63,7 @@ export interface Template {
   thumbnail: string;
   features: string[];
   themeColor: string;
-  interactivePreviewType: 'box21' | 'love_story' | 'bestie_wall' | 'sister_tree' | 'birthday_party' | 'retro_arcade' | 'galaxy' | 'editorial' | 'vintage' | 'friendship_greet';
+  interactivePreviewType: 'box21' | 'love_story' | 'bestie_wall' | 'sister_tree' | 'birthday_party' | 'retro_arcade' | 'galaxy' | 'editorial' | 'vintage' | 'friendship_greet' | 'sorry_apology';
   photoCount: number;
   price: number;
   reviews?: TemplateReview[];
@@ -143,6 +143,16 @@ export interface UserCustomization {
   arcadeMissionName?: string;
   arcadeHighScore?: string;
   shootingStarWishText?: string;
+
+  // Apology & Forgiveness Customization
+  apologyRecipientType?: 'bestie' | 'girlfriend' | 'boyfriend' | 'friend' | 'sister' | 'someone_special';
+  apologyLetterTitle?: string;
+  apologyLetterBody?: string;
+  apologyReasons?: Array<{ id: string; title: string; note: string }>;
+  apologyPromises?: string[];
+  forgiveButtonText?: string;
+  coverPhotoUrl?: string;
+  heroPhotoUrl?: string;
 
   // Final Completion / Thank You Screen Customization
   finalHeading?: string;

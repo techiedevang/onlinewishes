@@ -57,6 +57,22 @@ A story forever to be told.`,
   arcadeMissionName: 'BESTIE SURPRISE QUEST',
   arcadeHighScore: '999,999',
   shootingStarWishText: 'May you always find your guiding star in the darkest nights, and may your brightest dreams come true.',
+  apologyRecipientType: 'bestie',
+  apologyLetterTitle: "I'm So Sorry, My Dear 🥺",
+  apologyLetterBody: "I hate that I upset you. You mean the world to me, and life feels incomplete when we aren't talking. Please read these promises and reasons from my heart.",
+  apologyReasons: [
+    { id: '1', title: 'Why I Am So Sorry 😔', note: 'I reacted without thinking, and I deeply regret causing you any pain or frustration.' },
+    { id: '2', title: 'What You Mean To Me ✨', note: 'You are my safe place, my go-to person, and the one who makes everything brighter.' },
+    { id: '3', title: 'What I Learned 💡', note: 'Your feelings always matter to me, and I will be more thoughtful and understanding.' },
+    { id: '4', title: 'Why I Miss Us 💖', note: 'No joke is funny and no story is complete until I share it with you.' }
+  ],
+  apologyPromises: [
+    'I promise to listen to you with a calm and open heart.',
+    'I promise to never take our bond or your kindness for granted.',
+    'I promise to bring your favorite snack next time we meet 🍦',
+    'I promise to always value our connection above any misunderstanding.'
+  ],
+  forgiveButtonText: 'YES, I Forgive You! 🫂❤️',
   finalHeading: '',
   finalMessage: '',
   finalImageUrl: '',
@@ -117,6 +133,33 @@ export const SAMPLE_REVIEWS_BOX21: TemplateReview[] = [
 ];
 
 export const TEMPLATES: Template[] = [
+  {
+    id: 'sorry-heartfelt-apology',
+    title: 'Heartfelt Apology & Forgiveness Scrapbook',
+    category: 'girlfriend',
+    description: 'A deeply emotional, interactive apology & forgiveness surprise website. Designed for Besties, Partners, Friends & Loved Ones with an interactive Forgiveness Meter, 10 Reasons I Am Sorry origami envelopes, playful evasive forgive button, promise checklist, memory gallery, and soothing background music.',
+    badge: '🥹 Soft & Heartfelt',
+    rating: 4.99,
+    reviewsCount: 530,
+    thumbnail: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&fit=crop',
+    features: ['Custom Recipient Selector (Bestie/GF/Friend)', 'Interactive Forgiveness Meter (0-100%)', 'Playful Evasive Forgive Button', 'Origami Reasons Envelopes', 'Promises I Make Checklist', 'Soothing Background Music'],
+    themeColor: 'from-rose-400 to-pink-500',
+    interactivePreviewType: 'sorry_apology',
+    photoCount: 12,
+    price: 49,
+    reviews: [
+      {
+        id: 'r_sorry',
+        templateId: 'sorry-heartfelt-apology',
+        author: 'Rohan M.',
+        rating: 5,
+        date: '2 days ago',
+        comment: 'I made a silly mistake with my girlfriend and sent her this apology website. The evasive No button made her laugh, and she clicked Yes! We are back stronger than ever.',
+        verified: true,
+        recipientType: 'Girlfriend',
+      }
+    ],
+  },
   {
     id: 'friendship-day-greet',
     title: 'Friendship Day',

@@ -4,7 +4,7 @@ import {
   Volume2, VolumeX, Play, Pause, Heart, Sparkles, Music, Check, RefreshCw, 
   Camera, Smile, Image as ImageIcon, ChevronRight, ChevronLeft, Plus, X, Upload 
 } from 'lucide-react';
-import { UserCustomization } from '../types';
+import { UserCustomization, Memory } from '../types';
 import { SafeImage } from './SafeImage';
 import confetti from 'canvas-confetti';
 import { soundscapeEngine } from '../utils/soundscapes';
@@ -356,7 +356,7 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
   }, [isPlayingAudio]);
 
   // Fallback memories or customized memories
-  const memoriesList = customization.memories && customization.memories.length > 0
+  const memoriesList: Memory[] = customization.memories && customization.memories.length > 0
     ? customization.memories
     : [
         { id: '1', imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=800&q=80', caption: 'Day one energy — best friends forever! 💖' },
@@ -786,8 +786,8 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
                 
                 <div className="w-full h-48 sm:h-56 rounded-xl overflow-hidden border border-amber-200">
                   <SafeImage
-                    src={memoriesList[0]?.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=600&q=80'}
-                    fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=600&q=80"
+                    src={customization.coverPhotoUrl || customization.heroPhotoUrl || memoriesList[0]?.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=800&q=80'}
+                    fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=800&q=80"
                     alt="To the best one"
                     className="w-full h-full object-cover"
                   />

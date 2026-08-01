@@ -182,6 +182,20 @@ class SoundscapeEngine {
     this.isPlaying = false;
   }
 
+  public toggleSoundscape(soundId: string = 'romantic_piano'): boolean {
+    if (this.isPlaying) {
+      this.stop();
+      return false;
+    } else {
+      this.play(soundId);
+      return true;
+    }
+  }
+
+  public getIsPlaying(): boolean {
+    return this.isPlaying;
+  }
+
   // 1. Rainy Cafe Generator (Pink noise filter + drop impulses)
   private createRainyCafeSound() {
     if (!this.ctx || !this.masterGain) return;

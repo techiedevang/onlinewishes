@@ -17,6 +17,8 @@ const mainRoutes = [
 ];
 
 const templates = [
+  'sorry-heartfelt-apology',
+  'friendship-day-greet',
   'box21-surprise',
   'romantic-love-story',
   'bestie-chaos-polaroid',
@@ -25,12 +27,7 @@ const templates = [
   'retro-90s-arcade',
   'celestial-galaxy',
   'minimalist-editorial',
-  'vintage-parchment',
-  'sunset-romance',
-  'neon-cyberpunk',
-  'fairy-tale',
-  'elegant-wedding',
-  'graduation-memories'
+  'vintage-parchment'
 ];
 
 const today = new Date().toISOString().split('T')[0];

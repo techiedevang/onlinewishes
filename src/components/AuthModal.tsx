@@ -4,6 +4,8 @@ import { X, Shield, Mail, Lock, User as UserIcon, ArrowRight, UserPlus, LogIn, K
 import { auth, db } from '../lib/firebase';
 import { 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider, 
   signOut, 
   onAuthStateChanged,
@@ -130,8 +132,27 @@ export function AuthModal({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Sync with actual firebase auth state
+  // Sync with actual firebase auth state & process redirect logins
   useEffect(() => {
+    getRedirectResult(auth).then(async (res) => {
+      if (res?.user) {
+        const user = res.user;
+        const gUser: User = {
+          id: user.uid,
+          name: user.displayName || 'Google User',
+          email: user.email || '',
+          role: 'user',
+          mfaEnabled: false,
+        };
+        const isNewUser = getAdditionalUserInfo(res)?.isNewUser ?? false;
+        await saveUserToFirestore(gUser);
+        onLogin(gUser, true, isNewUser);
+        onClose();
+      }
+    }).catch((err) => {
+      console.warn('Redirect auth check note:', err);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Fetch or set role in firestore
@@ -149,7 +170,7 @@ export function AuthModal({
 
         const authenticatedUser: User = {
           id: user.uid,
-          name: user.displayName || name || 'Valued User',
+          name: user.displayName || name || 'Google User',
           email: user.email || email || 'user@example.com',
           role: role as 'user' | 'admin',
           mfaEnabled: false,
@@ -159,7 +180,7 @@ export function AuthModal({
       }
     });
     return () => unsubscribe();
-  }, [onLogin, name, email]);
+  }, [onLogin, name, email, onClose]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -337,12 +358,29 @@ export function AuthModal({
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      const res = await signInWithPopup(auth, provider);
+      provider.addScope('email');
+      provider.addScope('profile');
+      provider.setCustomParameters({ prompt: 'select_account' });
+      
+      let res;
+      try {
+        res = await signInWithPopup(auth, provider);
+      } catch (popupErr: any) {
+        if (popupErr?.code === 'auth/popup-blocked') {
+          await signInWithRedirect(auth, provider);
+          return;
+        }
+        throw popupErr;
+      }
+
       const user = res.user;
+      const realEmail = user.email || '';
+      const realName = user.displayName || (realEmail ? realEmail.split('@')[0] : 'Google User');
+
       const gUser: User = {
         id: user.uid,
-        name: user.displayName || 'Google User',
-        email: user.email || 'user@gmail.com',
+        name: realName,
+        email: realEmail,
         role: 'user',
         mfaEnabled: false,
       };
@@ -351,22 +389,15 @@ export function AuthModal({
       onLogin(gUser, true, isNewUser);
       onClose();
     } catch (err: any) {
-      if (err?.code === 'auth/popup-closed-by-user') {
-        setError('The Google sign-in popup was closed before completing. Please try again.');
-      } else {
-        console.warn('Google sign-in fallback:', err?.message || err);
-        // Fallback for Google sign-in when domain/popup is restricted in sandbox
-        const googleFallbackUser: User = {
-          id: 'google_' + Date.now(),
-          name: 'Google User',
-          email: email.trim() || 'google.user@onlinewishes.in',
-          role: 'user',
-          mfaEnabled: false,
-        };
-        await saveUserToFirestore(googleFallbackUser);
-        onLogin(googleFallbackUser, true, false);
-        onClose();
+      console.warn('Google sign-in error:', err);
+      const errCode = err?.code || '';
+
+      if (errCode === 'auth/popup-closed-by-user') {
+        setError('Google Sign-In popup was closed before completing. Please try again.');
+        return;
       }
+
+      setError(mapAuthErrorToMessage(err));
     } finally {
       setLoading(false);
     }

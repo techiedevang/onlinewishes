@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <defs>
+    <linearGradient id="grad_bestie-chaos-polaroid" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="800" height="800" fill="url(#grad_bestie-chaos-polaroid)" />
+  
+  <!-- Subtle pattern / circles -->
+  <circle cx="100" cy="100" r="150" fill="#ffffff" opacity="0.1" />
+  <circle cx="700" cy="700" r="250" fill="#ffffff" opacity="0.1" />
+  <circle cx="750" cy="150" r="80" fill="#ffffff" opacity="0.1" />
+  
+  <text x="50%" y="45%" font-size="180" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">📸🤪</text>
+  
+  <text x="50%" y="70%" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="52" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" letter-spacing="1">BESTIE POLAROID</text>
+  
+  <!-- Glassmorphism badge -->
+  <rect x="300" y="750" width="200" height="40" rx="20" fill="#ffffff" opacity="0.2" />
+  <text x="50%" y="770" font-family="system-ui, sans-serif" font-weight="600" font-size="16" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" letter-spacing="2">PREMIUM TEMPLATE</text>
+</svg>

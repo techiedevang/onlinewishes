@@ -75,10 +75,10 @@ const ScratchCard = ({
 
         // Sticker badge in top corner if provided
         if (sticker) {
-          ctx.font = '24px sans-serif';
+          ctx.font = '28px sans-serif';
           ctx.textAlign = 'right';
           ctx.textBaseline = 'top';
-          ctx.fillText(sticker, width - 10, 10);
+          ctx.fillText(sticker, width - 12, 12);
         }
 
         // Clean cover photo - no text overlay written over photo as requested
@@ -108,44 +108,17 @@ const ScratchCard = ({
 
         // Sticker Emoji if provided
         if (sticker) {
-          ctx.font = '48px sans-serif';
+          ctx.font = '56px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(sticker, width / 2, height / 2 - 10);
-
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-          const badgeW = 140;
-          const badgeH = 28;
-          ctx.beginPath();
-          if (ctx.roundRect) ctx.roundRect((width - badgeW) / 2, height / 2 + 18, badgeW, badgeH, 14);
-          else ctx.rect((width - badgeW) / 2, height / 2 + 18, badgeW, badgeH);
-          ctx.fill();
-
-          ctx.fillStyle = '#fef08a';
-          ctx.font = 'bold 11px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('SCRATCH TO REVEAL ✦', width / 2, height / 2 + 32);
+          ctx.fillText(sticker, width / 2, height / 2);
+          // Clean sticker emoji - NO text overlay written over sticker as requested
         } else {
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-          const badgeW = 150;
-          const badgeH = 32;
-          const badgeX = (width - badgeW) / 2;
-          const badgeY = (height - badgeH) / 2;
-
+          // Minimal decorative center highlight when neither photo nor sticker
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
           ctx.beginPath();
-          if (ctx.roundRect) {
-            ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 16);
-          } else {
-            ctx.rect(badgeX, badgeY, badgeW, badgeH);
-          }
+          ctx.arc(width / 2, height / 2, 24, 0, Math.PI * 2);
           ctx.fill();
-
-          ctx.fillStyle = '#fef08a';
-          ctx.font = 'bold 12px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('SCRATCH TO REVEAL ✦', width / 2, height / 2);
         }
       }
     };
@@ -307,6 +280,7 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
     [index: number]: { photoUrl?: string; sticker?: string };
   }>({});
   const [attachmentModalIndex, setAttachmentModalIndex] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const goToPage = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -315,18 +289,33 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
     }
   };
 
+  const customAudioUrl = customization.spotifyPreviewUrl || customization.spotifyTrackUrl;
+
   useEffect(() => {
     if (isPlayingAudio) {
-      if (customization.ambientSoundscape && customization.ambientSoundscape !== 'none') {
+      if (customAudioUrl) {
+        soundscapeEngine.stop();
+        if (audioRef.current) {
+          audioRef.current.play().catch((e) => console.log('Audio autoplay prevented:', e));
+        }
+      } else if (customization.ambientSoundscape && customization.ambientSoundscape !== 'none') {
         soundscapeEngine.play(customization.ambientSoundscape);
+      } else {
+        soundscapeEngine.play('rainy_cafe');
       }
     } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       soundscapeEngine.stop();
     }
     return () => {
       soundscapeEngine.stop();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
     };
-  }, [isPlayingAudio, customization.ambientSoundscape]);
+  }, [isPlayingAudio, customAudioUrl, customization.ambientSoundscape]);
 
   const toggleFlipCard = (index: number) => {
     setFlippedCards((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -511,13 +500,13 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
             {/* POP UP ENVELOPE & LETTER MODAL */}
             {showPopUpNote && (
               <div 
-                className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md overflow-y-auto min-h-screen"
                 onClick={(e) => e.stopPropagation()}
               >
                 <motion.div
-                  initial={{ scale: 0.85, opacity: 0, y: 20 }}
+                  initial={{ scale: 0.85, opacity: 0, y: 0 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
-                  className="relative w-full max-w-md mx-auto my-auto flex flex-col items-center py-6"
+                  className="relative w-full max-w-md mx-auto my-auto flex flex-col items-center justify-center py-4"
                 >
                   {/* Top Notification Badge */}
                   <div className="bg-white/95 backdrop-blur-md px-6 py-2 rounded-full border-2 border-emerald-300 shadow-md mb-6 z-10">
@@ -828,15 +817,27 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
 
           {/* AUDIO PLAYER UI ("NOW PLAYING - Our Song") */}
           <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-amber-50 p-3.5 sm:p-5 rounded-2xl border-2 border-emerald-300 shadow-sm relative space-y-2.5">
+            {customAudioUrl && (
+              <audio
+                ref={audioRef}
+                src={customAudioUrl}
+                loop
+                onTimeUpdate={() => {
+                  if (audioRef.current && audioRef.current.duration) {
+                    setAudioProgress((audioRef.current.currentTime / audioRef.current.duration) * 100);
+                  }
+                }}
+              />
+            )}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center space-x-1.5 min-w-0">
                 <span className="text-base shrink-0">🎵</span>
                 <span className="font-serif font-bold text-[10px] sm:text-xs uppercase tracking-wider text-emerald-800 truncate">
-                  NOW PLAYING — Our Song
+                  NOW PLAYING — {customization.musicTrack || customization.spotifyTrackName || 'Our Song'}
                 </span>
               </div>
-              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-200/60 px-2 py-0.5 rounded-full shrink-0">
-                Kawaii Beats 🐾
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-200/80 px-2 py-0.5 rounded-full shrink-0">
+                {customAudioUrl ? 'Uploaded Audio 🎵' : (customization.ambientSoundscape && customization.ambientSoundscape !== 'none' ? customization.ambientSoundscape.replace('_', ' ') : 'Kawaii Beats 🐾')}
               </span>
             </div>
 
@@ -852,8 +853,8 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
 
               <div className="flex-1 space-y-1 min-w-0">
                 <div className="flex justify-between text-[10px] sm:text-xs font-bold text-emerald-900">
-                  <span className="truncate pr-1">{customization.ambientSoundscape && customization.ambientSoundscape !== 'none' ? customization.ambientSoundscape.replace('_', ' ').toUpperCase() : 'FRIENDSHIP ANTHEM'}</span>
-                  <span className="shrink-0">0{Math.floor(audioProgress / 30)}:{audioProgress % 30 < 10 ? '0' : ''}{audioProgress % 30}</span>
+                  <span className="truncate pr-1">{customization.musicTrack || customization.spotifyTrackName || 'FRIENDSHIP ANTHEM'}</span>
+                  <span className="shrink-0 font-mono">0{Math.floor((audioProgress * 1.8) / 60)}:{Math.floor((audioProgress * 1.8) % 60) < 10 ? '0' : ''}{Math.floor((audioProgress * 1.8) % 60)}</span>
                 </div>
                 {/* Progress Bar */}
                 <div className="w-full bg-emerald-200/80 rounded-full h-2.5 sm:h-3 overflow-hidden border border-emerald-300">

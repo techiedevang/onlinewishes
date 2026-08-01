@@ -1416,6 +1416,120 @@ export function CustomizerStudio({
               {/* 5. FRIENDSHIP DAY GREET */}
               {selectedTemplate?.id === 'friendship-day-greet' && (
                 <div className="space-y-6">
+                  {/* OUR SONG — MUSIC TRACK & CUSTOM AUDIO UPLOAD */}
+                  <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-900 dark:to-slate-800 rounded-2xl border-2 border-emerald-300 dark:border-emerald-800 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h5 className="font-bold text-emerald-950 dark:text-emerald-200 text-sm flex items-center space-x-2">
+                        <Music className="w-4 h-4 text-emerald-600" />
+                        <span>Our Song (Choose Preset Track or Upload Custom Audio)</span>
+                      </h5>
+                      <span className="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">
+                        🎵 Audio Track
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      Choose a music track from the presets or upload your own song/audio recording from your device!
+                    </p>
+
+                    {/* Song Title Display Name */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Song Name / Title Displayed on Player
+                      </label>
+                      <input
+                        type="text"
+                        value={customization.musicTrack || customization.spotifyTrackName || ''}
+                        onChange={(e) => {
+                          updateField('musicTrack', e.target.value);
+                          updateField('spotifyTrackName', e.target.value);
+                        }}
+                        placeholder="e.g. Our Favourite Song 🎵"
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-emerald-900 dark:text-white"
+                      />
+                    </div>
+
+                    {/* Audio Options: Preset Select vs Custom Audio Upload */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Option A: Preset Track */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                          Select Preset Music Track
+                        </label>
+                        <select
+                          value={customization.ambientSoundscape || 'rainy_cafe'}
+                          onChange={(e) => {
+                            updateField('ambientSoundscape', e.target.value);
+                            const trackNames: { [key: string]: string } = {
+                              rainy_cafe: 'Kawaii Cafe Beats ☕',
+                              library_whispers: 'Acoustic Friendship Anthem 🎸',
+                              cozy_fireplace: 'Lofi Sunset Chill 🌅',
+                              ocean_breeze: 'Piano Memory Lane 🎹',
+                              stargazing_night: 'Stargazing Night ✨',
+                              none: 'No Music',
+                            };
+                            const chosenName = trackNames[e.target.value] || 'Our Special Song';
+                            updateField('musicTrack', chosenName);
+                            updateField('spotifyTrackName', chosenName);
+                          }}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200"
+                        >
+                          <option value="rainy_cafe">Kawaii Cafe Beats ☕</option>
+                          <option value="library_whispers">Acoustic Friendship Anthem 🎸</option>
+                          <option value="cozy_fireplace">Lofi Sunset Chill 🌅</option>
+                          <option value="ocean_breeze">Piano Memory Lane 🎹</option>
+                          <option value="stargazing_night">Stargazing Night ✨</option>
+                          <option value="none">No Background Track</option>
+                        </select>
+                      </div>
+
+                      {/* Option B: Upload Custom Audio File */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+                          Upload Custom Audio File (MP3, WAV, M4A)
+                        </label>
+                        <label className="cursor-pointer w-full px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{customization.spotifyPreviewUrl ? 'Change Uploaded Audio' : 'Upload Audio File'}</span>
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const audioDataUrl = ev.target?.result as string;
+                                  updateField('spotifyPreviewUrl', audioDataUrl);
+                                  updateField('spotifyTrackUrl', audioDataUrl);
+                                  const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+                                  updateField('musicTrack', nameWithoutExt);
+                                  updateField('spotifyTrackName', nameWithoutExt);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </label>
+                        {customization.spotifyPreviewUrl && (
+                          <div className="flex items-center justify-between mt-1.5 px-2 py-1 bg-white dark:bg-slate-900 rounded-lg border border-emerald-300 text-[10px]">
+                            <span className="text-emerald-700 font-bold truncate">✓ Custom Song Uploaded</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateField('spotifyPreviewUrl', undefined);
+                                updateField('spotifyTrackUrl', undefined);
+                              }}
+                              className="text-rose-500 hover:text-rose-700 font-bold ml-2 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* 6 Little Truths (Scratch Cards) */}
                   <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 space-y-5">
                     <div className="flex items-center justify-between">
@@ -1570,6 +1684,68 @@ export function CustomizerStudio({
                                   )}
                                 </div>
                               </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* MEMORY CAPTIONS EDITOR FOR FRIENDSHIP DAY GREET */}
+                  <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h5 className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center space-x-2">
+                        <Camera className="w-4 h-4 text-emerald-500" />
+                        <span>Memory Card Captions (Back Side of Flip Cards)</span>
+                      </h5>
+                      <span className="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                        {customization.memories?.length || 6} Memory Cards
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Edit the captions that appear on the back of each memory card when flipped by your bestie!
+                    </p>
+
+                    <div className="space-y-3">
+                      {Array.from({ length: 6 }).map((_, idx) => {
+                        const currentMems = customization.memories && customization.memories.length > 0
+                          ? customization.memories
+                          : [
+                              { id: '1', imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=800&q=80', caption: 'Day one energy — best friends forever! 💖' },
+                              { id: '2', imageUrl: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80', caption: 'Still one of the funniest days of our lives 📸' },
+                              { id: '3', imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&q=80', caption: 'Unhinged 3 AM voice notes twin forever 🔊' },
+                              { id: '4', imageUrl: 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=800&q=80', caption: 'Spontaneous trips, lost maps & endless laughter 🚗' },
+                              { id: '5', imageUrl: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80', caption: 'Coffee dates that turned into 5-hour heart to hearts ☕' },
+                              { id: '6', imageUrl: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=800&q=80', caption: 'Laughing until our stomachs literally hurt 🌸' },
+                            ];
+                        const mem = currentMems[idx] || { id: String(idx + 1), imageUrl: '', caption: '' };
+
+                        return (
+                          <div key={idx} className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-300">
+                              {mem.imageUrl ? (
+                                <img src={mem.imageUrl} alt={`Memory ${idx + 1}`} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                  #{idx + 1}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <label className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-0.5">
+                                Memory #{idx + 1} Caption
+                              </label>
+                              <input
+                                type="text"
+                                value={mem.caption || ''}
+                                onChange={(e) => {
+                                  const updated = [...currentMems];
+                                  updated[idx] = { ...updated[idx], caption: e.target.value };
+                                  updateField('memories', updated);
+                                }}
+                                className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-400"
+                                placeholder={`Custom caption for memory #${idx + 1}...`}
+                              />
                             </div>
                           </div>
                         );

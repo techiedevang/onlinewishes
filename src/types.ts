@@ -2,6 +2,7 @@ export interface Memory {
   id: string;
   imageUrl: string;
   caption: string;
+  backNote?: string;
   date: string;
   fallbackUrl?: string;
   isBig?: boolean;

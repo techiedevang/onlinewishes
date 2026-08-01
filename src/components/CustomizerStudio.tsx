@@ -1750,8 +1750,8 @@ export function CustomizerStudio({
                               </label>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-300">
+                            <div className="flex items-start gap-3">
+                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-300 mt-1">
                                 {mem.imageUrl ? (
                                   <img src={mem.imageUrl} alt={`Memory ${idx + 1}`} className="w-full h-full object-cover" />
                                 ) : (
@@ -1760,21 +1760,40 @@ export function CustomizerStudio({
                                   </div>
                                 )}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">
-                                  Photo Caption (Text written under photo)
-                                </label>
-                                <input
-                                  type="text"
-                                  value={mem.caption || ''}
-                                  onChange={(e) => {
-                                    const updated = [...currentMems];
-                                    updated[idx] = { ...updated[idx], caption: e.target.value };
-                                    updateField('memories', updated);
-                                  }}
-                                  className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-400"
-                                  placeholder={`e.g. Best day at the beach 🌊`}
-                                />
+                              <div className="flex-1 min-w-0 space-y-2">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">
+                                    Photo Caption (Text written under photo)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={mem.caption || ''}
+                                    onChange={(e) => {
+                                      const updated = [...currentMems];
+                                      updated[idx] = { ...updated[idx], caption: e.target.value };
+                                      updateField('memories', updated);
+                                    }}
+                                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-400"
+                                    placeholder={`e.g. Best day at the beach 🌊`}
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[10px] font-bold text-amber-700 dark:text-amber-400 mb-0.5">
+                                    Card Back Note (Text shown when card is flipped 🔄)
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    value={mem.backNote !== undefined ? mem.backNote : (mem.caption || '')}
+                                    onChange={(e) => {
+                                      const updated = [...currentMems];
+                                      updated[idx] = { ...updated[idx], backNote: e.target.value };
+                                      updateField('memories', updated);
+                                    }}
+                                    className="w-full px-2.5 py-1.5 bg-amber-50/50 dark:bg-slate-900 border border-amber-200 dark:border-amber-900/50 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-amber-400"
+                                    placeholder={`e.g. Day one energy! We had no idea how incredible this journey would be ✨`}
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>

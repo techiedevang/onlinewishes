@@ -951,7 +951,7 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
                         <div className="absolute inset-0 w-full h-full bg-amber-50/90 rounded-2xl p-3 sm:p-5 border-2 border-emerald-300 shadow-[4px_4px_0px_0px_rgba(167,243,208,0.8)] [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col items-center justify-center text-center space-y-2 sm:space-y-3">
                           <span className="text-xl sm:text-2xl">✨</span>
                           <p className="font-serif italic text-xs sm:text-base text-slate-800 leading-snug line-clamp-4">
-                            "{mem.caption || 'day one energy. we had no idea what was coming.'}"
+                            "{mem.backNote || mem.caption || 'day one energy. we had no idea what was coming.'}"
                           </p>
                           <span className="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
                             Forever Memory 💖

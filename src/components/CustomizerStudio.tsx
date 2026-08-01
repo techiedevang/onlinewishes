@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { uploadImageToStorage } from '../lib/storageService';
+import { uploadImageToStorage, uploadAudioToStorage } from '../lib/storageService';
 import { auth } from '../lib/firebase';
 import imageCompression from 'browser-image-compression';
 
@@ -89,6 +89,7 @@ export function CustomizerStudio({
   });
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [editingMemoryIndex, setEditingMemoryIndex] = useState<number | null>(null);
+  const [cropTarget, setCropTarget] = useState<{ url: string; onSave: (url: string) => void } | null>(null);
   const [previewSoundId, setPreviewSoundId] = useState<string | null>(null);
   const selectedTemplate = TEMPLATES.find(t => t.id === customization.bgTheme);
   const targetPhotoCount = selectedTemplate?.photoCount || 21;
@@ -1544,22 +1545,29 @@ export function CustomizerStudio({
                             type="file"
                             accept="audio/*"
                             className="hidden"
-                            onChange={(e) => {
+                            onChange={async (e) => {
                               const file = e.target.files?.[0];
                               if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (ev) => {
-                                  const audioDataUrl = ev.target?.result as string;
+                                setIsUploading(true);
+                                setUploadProgressMsg('Uploading audio file...');
+                                try {
+                                  const scrapbookId = customization.subdomain || `sb_${Date.now()}`;
+                                  const audioUrl = await uploadAudioToStorage(file, scrapbookId);
                                   const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
                                   onChangeCustomization({
                                     ...customization,
-                                    spotifyPreviewUrl: audioDataUrl,
-                                    spotifyTrackUrl: audioDataUrl,
+                                    spotifyPreviewUrl: audioUrl,
+                                    spotifyTrackUrl: audioUrl,
                                     musicTrack: nameWithoutExt,
                                     spotifyTrackName: nameWithoutExt
                                   });
-                                };
-                                reader.readAsDataURL(file);
+                                } catch (err) {
+                                  console.error(err);
+                                  alert(err instanceof Error ? err.message : 'Failed to upload audio');
+                                } finally {
+                                  setIsUploading(false);
+                                  setUploadProgressMsg('');
+                                }
                               }
                             }}
                           />
@@ -1674,6 +1682,18 @@ export function CustomizerStudio({
                                       <img src={currentAtt.photoUrl} alt="Cover" className="w-9 h-9 rounded-md object-cover border border-emerald-300 shrink-0" />
                                       <button
                                         type="button"
+                                        onClick={() => {
+                                          setCropTarget({
+                                            url: currentAtt.photoUrl!,
+                                            onSave: (url) => updateAttachment(url, currentAtt.sticker)
+                                          });
+                                        }}
+                                        className="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200"
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
                                         onClick={() => updateAttachment(undefined, currentAtt.sticker)}
                                         className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-1 rounded border border-rose-200"
                                       >
@@ -1691,15 +1711,19 @@ export function CustomizerStudio({
                                         onChange={async (e) => {
                                           const file = e.target.files?.[0];
                                           if (file) {
+                                            setIsUploading(true);
+                                            setUploadProgressMsg('Uploading scratch card image...');
                                             try {
-                                              const reader = new FileReader();
-                                              reader.onload = (ev) => {
-                                                const dataUrl = ev.target?.result as string;
-                                                updateAttachment(dataUrl, currentAtt.sticker);
-                                              };
-                                              reader.readAsDataURL(file);
+                                              const compressedFile = await imageCompression(file, { maxSizeMB: 0.8, maxWidthOrHeight: 1600, useWebWorker: true });
+                                              const scrapbookId = customization.subdomain || `sb_${Date.now()}`;
+                                              const url = await uploadImageToStorage(compressedFile, scrapbookId);
+                                              updateAttachment(url, currentAtt.sticker);
                                             } catch (err) {
-                                              console.error(err);
+                                              console.error('Failed to upload scratch card image', err);
+                                              alert('Failed to upload image');
+                                            } finally {
+                                              setIsUploading(false);
+                                              setUploadProgressMsg('');
                                             }
                                           }
                                         }}
@@ -1902,16 +1926,36 @@ export function CustomizerStudio({
                             Custom Cover Photo Uploaded 📸
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            updateField('coverPhotoUrl', undefined);
-                            updateField('heroPhotoUrl', undefined);
-                          }}
-                          className="text-xs text-rose-500 font-bold hover:underline px-2 cursor-pointer"
-                        >
-                          Reset
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const existingUrl = customization.coverPhotoUrl || customization.heroPhotoUrl;
+                              if (existingUrl) {
+                                setCropTarget({
+                                  url: existingUrl,
+                                  onSave: (croppedUrl) => {
+                                    updateField('coverPhotoUrl', croppedUrl);
+                                    updateField('heroPhotoUrl', croppedUrl);
+                                  }
+                                });
+                              }
+                            }}
+                            className="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1.5 rounded border border-blue-200 shadow-sm cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              updateField('coverPhotoUrl', undefined);
+                              updateField('heroPhotoUrl', undefined);
+                            }}
+                            className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-1.5 rounded border border-rose-200 shadow-sm cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2027,16 +2071,36 @@ export function CustomizerStudio({
                             Custom Cover Image Set 📸
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            updateField('coverPhotoUrl', undefined);
-                            updateField('heroPhotoUrl', undefined);
-                          }}
-                          className="text-xs text-rose-500 font-bold hover:underline px-2 cursor-pointer"
-                        >
-                          Reset
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const existingUrl = customization.coverPhotoUrl || customization.heroPhotoUrl;
+                              if (existingUrl) {
+                                setCropTarget({
+                                  url: existingUrl,
+                                  onSave: (croppedUrl) => {
+                                    updateField('coverPhotoUrl', croppedUrl);
+                                    updateField('heroPhotoUrl', croppedUrl);
+                                  }
+                                });
+                              }
+                            }}
+                            className="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1.5 rounded border border-blue-200 shadow-sm cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              updateField('coverPhotoUrl', undefined);
+                              updateField('heroPhotoUrl', undefined);
+                            }}
+                            className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 px-2 py-1.5 rounded border border-rose-200 shadow-sm cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2640,28 +2704,23 @@ export function CustomizerStudio({
                       Final Closing Photo / GIF (Optional Souvenir Badge)
                     </label>
                     <div className="flex items-center space-x-3">
-                      {customization.finalImageUrl && (
-                        <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-purple-300 shrink-0">
-                          <img src={customization.finalImageUrl} alt="Final photo" className="w-full h-full object-cover" />
+                      {customization.finalImageUrl ? (
+                        <div className="flex items-center space-x-3 w-full">
+                          <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-purple-300 shrink-0">
+                            <img src={customization.finalImageUrl} alt="Final photo" className="w-full h-full object-cover" />
+                          </div>
                           <button
                             type="button"
                             onClick={() => updateField('finalImageUrl', '')}
-                            className="absolute top-0 right-0 bg-red-500 text-white text-[10px] p-0.5 rounded-bl"
+                            className="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-bold rounded-xl transition-colors shrink-0"
                           >
-                            ✕
+                            Remove Photo
                           </button>
                         </div>
-                      )}
-                      <input
-                        type="text"
-                        value={customization.finalImageUrl || ''}
-                        onChange={(e) => updateField('finalImageUrl', e.target.value)}
-                        placeholder="Paste image/GIF URL or upload photo below..."
-                        className="flex-1 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                      />
-                      <label className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl cursor-pointer transition-colors shrink-0 flex items-center space-x-1">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Upload</span>
+                      ) : (
+                        <label className="flex-1 px-3 py-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 border-dashed rounded-xl cursor-pointer transition-colors flex items-center justify-center space-x-2">
+                          <Upload className="w-4 h-4" />
+                          <span className="text-xs font-bold">Upload Souvenir Photo</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -2698,6 +2757,7 @@ export function CustomizerStudio({
                           }}
                         />
                       </label>
+                      )}
                     </div>
                   </div>
 
@@ -3493,6 +3553,29 @@ export function CustomizerStudio({
         }}
         onClose={() => setEditingMemoryIndex(null)}
       />
+    )}
+
+    {cropTarget && (
+      <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+            <h3 className="font-bold text-slate-900 dark:text-white">Crop Photo</h3>
+            <button onClick={() => setCropTarget(null)} className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-hidden relative min-h-[400px]">
+            <ImageCropper
+              imageUrl={cropTarget.url}
+              onCrop={(croppedUrl) => {
+                cropTarget.onSave(croppedUrl);
+                setCropTarget(null);
+              }}
+              onCancel={() => setCropTarget(null)}
+            />
+          </div>
+        </div>
+      </div>
     )}
   </div>
 );

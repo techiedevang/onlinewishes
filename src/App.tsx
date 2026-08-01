@@ -18,7 +18,7 @@ import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
 import { GoogleAd } from './components/GoogleAd';
 import { useDynamicSEO } from './hooks/useDynamicSEO';
 import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart, Instagram, ArrowLeft, Maximize2, Copy } from 'lucide-react';
-import { loadScrapbookFromCloud } from './lib/scrapbookService';
+import { loadScrapbookFromCloud, incrementScrapbookViews } from './lib/scrapbookService';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Code splitting with React.lazy for major route components and heavy modals
@@ -163,6 +163,7 @@ export default function App() {
           }
         } else if (result.customization) {
           setPublishedScrapbook(result.customization);
+          if (!passcode) { incrementScrapbookViews(slug); } else if (result.customization) { incrementScrapbookViews(slug); }
           setIsPasscodeLocked(false);
           setScrapbookError(null);
         }
@@ -424,6 +425,10 @@ A story forever to be told.`,
 
         // Handle other static routes
         const knownTabs = ['templates', 'pricing', 'custom_AI', 'how-it-works', 'reviews', 'contact'];
+        if (possibleTemplateId === 'privacy-policy') { setPolicyTab('privacy'); setShowPolicyModal(true); return; }
+        if (possibleTemplateId === 'terms-of-service') { setPolicyTab('terms'); setShowPolicyModal(true); return; }
+        if (possibleTemplateId === 'refund-policy') { setPolicyTab('refund'); setShowPolicyModal(true); return; }
+        if (possibleTemplateId === 'about-us') { setPolicyTab('about'); setShowPolicyModal(true); return; }
         if (knownTabs.includes(possibleTemplateId)) {
            setActiveTab(possibleTemplateId);
            return;

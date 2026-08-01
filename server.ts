@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from "vite";
+import validator from "deep-email-validator";
 import Razorpay from "razorpay";
 import SpotifyWebApi from "spotify-web-api-node";
 import nodemailer from "nodemailer";
@@ -175,6 +176,30 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Email Validation Endpoint
+  app.get("/api/validate-email", async (req, res) => {
+    try {
+      const email = req.query.email as string;
+      if (!email) {
+        return res.status(400).json({ valid: false, error: "Email is required" });
+      }
+
+      const result = await validator({
+        email,
+        validateRegex: true,
+        validateMx: true,
+        validateTypo: true,
+        validateDisposable: true,
+        validateSMTP: false
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Email validation error:", error);
+      res.status(500).json({ valid: false, error: "Validation failed" });
+    }
+  });
 
   // Initialize Razorpay
   const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET 

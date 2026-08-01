@@ -295,10 +295,27 @@ export function AuthModal({
       setError('Please enter your full name.');
       return;
     }
+    
+    // Inappropriate name check
+    const inappropriateWords = ['admin', 'root', 'superuser', 'fuck', 'shit', 'bitch', 'asshole', 'cunt', 'dick', 'pussy', 'bastard', 'whore', 'slut', 'fag', 'nigger', 'nigga', 'crap'];
+    const lowerName = trimmedName.toLowerCase();
+    if (inappropriateWords.some(word => lowerName.includes(word))) {
+      setError('Please use a more appropriate name.');
+      return;
+    }
+
     if (!trimmedEmail) {
       setError('Please enter a valid email address.');
       return;
     }
+    
+    // Basic email regex validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email address format.');
+      return;
+    }
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters long.');
       return;
@@ -308,6 +325,26 @@ export function AuthModal({
     setError(null);
 
     try {
+      // Validate email existence and MX records
+      try {
+        const response = await fetch(`/api/validate-email?email=${encodeURIComponent(trimmedEmail)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.valid) {
+            let errorMsg = 'Please enter a valid, existing email address.';
+            if (data.reason === 'disposable') errorMsg = 'Disposable email addresses are not allowed.';
+            if (data.reason === 'mx') errorMsg = 'The email domain does not exist or cannot receive emails.';
+            if (data.reason === 'typo') errorMsg = 'There seems to be a typo in your email address.';
+            
+            setError(errorMsg);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Email validation service unavailable:', err);
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
       const user = userCredential.user;
 

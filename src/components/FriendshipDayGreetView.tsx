@@ -27,7 +27,6 @@ const ScratchCard = ({
   sticker,
   isRevealed,
   onReveal,
-  onOpenAttachmentModal,
 }: {
   index: number;
   truthNumber: string;
@@ -36,7 +35,6 @@ const ScratchCard = ({
   sticker?: string;
   isRevealed: boolean;
   onReveal: () => void;
-  onOpenAttachmentModal: (index: number) => void;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -125,11 +123,11 @@ const ScratchCard = ({
 
     if (photoUrl) {
       const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = photoUrl;
+      // Do not set crossOrigin to anonymous to avoid CORS blocks on user images.
+      // We don't need to read pixel data from this canvas anyway.
       img.onload = () => drawScratchSurface(img);
       img.onerror = () => drawScratchSurface();
-      drawScratchSurface();
+      img.src = photoUrl;
     } else {
       drawScratchSurface();
     }
@@ -192,24 +190,6 @@ const ScratchCard = ({
           <p className="font-serif italic text-sm sm:text-base text-slate-900 font-bold leading-relaxed">
             "{truthText}"
           </p>
-        </div>
-
-        {/* Footer: Edit Cover Photo/Sticker button */}
-        <div className="w-full flex items-center justify-between pt-1 border-t border-emerald-100 mt-1">
-          <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
-            <span>✨</span> secret note
-          </span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenAttachmentModal(index);
-            }}
-            className="text-[10px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200 transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <Camera className="w-3 h-3" />
-            <span>{photoUrl || sticker ? 'Edit Cover' : '+ Cover Photo'}</span>
-          </button>
         </div>
       </div>
 
@@ -275,11 +255,7 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
   const [currentPage, setCurrentPage] = useState<number>(1);
   const mainContainerRef = useRef<HTMLDivElement>(null);
 
-  // Scratch card attachments (photo + sticker per card index)
-  const [scratchCardAttachments, setScratchCardAttachments] = useState<{
-    [index: number]: { photoUrl?: string; sticker?: string };
-  }>({});
-  const [attachmentModalIndex, setAttachmentModalIndex] = useState<number | null>(null);
+  const customScratchAttachments = customization.scratchCardAttachments || [];
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const goToPage = (pageNumber: number) => {
@@ -366,19 +342,6 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
         { id: '5', imageUrl: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80', caption: 'Coffee dates that turned into 5-hour heart to hearts ☕' },
         { id: '6', imageUrl: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=800&q=80', caption: 'Laughing until our stomachs literally hurt 🌸' },
       ];
-
-  // Initialize scratch card attachments
-  useEffect(() => {
-    const initial: { [index: number]: { photoUrl?: string; sticker?: string } } = {};
-    const defaultStickers = ['🌸', '💖', '⭐', '📸', '🍦', '🎀'];
-    for (let i = 0; i < 6; i++) {
-      initial[i] = {
-        sticker: defaultStickers[i % defaultStickers.length],
-        photoUrl: memoriesList[i % memoriesList.length]?.imageUrl || '',
-      };
-    }
-    setScratchCardAttachments(initial);
-  }, [customization.memories]);
 
   const defaultTruths = [
     'you always show up no matter what',
@@ -793,8 +756,8 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
                   </div>
 
                   <SafeImage
-                    src={customization.coverPhotoUrl || customization.heroPhotoUrl || memoriesList[0]?.imageUrl || 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=1200&q=80'}
-                    fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=1200&q=80"
+                    src={customization.coverPhotoUrl || customization.heroPhotoUrl || memoriesList[0]?.imageUrl || 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1200&q=80'}
+                    fallbackUrl="https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1200&q=80"
                     alt="Happy Friendship Day Best Friends"
                     className="w-full h-full object-cover"
                   />
@@ -1034,11 +997,10 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
                     index={idx}
                     truthNumber={truth.num}
                     truthText={truth.text}
-                    photoUrl={scratchCardAttachments[idx]?.photoUrl}
-                    sticker={scratchCardAttachments[idx]?.sticker}
+                    photoUrl={customScratchAttachments[idx]?.photoUrl}
+                    sticker={customScratchAttachments[idx]?.sticker}
                     isRevealed={Boolean(revealedTruths[idx])}
                     onReveal={() => handleRevealTruth(idx)}
-                    onOpenAttachmentModal={(i) => setAttachmentModalIndex(i)}
                   />
                 ))}
               </div>
@@ -1151,130 +1113,6 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
             </motion.section>
           )}
         </AnimatePresence>
-
-        {/* ATTACH PHOTO OR STICKER MODAL */}
-        {attachmentModalIndex !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 border-4 border-emerald-300 shadow-2xl space-y-5 relative">
-              <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
-                <div className="flex items-center gap-2 text-emerald-900 font-bold text-lg font-serif">
-                  <Camera className="w-5 h-5 text-rose-500" />
-                  <span>Attach Photo or Sticker</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAttachmentModalIndex(null)}
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Pick Decorative Sticker Emoji */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <Smile className="w-4 h-4 text-amber-500" />
-                  <span>Select Decorative Sticker:</span>
-                </label>
-                <div className="grid grid-cols-8 gap-2 bg-amber-50 p-3 rounded-2xl border border-amber-200">
-                  {STICKER_PALETTE.map((stk) => (
-                    <button
-                      key={stk}
-                      type="button"
-                      onClick={() => {
-                        setScratchCardAttachments((prev) => ({
-                          ...prev,
-                          [attachmentModalIndex]: {
-                            ...prev[attachmentModalIndex],
-                            sticker: stk,
-                          },
-                        }));
-                      }}
-                      className={`text-2xl p-1.5 rounded-xl transition-transform hover:scale-125 cursor-pointer ${
-                        scratchCardAttachments[attachmentModalIndex]?.sticker === stk
-                          ? 'bg-rose-200 ring-2 ring-rose-500 scale-110'
-                          : 'hover:bg-amber-100'
-                      }`}
-                    >
-                      {stk}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Pick Photo from Memories or Custom URL */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4 text-emerald-600" />
-                  <span>Select Photo to Attach:</span>
-                </label>
-
-                {/* Grid of uploaded memory photos */}
-                {memoriesList.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto p-2 bg-emerald-50 rounded-xl border border-emerald-200">
-                    {memoriesList.map((mem, mIdx) => (
-                      <button
-                        key={mem.id || mIdx}
-                        type="button"
-                        onClick={() => {
-                          setScratchCardAttachments((prev) => ({
-                            ...prev,
-                            [attachmentModalIndex]: {
-                              ...prev[attachmentModalIndex],
-                              photoUrl: mem.imageUrl,
-                            },
-                          }));
-                        }}
-                        className={`relative h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                          scratchCardAttachments[attachmentModalIndex]?.photoUrl === mem.imageUrl
-                            ? 'border-rose-500 ring-2 ring-rose-300 scale-95'
-                            : 'border-emerald-200 hover:border-emerald-400'
-                        }`}
-                      >
-                        <SafeImage src={mem.imageUrl} fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=600&q=80" alt={`Mem ${mIdx}`} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Custom Image URL input */}
-                <div className="pt-2 space-y-1">
-                  <span className="text-[11px] text-slate-500 font-medium">Or enter image URL:</span>
-                  <input
-                    type="text"
-                    placeholder="https://..."
-                    value={scratchCardAttachments[attachmentModalIndex]?.photoUrl || ''}
-                    onChange={(e) => {
-                      const url = e.target.value;
-                      setScratchCardAttachments((prev) => ({
-                        ...prev,
-                        [attachmentModalIndex]: {
-                          ...prev[attachmentModalIndex],
-                          photoUrl: url,
-                        },
-                      }));
-                    }}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                  />
-                </div>
-              </div>
-
-              {/* Done Button */}
-              <div className="flex justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAttachmentModalIndex(null);
-                    confetti({ particleCount: 25, spread: 50, origin: { y: 0.6 } });
-                  }}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition-all cursor-pointer"
-                >
-                  Save Attachment ✨
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* FOOTER */}
         <div className="text-center pt-8 text-xs text-emerald-700 space-y-2">

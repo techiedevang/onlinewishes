@@ -7,7 +7,8 @@ import {
   getDocs,
   query,
   where,
-  getDocFromServer
+  getDocFromServer,
+  increment
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, auth } from './firebase';
 import { UserCustomization } from '../types';
@@ -23,7 +24,8 @@ export interface SavedScrapbookRecord {
 // Test initial connection to Firestore
 export async function testFirestoreConnection() {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    await getDocFromServer,
+  increment(doc(db, 'test', 'connection'));
   } catch (error) {
     if (error instanceof Error && error.message.includes('the client is offline')) {
       console.error('Please check your Firebase configuration.');
@@ -162,3 +164,24 @@ export async function recordPaymentInCloud(
   }
 }
 
+
+export async function incrementScrapbookViews(scrapbookId: string): Promise<void> {
+  const path = `scrapbooks/${scrapbookId}`;
+  try {
+    const docRef = doc(db, 'scrapbooks', scrapbookId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      await updateDoc(docRef, { views: increment(1) });
+    } else {
+      // It might be a subdomain, find the doc
+      const q = query(collection(db, 'scrapbooks'), where('subdomain', '==', scrapbookId));
+      const querySnap = await getDocs(q);
+      if (!querySnap.empty) {
+        const actualDocRef = doc(db, 'scrapbooks', querySnap.docs[0].id);
+        await updateDoc(actualDocRef, { views: increment(1) });
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to increment views:', error);
+  }
+}

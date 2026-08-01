@@ -440,6 +440,37 @@ async function startServer() {
     }
   });
 
+  app.get("/ads.txt", (req, res) => {
+    res.type("text/plain");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    const publicAds = path.join(process.cwd(), "public", "ads.txt");
+    const distAds = path.join(process.cwd(), "dist", "ads.txt");
+
+    if (fs.existsSync(publicAds)) {
+      return res.sendFile(publicAds);
+    } else if (fs.existsSync(distAds)) {
+      return res.sendFile(distAds);
+    } else {
+      return res.send("google.com, pub-3363935190538446, DIRECT, f08c47fec0942fa0\n");
+    }
+  });
+
+  app.get("/sitemap*.xml", (req, res, next) => {
+    res.type("application/xml");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    const filename = req.path.replace(/^\//, '');
+    const publicFile = path.join(process.cwd(), "public", filename);
+    const distFile = path.join(process.cwd(), "dist", filename);
+
+    if (fs.existsSync(publicFile)) {
+      return res.sendFile(publicFile);
+    } else if (fs.existsSync(distFile)) {
+      return res.sendFile(distFile);
+    } else {
+      return next();
+    }
+  });
+
   app.get("/robots.txt", (req, res, next) => {
     res.type("text/plain");
     res.setHeader("Cache-Control", "public, max-age=86400");
@@ -458,6 +489,165 @@ async function startServer() {
       return res.send("User-agent: *\nAllow: /\nSitemap: https://onlinewishes.in/sitemap.xml");
     }
   });
+
+  // Dynamic SEO metadata dictionary
+  const TEMPLATE_SEO_MAP: Record<string, { title: string; description: string; ogImage?: string }> = {
+    'box21-surprise': {
+      title: 'Surprise Box & 3D Interactive Flipbook Scrapbook | OnlineWishes',
+      description: 'Create a viral 3D unboxing gift box experience with floating photo memories, custom poems, sound effects, and a 3D page-flip scrapbook.',
+      ogImage: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&fit=crop'
+    },
+    'romantic-love-story': {
+      title: 'Romantic Sunset & Secret Passcode Love Vault | OnlineWishes',
+      description: 'A romantic web surprise for girlfriends & boyfriends. Features anniversary timeline, secret passcode vault, animated love letters, and piano music.',
+      ogImage: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&fit=crop'
+    },
+    'bestie-chaos-polaroid': {
+      title: 'Bestie Chaos & Polaroid Friendship Scrapbook | OnlineWishes',
+      description: 'Designed specifically for best friends. Polaroid photo wall, insider secrets, goofy meme carousel, and interactive friendship quiz.',
+      ogImage: 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=800&fit=crop'
+    },
+    'sisterhood-gratitude-tree': {
+      title: 'Sisterhood & Family Gratitude Memory Tree | OnlineWishes',
+      description: 'A heartwarming nostalgic tribute for sisters or brothers. Interactive memory branch tree, voice note recorder, and gratitude flip cards.',
+      ogImage: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&fit=crop'
+    },
+    'birthday-confetti-party': {
+      title: 'Virtual Birthday Party & Interactive Candle Blower | OnlineWishes',
+      description: 'An interactive virtual birthday celebration website. Recipient can blow out interactive candles, unpack 3D gifts, and read squad wishes.',
+      ogImage: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&fit=crop'
+    },
+    'retro-90s-arcade': {
+      title: 'Retro 90s Arcade & Gaming Friendship Quest | OnlineWishes',
+      description: 'Pixel art retro arcade machine theme. Includes 8-bit sound effects, high-score memory leaderboard, level unlocks, and retro pixels.',
+      ogImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&fit=crop'
+    },
+    'celestial-galaxy': {
+      title: 'Cosmic Galaxy & Stargazer Constellation Scrapbook | OnlineWishes',
+      description: 'A glowing starry space universe where every photo is a constellation node in the night sky. Deep space ambient audio and shooting stars.',
+      ogImage: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=800&fit=crop'
+    },
+    'minimalist-editorial': {
+      title: 'Minimalist Aesthetic Editorial Memory Journal | OnlineWishes',
+      description: 'High-fashion editorial layout featuring elegant serif typography, clean grid spacing, subtle fade animations, and chic neutral tones.',
+      ogImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&fit=crop'
+    },
+    'vintage-parchment': {
+      title: 'Vintage Parchment & Pressed Flower Scrapbook | OnlineWishes',
+      description: 'Nostalgic antique paper aesthetic featuring pressed botanical flowers, wax seal locks, handwritten fountain pen quotes, and photo memories.',
+      ogImage: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&fit=crop'
+    },
+    'sunset-romance': {
+      title: 'Golden Sunset Romance & Acoustic Love Scrapbook | OnlineWishes',
+      description: 'Warm golden-hour aesthetic with acoustic guitar melodies, Polaroid memories, and heartfelt love letters.',
+      ogImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&fit=crop'
+    },
+    'neon-cyberpunk': {
+      title: 'Neon Cyberpunk Futuristic Memory Vault | OnlineWishes',
+      description: 'Futuristic glowing neon aesthetic with synthwave beats, glitch photo effects, and interactive holographic memories.',
+      ogImage: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&fit=crop'
+    },
+    'fairy-tale': {
+      title: 'Enchanted Fairy Tale & Magic Book Story | OnlineWishes',
+      description: 'Magical fairy tale book theme with floating sparkles, parchment scroll letters, and enchanted storybook pages.',
+      ogImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&fit=crop'
+    },
+    'graduation-memories': {
+      title: 'Graduation Hall of Fame & Future Aspirations | OnlineWishes',
+      description: 'Celebrate academic achievements with a classy graduation yearbook theme, milestone timeline, and squad cheer wall.',
+      ogImage: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&fit=crop'
+    },
+    'elegant-wedding': {
+      title: 'Elegant Wedding & Marriage Anniversary Scrapbook | OnlineWishes',
+      description: 'Luxurious wedding reception invitation and photo scrapbook with gold foil accents, classical violin audio, and RSVP wishes.',
+      ogImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&fit=crop'
+    }
+  };
+
+  const PAGE_SEO_MAP: Record<string, { title: string; description: string }> = {
+    '/templates': {
+      title: 'All Scrapbook & Birthday Surprise Templates | OnlineWishes',
+      description: 'Explore 14+ interactive surprise website templates for besties, lovers, sisters, birthdays, and anniversaries on OnlineWishes.in.'
+    },
+    '/pricing': {
+      title: 'Pricing & Custom AI Website Plans | OnlineWishes',
+      description: 'All interactive templates at flat Rs. 49 and custom AI website blueprints at flat Rs. 79. Instant delivery with zero subscription fees.'
+    },
+    '/customize': {
+      title: 'Create Your Custom Memory Scrapbook | OnlineWishes',
+      description: 'Customize your surprise website with personal photos, voice messages, secret passcode, background music, and instant WhatsApp link.'
+    },
+    '/custom_AI': {
+      title: 'AI Custom Website Blueprint Generator | OnlineWishes',
+      description: 'Tell our AI Architect your idea and get a bespoke custom surprise website blueprint generated in seconds.'
+    }
+  };
+
+  function injectSeoMetadata(reqPath: string, html: string, customFields?: any): string {
+    const cleanPath = reqPath.split('?')[0];
+    const currentUrl = `https://onlinewishes.in${cleanPath}`;
+
+    let title = "OnlineWishes | Best Personalized Digital Memory Scrapbooks & Surprises";
+    let description = "Create personalized digital surprises, memory books, birthday websites, and love scrapbooks for your loved ones at onlinewishes.in. Make their day special with custom digital gifts.";
+    let ogImage = "https://onlinewishes.in/favicon.svg";
+
+    if (customFields) {
+      const getFieldString = (f: any, name: string): string | null => {
+        if (f && f[name] && f[name].stringValue) return f[name].stringValue;
+        return null;
+      };
+      const recipientName = getFieldString(customFields, "recipientName") || "Sarah";
+      const occasion = getFieldString(customFields, "occasion") || "special-day";
+      const senderName = getFieldString(customFields, "senderName") || "Your Friend";
+      let img = getFieldString(customFields, "ogImageUrl");
+
+      const formatOccasion = (occ: string): string => {
+        const map: Record<string, string> = {
+          bestie: "Best Friend 💖",
+          girlfriend: "Love & Romance 🌹",
+          sister: "Sisterhood 🌸",
+          birthday: "Birthday Celebration 🎂",
+          anniversary: "Anniversary Surprises 🥂",
+          wedding: "Wedding Scrapbook 💍",
+          friendship: "Friendship Day 🤝"
+        };
+        return map[occ.toLowerCase()] || "Special Day!";
+      };
+
+      title = `${recipientName}'s Custom Surprise Scrapbook | OnlineWishes`;
+      description = `Open this beautiful personalized digital memory scrapbook created with love for ${recipientName} by ${senderName} for ${formatOccasion(occasion)} on OnlineWishes.in.`;
+      if (img) ogImage = img.startsWith('/') ? `https://onlinewishes.in${img}` : img;
+    } else {
+      const tplSlug = cleanPath.substring(1);
+      if (tplSlug in TEMPLATE_SEO_MAP) {
+        const tpl = TEMPLATE_SEO_MAP[tplSlug];
+        title = tpl.title;
+        description = tpl.description;
+        if (tpl.ogImage) ogImage = tpl.ogImage;
+      } else if (cleanPath in PAGE_SEO_MAP) {
+        const page = PAGE_SEO_MAP[cleanPath];
+        title = page.title;
+        description = page.description;
+      }
+    }
+
+    html = html.replace(/<link rel="canonical" href="[^"]*"/g, `<link rel="canonical" href="${currentUrl}"`);
+    html = html.replace(/<meta property="og:url" content="[^"]*"/g, `<meta property="og:url" content="${currentUrl}"`);
+    html = html.replace(/<meta property="twitter:url" content="[^"]*"/g, `<meta property="twitter:url" content="${currentUrl}"`);
+
+    html = html.replace(/<title>[^<]*<\/title>/g, `<title>${title}</title>`);
+    html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${title}"`);
+    html = html.replace(/<meta property="twitter:title" content="[^"]*"/g, `<meta property="twitter:title" content="${title}"`);
+
+    html = html.replace(/<meta name="description" content="[^"]*"/g, `<meta name="description" content="${description}"`);
+    html = html.replace(/<meta property="og:description" content="[^"]*"/g, `<meta property="og:description" content="${description}"`);
+    html = html.replace(/<meta property="twitter:description" content="[^"]*"/g, `<meta property="twitter:description" content="${description}"`);
+
+    html = html.replace(/<meta property="og:image" content="[^"]*"/g, `<meta property="og:image" content="${ogImage}"`);
+    html = html.replace(/<meta property="twitter:image" content="[^"]*"/g, `<meta property="twitter:image" content="${ogImage}"`);
+
+    return html;
+  }
 
   // Dynamic SEO metadata injection middleware for published scrapbooks
   app.get("/p/:id", async (req, res, next) => {
@@ -538,60 +728,7 @@ async function startServer() {
       }
 
       let html = fs.readFileSync(htmlPath, "utf8");
-
-      if (fields) {
-        const getFieldString = (f: any, name: string): string | null => {
-          if (f && f[name] && f[name].stringValue) return f[name].stringValue;
-          return null;
-        };
-
-        const recipientName = getFieldString(fields, "recipientName") || "Sarah";
-        const occasion = getFieldString(fields, "occasion") || "special-day";
-        const senderName = getFieldString(fields, "senderName") || "Your Friend";
-        let ogImageUrl = getFieldString(fields, "ogImageUrl");
-
-        // Format occasion nicely
-        const formatOccasion = (occ: string): string => {
-          const map: Record<string, string> = {
-            bestie: "Best Friend 💖",
-            girlfriend: "Love & Romance 🌹",
-            sister: "Sisterhood 🌸",
-            birthday: "Birthday Celebration 🎂",
-            anniversary: "Anniversary Surprises 🥂",
-            wedding: "Wedding Scrapbook 💍",
-            friendship: "Friendship Day 🤝"
-          };
-          return map[occ.toLowerCase()] || "Special Day!";
-        };
-
-        if (ogImageUrl && ogImageUrl.startsWith("/")) {
-          ogImageUrl = `https://${req.get("host")}${ogImageUrl}`;
-        } else if (!ogImageUrl) {
-          ogImageUrl = `https://${req.get("host")}/favicon.svg`;
-        }
-
-        const title = `${recipientName}'s Custom Surprise Scrapbook | OnlineWishes`;
-        const description = `Open this beautiful personalized digital memory scrapbook created with love for ${recipientName} by ${senderName} on OnlineWishes.in.`;
-        const ogTitle = `A Surprise for ${recipientName}! ❤️`;
-        const ogDescription = `Created with love by ${senderName} for ${recipientName} for the occasion of ${formatOccasion(occasion)}. Open to unwrap the memories and messages!`;
-
-        // String replacements
-        const currentUrl = `https://${req.get("host")}/p/${docId}`;
-        html = html.replace(/<link rel="canonical" href="[^"]*"/g, `<link rel="canonical" href="${currentUrl}"`);
-        html = html.replace(/<meta property="og:url" content="[^"]*"/g, `<meta property="og:url" content="${currentUrl}"`);
-        html = html.replace(/<meta property="twitter:url" content="[^"]*"/g, `<meta property="twitter:url" content="${currentUrl}"`);
-
-        html = html.replace(/<title>[^<]*<\/title>/g, `<title>${title}</title>`);
-        html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${ogTitle}"`);
-        html = html.replace(/<meta property="twitter:title" content="[^"]*"/g, `<meta property="twitter:title" content="${ogTitle}"`);
-
-        html = html.replace(/<meta name="description" content="[^"]*"/g, `<meta name="description" content="${description}"`);
-        html = html.replace(/<meta property="og:description" content="[^"]*"/g, `<meta property="og:description" content="${ogDescription}"`);
-        html = html.replace(/<meta property="twitter:description" content="[^"]*"/g, `<meta property="twitter:description" content="${ogDescription}"`);
-
-        html = html.replace(/<meta property="og:image" content="[^"]*"/g, `<meta property="og:image" content="${ogImageUrl}"`);
-        html = html.replace(/<meta property="twitter:image" content="[^"]*"/g, `<meta property="twitter:image" content="${ogImageUrl}"`);
-      }
+      html = injectSeoMetadata(req.path, html, fields);
 
       res.setHeader("Content-Type", "text/html");
       return res.send(html);
@@ -610,9 +747,16 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, { index: false }));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      let htmlPath = path.join(distPath, 'index.html');
+      if (!fs.existsSync(htmlPath)) {
+        htmlPath = path.join(process.cwd(), 'index.html');
+      }
+      let html = fs.readFileSync(htmlPath, 'utf8');
+      html = injectSeoMetadata(req.path, html);
+      res.setHeader("Content-Type", "text/html");
+      res.send(html);
     });
   }
 

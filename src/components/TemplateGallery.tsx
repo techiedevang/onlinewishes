@@ -70,7 +70,7 @@ export function TemplateGallery({
                   </span>
                 </h3>
                 <p className="text-xs text-purple-200 mt-0.5">
-                  Describe your dream website concept and our AI will build a custom blueprint (Custom Website: Rs. 300).
+                  Describe your dream website concept and our AI will build a custom blueprint (Custom Website: Rs. 79).
                 </p>
               </div>
             </div>

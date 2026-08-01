@@ -21,7 +21,10 @@ const DEFAULT_URL = 'https://onlinewishes.in/';
 const DEFAULT_OG_IMAGE = 'https://onlinewishes.in/favicon.svg';
 
 export function updatePageMetadata(options: MetaDataOptions = {}) {
-  const title = options.title ? `${options.title} | OnlineWishes` : DEFAULT_TITLE;
+  let title = DEFAULT_TITLE;
+  if (options.title) {
+    title = options.title.includes('OnlineWishes') ? options.title : `${options.title} | OnlineWishes`;
+  }
   const description = options.description || DEFAULT_DESC;
   const keywords = options.keywords || DEFAULT_KEYWORDS;
   const url = options.canonicalUrl || DEFAULT_URL;
@@ -106,13 +109,35 @@ export function updatePageMetadata(options: MetaDataOptions = {}) {
 /**
  * Utility to set SEO metadata for a specific template
  */
-export function updateMetadataForTemplate(templateName: string, templateCategory: string, templateDescription?: string, thumbnailImage?: string) {
+export function updateMetadataForTemplate(
+  templateId: string,
+  templateName: string,
+  templateCategory: string,
+  templateDescription?: string,
+  thumbnailImage?: string,
+  subPath: '' | 'customize' | 'preview' = ''
+) {
+  let canonicalUrl = `https://onlinewishes.in/${templateId}`;
+  let title = `${templateName} - ${templateCategory.toUpperCase()} Surprise Website`;
+  let description = templateDescription || `Customize the ${templateName} digital gift website with photos, music, secret passcodes and custom messages on OnlineWishes.in.`;
+
+  if (subPath === 'customize') {
+    canonicalUrl = `https://onlinewishes.in/${templateId}/customize`;
+    title = `Customize ${templateName} Surprise Website`;
+    description = `Personalize the ${templateName} surprise website with custom photos, love letters, background music, secret passcode, and instant WhatsApp share link.`;
+  } else if (subPath === 'preview') {
+    canonicalUrl = `https://onlinewishes.in/${templateId}/preview`;
+    title = `Live Preview: ${templateName} Surprise Website`;
+    description = `Interactive live preview of ${templateName} surprise website on OnlineWishes.in.`;
+  }
+
   updatePageMetadata({
-    title: `${templateName} - ${templateCategory.toUpperCase()} Surprise Website`,
-    description: templateDescription || `Customize the ${templateName} digital gift website with photos, music, secret passcodes and custom messages.`,
+    title,
+    description,
     keywords: `${templateName.toLowerCase()}, ${templateCategory.toLowerCase()} surprise, digital scrapbook, custom website gift, onlinewishes`,
-    ogTitle: `${templateName} | OnlineWishes Custom Gift`,
-    ogDescription: templateDescription,
+    canonicalUrl,
+    ogTitle: `${title} | OnlineWishes`,
+    ogDescription: description,
     ogImage: thumbnailImage || DEFAULT_OG_IMAGE,
   });
 }

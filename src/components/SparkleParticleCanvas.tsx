@@ -31,13 +31,14 @@ export function SparkleParticleCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    let lastX = -1000;
-    let lastY = -1000;
+    let cachedRect = { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+    let cachedDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    let lastSpawnTime = 0;
 
     const colors = [
       '#f43f5e', '#ec4899', '#d946ef', '#a855f7',
@@ -45,78 +46,73 @@ export function SparkleParticleCanvas({
       '#f59e0b', '#fb7185', '#ffffff', '#fde047'
     ];
 
-    const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1;
+    const updateBounds = () => {
+      cachedDpr = Math.min(window.devicePixelRatio || 1, 1.5);
       if (isFullScreen) {
-        canvas.width = window.innerWidth * dpr;
-        canvas.height = window.innerHeight * dpr;
+        cachedRect = { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
       } else {
         const rect = canvas.getBoundingClientRect();
-        canvas.width = (rect.width || window.innerWidth) * dpr;
-        canvas.height = (rect.height || window.innerHeight) * dpr;
+        cachedRect = {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width || window.innerWidth,
+          height: rect.height || window.innerHeight,
+        };
       }
+      canvas.width = cachedRect.width * cachedDpr;
+      canvas.height = cachedRect.height * cachedDpr;
     };
 
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    updateBounds();
+    window.addEventListener('resize', updateBounds, { passive: true });
 
-    const spawnSparkle = (clientX: number, clientY: number, count = 2) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
+    const spawnSparkle = (clientX: number, clientY: number, count = 1) => {
+      if (particles.length > 30) return; // Cap maximum active particles
 
-      const dpr = window.devicePixelRatio || 1;
+      const x = (clientX - cachedRect.left) * cachedDpr;
+      const y = (clientY - cachedRect.top) * cachedDpr;
+
       const shapes: Particle['shape'][] = ['sparkle', 'star', 'heart', 'circle'];
 
       for (let i = 0; i < count; i++) {
         const shape = shapes[Math.floor(Math.random() * shapes.length)];
         const color = colors[Math.floor(Math.random() * colors.length)];
         const angle = Math.random() * Math.PI * 2;
-        const speed = (Math.random() * 2.5 + 0.6) * particleDensity;
+        const speed = (Math.random() * 2 + 0.5) * particleDensity;
 
         particles.push({
-          x: x * dpr,
-          y: y * dpr,
+          x,
+          y,
           vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 0.4,
-          size: (Math.random() * 9 + 4) * dpr,
+          vy: Math.sin(angle) * speed - 0.3,
+          size: (Math.random() * 7 + 3) * cachedDpr,
           alpha: 1.0,
-          decay: Math.random() * 0.02 + 0.015,
+          decay: Math.random() * 0.025 + 0.02,
           color,
           shape,
           rotation: Math.random() * Math.PI,
-          rotationSpeed: (Math.random() - 0.5) * 0.12,
+          rotationSpeed: (Math.random() - 0.5) * 0.1,
         });
       }
     };
 
-    // Pointer move handler (mouse / stylus / touch)
+    // Throttled pointer move handler
     const handlePointerMove = (e: PointerEvent) => {
-      lastX = e.clientX;
-      lastY = e.clientY;
-      spawnSparkle(e.clientX, e.clientY, 3);
+      const now = performance.now();
+      if (now - lastSpawnTime < 60) return; // Throttle to max ~16fps spawn
+      lastSpawnTime = now;
+      spawnSparkle(e.clientX, e.clientY, 2);
     };
 
-    // Mobile Touch Move & Touch Start handler
+    // Throttled touch move
     const handleTouchMove = (e: TouchEvent) => {
-      for (let i = 0; i < e.touches.length; i++) {
-        const touch = e.touches[i];
-        lastX = touch.clientX;
-        lastY = touch.clientY;
-        spawnSparkle(touch.clientX, touch.clientY, 2);
-      }
-    };
+      const now = performance.now();
+      if (now - lastSpawnTime < 80) return;
+      lastSpawnTime = now;
 
-    // Mobile scroll burst
-    let scrollTimeout: any = null;
-    const handleScroll = () => {
-      if (lastX > 0 && lastY > 0) {
-        spawnSparkle(lastX, lastY, 2);
-      } else {
-        // Fallback center screen sparkles on scroll
-        const cx = window.innerWidth / 2 + (Math.random() - 0.5) * 200;
-        const cy = window.innerHeight / 2 + (Math.random() - 0.5) * 200;
-        spawnSparkle(cx, cy, 2);
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        spawnSparkle(touch.clientX, touch.clientY, 1);
       }
     };
 
@@ -124,20 +120,18 @@ export function SparkleParticleCanvas({
 
     targetElement.addEventListener('pointermove', handlePointerMove as any, { passive: true });
     targetElement.addEventListener('touchmove', handleTouchMove as any, { passive: true });
-    targetElement.addEventListener('touchstart', handleTouchMove as any, { passive: true });
-    window.addEventListener('scroll', handleScroll, { passive: true });
 
-    // Ambient background sparkles
+    // Light ambient background sparkles
     const ambientInterval = setInterval(() => {
-      if (canvas && particles.length < 40) {
-        const rect = canvas.getBoundingClientRect();
-        const rx = rect.left + Math.random() * rect.width;
-        const ry = rect.top + Math.random() * rect.height;
+      if (document.hidden) return;
+      if (particles.length < 15) {
+        const rx = cachedRect.left + Math.random() * cachedRect.width;
+        const ry = cachedRect.top + Math.random() * cachedRect.height;
         spawnSparkle(rx, ry, 1);
       }
-    }, 350);
+    }, 600);
 
-    // Shape drawing helpers
+    // Fast shape drawing without shadowBlur
     const drawSparkleStar = (c: CanvasRenderingContext2D, size: number) => {
       c.beginPath();
       for (let i = 0; i < 4; i++) {
@@ -161,13 +155,18 @@ export function SparkleParticleCanvas({
     };
 
     const render = () => {
+      if (document.hidden) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
-        p.vy -= 0.02; // float up gently
+        p.vy -= 0.015; // gentle float up
         p.alpha -= p.decay;
         p.rotation += p.rotationSpeed;
 
@@ -179,19 +178,17 @@ export function SparkleParticleCanvas({
         ctx.save();
         ctx.globalAlpha = Math.max(0, p.alpha);
         ctx.fillStyle = p.color;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 10;
 
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rotation);
 
         if (p.shape === 'heart') {
-          drawHeart(ctx, p.size * 0.85);
+          drawHeart(ctx, p.size * 0.8);
         } else if (p.shape === 'sparkle' || p.shape === 'star') {
           drawSparkleStar(ctx, p.size);
         } else {
           ctx.beginPath();
-          ctx.arc(0, 0, p.size * 0.45, 0, Math.PI * 2);
+          ctx.arc(0, 0, p.size * 0.4, 0, Math.PI * 2);
           ctx.fill();
         }
 
@@ -206,12 +203,9 @@ export function SparkleParticleCanvas({
     return () => {
       cancelAnimationFrame(animationFrameId);
       clearInterval(ambientInterval);
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('resize', updateBounds);
       targetElement.removeEventListener('pointermove', handlePointerMove as any);
       targetElement.removeEventListener('touchmove', handleTouchMove as any);
-      targetElement.removeEventListener('touchstart', handleTouchMove as any);
-      window.removeEventListener('scroll', handleScroll);
     };
   }, [particleDensity, isFullScreen]);
 

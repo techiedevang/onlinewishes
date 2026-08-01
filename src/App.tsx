@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, lazy, Suspense } from 'react';
 import confetti from 'canvas-confetti';
 import { motion } from 'motion/react';
 import { User, UserCustomization, Template, CustomAiBlueprint } from './types';
@@ -9,26 +9,37 @@ import { TEMPLATES, INITIAL_MEMORIES_21, getDefaultCustomization } from './data/
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { TemplateGallery } from './components/TemplateGallery';
-import { TemplateDetailsPage } from './components/TemplateDetailsPage';
-import { CustomizerStudio } from './components/CustomizerStudio';
 import { PricingSection } from './components/PricingSection';
-import { LivePreviewModal } from './components/LivePreviewModal';
-import { AuthModal } from './components/AuthModal';
-import { AdminDashboard } from './components/AdminDashboard';
-import { TemplateReviewsModal } from './components/TemplateReviewsModal';
-import { CustomAiIdeaModal } from './components/CustomAiIdeaModal';
 import { ContactAndNewsletter } from './components/ContactAndNewsletter';
 import { Footer } from './components/Footer';
-import { PolicyModal, PolicyTab } from './components/PolicyModal';
-import { UserDashboard } from './components/UserDashboard';
+import type { PolicyTab } from './components/PolicyModal';
 import { OfflineBanner } from './components/OfflineBanner';
 import { SparkleParticleCanvas } from './components/SparkleParticleCanvas';
 import { GoogleAd } from './components/GoogleAd';
 import { useDynamicSEO } from './hooks/useDynamicSEO';
 import { Check, Sparkles, ExternalLink, Share2, Facebook, Twitter, MessageCircle, Link, Lock, XCircle, Heart, Instagram, ArrowLeft, Maximize2, Copy } from 'lucide-react';
 import { loadScrapbookFromCloud } from './lib/scrapbookService';
-import { InteractiveSurpriseTemplate } from './components/InteractiveSurpriseTemplate';
 import { ErrorBoundary } from './components/ErrorBoundary';
+
+// Code splitting with React.lazy for major route components and heavy modals
+const TemplateDetailsPage = lazy(() => import('./components/TemplateDetailsPage').then(m => ({ default: m.TemplateDetailsPage })));
+const CustomizerStudio = lazy(() => import('./components/CustomizerStudio').then(m => ({ default: m.CustomizerStudio })));
+const LivePreviewModal = lazy(() => import('./components/LivePreviewModal').then(m => ({ default: m.LivePreviewModal })));
+const AuthModal = lazy(() => import('./components/AuthModal').then(m => ({ default: m.AuthModal })));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const TemplateReviewsModal = lazy(() => import('./components/TemplateReviewsModal').then(m => ({ default: m.TemplateReviewsModal })));
+const CustomAiIdeaModal = lazy(() => import('./components/CustomAiIdeaModal').then(m => ({ default: m.CustomAiIdeaModal })));
+const PolicyModal = lazy(() => import('./components/PolicyModal').then(m => ({ default: m.PolicyModal })));
+const UserDashboard = lazy(() => import('./components/UserDashboard').then(m => ({ default: m.UserDashboard })));
+const InteractiveSurpriseTemplate = lazy(() => import('./components/InteractiveSurpriseTemplate').then(m => ({ default: m.InteractiveSurpriseTemplate })));
+
+// Loading spinner fallback for lazy components
+const ComponentLoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center p-12 my-12 w-full min-h-[300px]">
+    <div className="w-10 h-10 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin mb-3" />
+    <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Loading experience...</p>
+  </div>
+);
 
 // Scroll Entrance Animation Wrapper Component
 function AnimatedSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
@@ -341,6 +352,9 @@ A story forever to be told.`,
   // Toggle Dark Mode
   
 
+  // Dynamically update document title, meta tags, and canonical URL on route change
+  useDynamicSEO(currentPath, activeTab, customization);
+
   const handleSelectTemplateToBuild = (template: Template) => {
     if (window.location.pathname !== `/${template.id}/customize`) {
       window.history.pushState(null, '', `/${template.id}/customize`);
@@ -569,10 +583,38 @@ A story forever to be told.`,
 
     return (
       <ErrorBoundary>
-        <div className="w-full h-[100dvh] relative bg-slate-950">
-          <div className="absolute top-4 left-4 z-50 flex items-center space-x-3">
-            <button
-              onClick={() => {
+        <Suspense fallback={
+          <div className="w-full h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+            <div className="w-10 h-10 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin mb-3" />
+            <p className="text-xs font-bold text-slate-400">Loading Preview...</p>
+          </div>
+        }>
+          <div className="w-full h-[100dvh] relative bg-slate-950">
+            <div className="absolute top-4 left-4 z-50 flex items-center space-x-3">
+              <button
+                onClick={() => {
+                  const targetPath = isCustomizerContext ? `/${standalonePreviewTemplate.id}/customize` : `/${standalonePreviewTemplate.id}`;
+                  window.history.pushState(null, '', targetPath);
+                  setStandalonePreviewTemplate(null);
+                  if (isCustomizerContext) {
+                    setActiveTab('customizer');
+                  } else {
+                    setTemplateDetail(standalonePreviewTemplate);
+                    setActiveTab('template-detail');
+                  }
+                }}
+                className="px-4 py-2 bg-black/70 hover:bg-black text-white rounded-full font-bold text-xs backdrop-blur-md border border-white/25 shadow-2xl flex items-center space-x-2 transition-all hover:scale-105"
+              >
+                <ArrowLeft className="w-4 h-4 text-rose-400" />
+                <span>Back</span>
+              </button>
+            </div>
+
+            <InteractiveSurpriseTemplate
+              key={`preview-standalone-${standalonePreviewTemplate.id}`}
+              customization={activeCustomization}
+              isStandaloneView={true}
+              onClose={() => {
                 const targetPath = isCustomizerContext ? `/${standalonePreviewTemplate.id}/customize` : `/${standalonePreviewTemplate.id}`;
                 window.history.pushState(null, '', targetPath);
                 setStandalonePreviewTemplate(null);
@@ -583,30 +625,9 @@ A story forever to be told.`,
                   setActiveTab('template-detail');
                 }
               }}
-              className="px-4 py-2 bg-black/70 hover:bg-black text-white rounded-full font-bold text-xs backdrop-blur-md border border-white/25 shadow-2xl flex items-center space-x-2 transition-all hover:scale-105"
-            >
-              <ArrowLeft className="w-4 h-4 text-rose-400" />
-              <span>Back</span>
-            </button>
+            />
           </div>
-
-          <InteractiveSurpriseTemplate
-            key={`preview-standalone-${standalonePreviewTemplate.id}`}
-            customization={activeCustomization}
-            isStandaloneView={true}
-            onClose={() => {
-              const targetPath = isCustomizerContext ? `/${standalonePreviewTemplate.id}/customize` : `/${standalonePreviewTemplate.id}`;
-              window.history.pushState(null, '', targetPath);
-              setStandalonePreviewTemplate(null);
-              if (isCustomizerContext) {
-                setActiveTab('customizer');
-              } else {
-                setTemplateDetail(standalonePreviewTemplate);
-                setActiveTab('template-detail');
-              }
-            }}
-          />
-        </div>
+        </Suspense>
       </ErrorBoundary>
     );
   }
@@ -614,13 +635,20 @@ A story forever to be told.`,
   if (publishedScrapbook) {
     return (
       <ErrorBoundary>
-        <div className="w-full h-[100dvh]">
-          <InteractiveSurpriseTemplate
-            key={`${publishedScrapbook.subdomain}-${publishedScrapbook.bgTheme}`}
-            customization={publishedScrapbook}
-            isStandaloneView={true}
-          />
-        </div>
+        <Suspense fallback={
+          <div className="w-full h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+            <div className="w-10 h-10 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin mb-3" />
+            <p className="text-xs font-bold text-slate-400">Loading Surprise...</p>
+          </div>
+        }>
+          <div className="w-full h-[100dvh]">
+            <InteractiveSurpriseTemplate
+              key={`${publishedScrapbook.subdomain}-${publishedScrapbook.bgTheme}`}
+              customization={publishedScrapbook}
+              isStandaloneView={true}
+            />
+          </div>
+        </Suspense>
       </ErrorBoundary>
     );
   }
@@ -654,115 +682,117 @@ A story forever to be told.`,
 
       {/* Main Container Views */}
       <main>
-        {activeTab === 'home' && (
-          <>
-            <AnimatedSection>
-              <HeroSection
-                onExploreTemplates={() => {
-                  setActiveTab('templates');
-                  document.getElementById('templates')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                onOpenCustomizer={() => setActiveTab('customizer')}
-                onTrySamplePreview={() => setPreviewTemplate(TEMPLATES[0])}
-              />
-            </AnimatedSection>
+        <Suspense fallback={<ComponentLoadingFallback />}>
+          {activeTab === 'home' && (
+            <>
+              <AnimatedSection>
+                <HeroSection
+                  onExploreTemplates={() => {
+                    setActiveTab('templates');
+                    document.getElementById('templates')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  onOpenCustomizer={() => setActiveTab('customizer')}
+                  onTrySamplePreview={() => setPreviewTemplate(TEMPLATES[0])}
+                />
+              </AnimatedSection>
 
-            <AnimatedSection delay={0.1}>
-              <TemplateGallery
-                onPreviewTemplate={(tpl) => setPreviewTemplate(tpl)}
+              <AnimatedSection delay={0.1}>
+                <TemplateGallery
+                  onPreviewTemplate={(tpl) => setPreviewTemplate(tpl)}
+                  onSelectTemplateToBuild={handleSelectTemplateToBuild}
+                  onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
+                  onOpenCustomAiModal={() => setActiveTab('custom_AI')}
+                  onViewDetails={(tpl) => {
+                    window.history.pushState(null, '', '/' + tpl.id);
+                    setTemplateDetail(tpl);
+                    setActiveTab('template-detail');
+                  }}
+                />
+              </AnimatedSection>
+
+              <AnimatedSection delay={0.1}>
+                <PricingSection
+                  onSelectTemplateToBuild={handleSelectTemplateToBuild}
+                  onOpenCustomAiModal={() => setActiveTab('custom_AI')}
+                />
+              </AnimatedSection>
+
+              <AnimatedSection delay={0.1}>
+                <ContactAndNewsletter />
+              </AnimatedSection>
+            </>
+          )}
+
+          
+          {activeTab === 'template-detail' && templateDetail && (
+            <AnimatedSection>
+              <TemplateDetailsPage
+                template={templateDetail}
+                onBack={() => {
+                  window.history.pushState(null, '', '/');
+                  setActiveTab('templates');
+                }}
+                onPreview={(tpl) => {
+                  window.history.pushState(null, '', `/${tpl.id}/preview`);
+                  setStandalonePreviewTemplate(tpl);
+                }}
                 onSelectTemplateToBuild={handleSelectTemplateToBuild}
                 onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
-                onOpenCustomAiModal={() => setActiveTab('custom_AI')}
-                onViewDetails={(tpl) => {
-                  window.history.pushState(null, '', '/' + tpl.id);
-                  setTemplateDetail(tpl);
-                  setActiveTab('template-detail');
-                }}
               />
             </AnimatedSection>
+          )}
 
-            <AnimatedSection delay={0.1}>
+          {activeTab === 'templates' && (
+            <AnimatedSection className="pt-4">
+              <TemplateGallery
+                  onPreviewTemplate={(tpl) => setPreviewTemplate(tpl)}
+                  onSelectTemplateToBuild={handleSelectTemplateToBuild}
+                  onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
+                  onOpenCustomAiModal={() => setActiveTab('custom_AI')}
+                  onViewDetails={(tpl) => {
+                    window.history.pushState(null, '', '/' + tpl.id);
+                    setTemplateDetail(tpl);
+                    setActiveTab('template-detail');
+                  }}
+                />
+            </AnimatedSection>
+          )}
+
+          {activeTab === 'customizer' && (
+            <AnimatedSection>
+              <CustomizerStudio
+                currentUser={currentUser}
+                customization={customization}
+                onChangeCustomization={setCustomization}
+                onOpenLivePreview={() => {
+                  const currentTpl = TEMPLATES.find(t => t.id === customization.bgTheme) || TEMPLATES[0];
+                  window.history.pushState(null, '', `/${currentTpl.id}/preview`);
+                  setStandalonePreviewTemplate(currentTpl);
+                }}
+                onPublish={handlePublishWebsite}
+                onOpenAuth={handleOpenAuth}
+              />
+            </AnimatedSection>
+          )}
+
+          {activeTab === 'pricing' && (
+            <AnimatedSection>
               <PricingSection
                 onSelectTemplateToBuild={handleSelectTemplateToBuild}
                 onOpenCustomAiModal={() => setActiveTab('custom_AI')}
               />
             </AnimatedSection>
+          )}
 
-            <AnimatedSection delay={0.1}>
-              <ContactAndNewsletter />
-            </AnimatedSection>
-          </>
-        )}
-
-        
-        {activeTab === 'template-detail' && templateDetail && (
-          <AnimatedSection>
-            <TemplateDetailsPage
-              template={templateDetail}
-              onBack={() => {
-                window.history.pushState(null, '', '/');
-                setActiveTab('templates');
-              }}
-              onPreview={(tpl) => {
-                window.history.pushState(null, '', `/${tpl.id}/preview`);
-                setStandalonePreviewTemplate(tpl);
-              }}
-              onSelectTemplateToBuild={handleSelectTemplateToBuild}
-              onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
-            />
-          </AnimatedSection>
-        )}
-
-        {activeTab === 'templates' && (
-          <AnimatedSection className="pt-4">
-            <TemplateGallery
-                onPreviewTemplate={(tpl) => setPreviewTemplate(tpl)}
-                onSelectTemplateToBuild={handleSelectTemplateToBuild}
-                onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
-                onOpenCustomAiModal={() => setActiveTab('custom_AI')}
-                onViewDetails={(tpl) => {
-                  window.history.pushState(null, '', '/' + tpl.id);
-                  setTemplateDetail(tpl);
-                  setActiveTab('template-detail');
-                }}
+          {activeTab === 'custom_AI' && (
+            <AnimatedSection>
+              <CustomAiIdeaModal
+                onClose={() => setActiveTab('home')}
+                onApplyBlueprint={handleApplyAiBlueprint}
               />
-          </AnimatedSection>
-        )}
-
-        {activeTab === 'customizer' && (
-          <AnimatedSection>
-            <CustomizerStudio
-              currentUser={currentUser}
-              customization={customization}
-              onChangeCustomization={setCustomization}
-              onOpenLivePreview={() => {
-                const currentTpl = TEMPLATES.find(t => t.id === customization.bgTheme) || TEMPLATES[0];
-                window.history.pushState(null, '', `/${currentTpl.id}/preview`);
-                setStandalonePreviewTemplate(currentTpl);
-              }}
-              onPublish={handlePublishWebsite}
-              onOpenAuth={handleOpenAuth}
-            />
-          </AnimatedSection>
-        )}
-
-        {activeTab === 'pricing' && (
-          <AnimatedSection>
-            <PricingSection
-              onSelectTemplateToBuild={handleSelectTemplateToBuild}
-              onOpenCustomAiModal={() => setActiveTab('custom_AI')}
-            />
-          </AnimatedSection>
-        )}
-
-        {activeTab === 'custom_AI' && (
-          <AnimatedSection>
-            <CustomAiIdeaModal
-              onClose={() => setActiveTab('home')}
-              onApplyBlueprint={handleApplyAiBlueprint}
-            />
-          </AnimatedSection>
-        )}
+            </AnimatedSection>
+          )}
+        </Suspense>
       </main>
 
       {/* Footer */}
@@ -771,111 +801,113 @@ A story forever to be told.`,
         onOpenPolicy={(tab) => setPolicyTab(tab)}
       />
 
-      {/* POLICY & LEGAL MODAL */}
-      {policyTab && (
-        <PolicyModal
-          initialTab={policyTab}
-          onClose={() => setPolicyTab(null)}
-        />
-      )}
+      <Suspense fallback={null}>
+        {/* POLICY & LEGAL MODAL */}
+        {policyTab && (
+          <PolicyModal
+            initialTab={policyTab}
+            onClose={() => setPolicyTab(null)}
+          />
+        )}
 
-      {/* MODAL 1: LIVE INTERACTIVE TEMPLATE PREVIEW MODAL */}
-      {previewTemplate && (
-        <LivePreviewModal
-          template={previewTemplate}
-          customization={customization}
-          onClose={() => setPreviewTemplate(null)}
-          onFullScreen={() => {
-            const tpl = previewTemplate;
-            if (tpl) {
-              window.history.pushState(null, '', `/${tpl.id}/preview`);
+        {/* MODAL 1: LIVE INTERACTIVE TEMPLATE PREVIEW MODAL */}
+        {previewTemplate && (
+          <LivePreviewModal
+            template={previewTemplate}
+            customization={customization}
+            onClose={() => setPreviewTemplate(null)}
+            onFullScreen={() => {
+              const tpl = previewTemplate;
+              if (tpl) {
+                window.history.pushState(null, '', `/${tpl.id}/preview`);
+                setPreviewTemplate(null);
+                setStandalonePreviewTemplate(tpl);
+              }
+            }}
+            onCustomizeThis={() => {
+              let sound = 'rainy_cafe';
+              if (previewTemplate.id === 'romantic-love-story') sound = 'romantic_piano';
+              else if (previewTemplate.id === 'celestial-galaxy') sound = 'stargazing_night';
+              else if (previewTemplate.id === 'vintage-parchment') sound = 'library_whispers';
+              else if (previewTemplate.id === 'birthday-confetti-party') sound = 'birthday_light';
+              else if (previewTemplate.id === 'retro-90s-arcade') sound = 'arcade_8bit';
+              else if (previewTemplate.id === 'minimalist-editorial') sound = 'library_whispers';
+              
+              setCustomization(prev => ({ ...prev, bgTheme: previewTemplate.id, occasion: previewTemplate.category, ambientSoundscape: sound, enablePasscode: previewTemplate.id === 'romantic-love-story' ? true : false, secretPasscode: previewTemplate.id === 'romantic-love-story' ? '2024' : prev.secretPasscode }));
               setPreviewTemplate(null);
-              setStandalonePreviewTemplate(tpl);
-            }
-          }}
-          onCustomizeThis={() => {
-            let sound = 'rainy_cafe';
-            if (previewTemplate.id === 'romantic-love-story') sound = 'romantic_piano';
-            else if (previewTemplate.id === 'celestial-galaxy') sound = 'stargazing_night';
-            else if (previewTemplate.id === 'vintage-parchment') sound = 'library_whispers';
-            else if (previewTemplate.id === 'birthday-confetti-party') sound = 'birthday_light';
-            else if (previewTemplate.id === 'retro-90s-arcade') sound = 'arcade_8bit';
-            else if (previewTemplate.id === 'minimalist-editorial') sound = 'library_whispers';
-            
-            setCustomization(prev => ({ ...prev, bgTheme: previewTemplate.id, occasion: previewTemplate.category, ambientSoundscape: sound, enablePasscode: previewTemplate.id === 'romantic-love-story' ? true : false, secretPasscode: previewTemplate.id === 'romantic-love-story' ? '2024' : prev.secretPasscode }));
-            setPreviewTemplate(null);
-            setActiveTab('customizer');
-          }}
-        />
-      )}
+              setActiveTab('customizer');
+            }}
+          />
+        )}
 
-      {/* MODAL 2: TEMPLATE REVIEWS MODAL */}
-      {reviewTemplate && (
-        <TemplateReviewsModal
-          template={reviewTemplate}
-          onClose={() => setReviewTemplate(null)}
-        />
-      )}
+        {/* MODAL 2: TEMPLATE REVIEWS MODAL */}
+        {reviewTemplate && (
+          <TemplateReviewsModal
+            template={reviewTemplate}
+            onClose={() => setReviewTemplate(null)}
+          />
+        )}
 
-      
-      {/* MODAL 4: USER AUTH & MFA MODAL */}
-      {showAuthModal && (
-        <AuthModal
-          currentUser={currentUser}
-          initialMode={authInitialMode}
-          onLogin={(user, isManualLogin, isNewUser) => {
-            localStorage.setItem('onlinewishes_current_user', JSON.stringify(user));
-            setCurrentUser(user);
-            if (isManualLogin) {
-              if (isNewUser) {
-                setWelcomeMessage({
-                  title: 'Thank you for joining us! 💖',
-                  body: 'Every beautiful surprise starts with a single step. Let\'s create memories that your loved ones will never forget.',
-                  isNewUser: true
-                });
-              } else {
-                setWelcomeMessage({
-                  title: '🎉 Welcome Back!',
-                  body: 'You\'ve successfully signed in.\nGreat to have you back! Everything is ready for you—jump in and enjoy your experience.\n💙 Have a great time!',
-                  isNewUser: false
+        
+        {/* MODAL 4: USER AUTH & MFA MODAL */}
+        {showAuthModal && (
+          <AuthModal
+            currentUser={currentUser}
+            initialMode={authInitialMode}
+            onLogin={(user, isManualLogin, isNewUser) => {
+              localStorage.setItem('onlinewishes_current_user', JSON.stringify(user));
+              setCurrentUser(user);
+              if (isManualLogin) {
+                if (isNewUser) {
+                  setWelcomeMessage({
+                    title: 'Thank you for joining us! 💖',
+                    body: 'Every beautiful surprise starts with a single step. Let\'s create memories that your loved ones will never forget.',
+                    isNewUser: true
+                  });
+                } else {
+                  setWelcomeMessage({
+                    title: '🎉 Welcome Back!',
+                    body: 'You\'ve successfully signed in.\nGreat to have you back! Everything is ready for you—jump in and enjoy your experience.\n💙 Have a great time!',
+                    isNewUser: false
+                  });
+                }
+                confetti({
+                  particleCount: 150,
+                  spread: 80,
+                  origin: { y: 0.6 },
+                  zIndex: 2000
                 });
               }
-              confetti({
-                particleCount: 150,
-                spread: 80,
-                origin: { y: 0.6 },
-                zIndex: 2000
-              });
-            }
-          }}
-          onLogout={handleLogout}
-          onClose={() => setShowAuthModal(false)}
-          onOpenDashboard={() => setShowUserDashboard(true)}
-        />
-      )}
+            }}
+            onLogout={handleLogout}
+            onClose={() => setShowAuthModal(false)}
+            onOpenDashboard={() => setShowUserDashboard(true)}
+          />
+        )}
 
-      {/* MODAL: USER PROFILE & PURCHASES DASHBOARD */}
-      {showUserDashboard && currentUser && (
-        <UserDashboard
-          currentUser={currentUser}
-          onLogout={handleLogout}
-          onClose={() => setShowUserDashboard(false)}
-          onNewWebsite={() => {
-            setActiveTab('customizer');
-            setShowUserDashboard(false);
-          }}
-        />
-      )}
+        {/* MODAL: USER PROFILE & PURCHASES DASHBOARD */}
+        {showUserDashboard && currentUser && (
+          <UserDashboard
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            onClose={() => setShowUserDashboard(false)}
+            onNewWebsite={() => {
+              setActiveTab('customizer');
+              setShowUserDashboard(false);
+            }}
+          />
+        )}
 
-      {/* MODAL 5: ADMIN & SYSTEM HEALTH DASHBOARD */}
-      {showAdminDashboard && (
-        <AdminDashboard
-          currentUser={currentUser}
-          onLogin={(user) => setCurrentUser(user)}
-          onLogout={handleLogout}
-          onClose={handleCloseAdmin}
-        />
-      )}
+        {/* MODAL 5: ADMIN & SYSTEM HEALTH DASHBOARD */}
+        {showAdminDashboard && (
+          <AdminDashboard
+            currentUser={currentUser}
+            onLogin={(user) => setCurrentUser(user)}
+            onLogout={handleLogout}
+            onClose={handleCloseAdmin}
+          />
+        )}
+      </Suspense>
 
       {/* PUBLISHED TOAST MODAL */}
       

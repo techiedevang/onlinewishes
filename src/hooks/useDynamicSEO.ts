@@ -58,35 +58,76 @@ export function useDynamicSEO(currentPath: string, activeTab: string, customizat
         updatePageMetadata({
           title: 'Admin Dashboard',
           description: 'OnlineWishes administration dashboard and user management.',
+          canonicalUrl: 'https://onlinewishes.in/admin',
         });
         return;
       }
 
-      // 3. Customizer Route
-      if (activeTab === 'customizer') {
-        updatePageMetadata({
-          title: `Customizing ${customizationParams?.recipientName || 'Your'}'s Surprise Page`,
-          description: `Personalize photos, custom love letters, background music, and secret passcode for ${customizationParams?.recipientName || 'your loved one'} on OnlineWishes.`,
-        });
-        return;
-      }
-
-      // 4. Template Route
+      // 3. Template Routes (Detail, Customizer, Preview)
       if (currentPath.length > 1 && !currentPath.startsWith('/p/') && !currentPath.startsWith('/admin')) {
+        let isCustomize = currentPath.endsWith('/customize') || activeTab === 'customizer';
+        let isPreview = currentPath.endsWith('/preview');
         let possibleTemplateId = currentPath.substring(1);
+        
         if (possibleTemplateId.endsWith('/customize')) {
            possibleTemplateId = possibleTemplateId.replace('/customize', '');
+        } else if (possibleTemplateId.endsWith('/preview')) {
+           possibleTemplateId = possibleTemplateId.replace('/preview', '');
         }
         
         const template = TEMPLATES.find(t => t.id === possibleTemplateId);
         if (template) {
-          updateMetadataForTemplate(template.title, template.category, template.description, template.thumbnail);
+          const subPath = isCustomize ? 'customize' : isPreview ? 'preview' : '';
+          updateMetadataForTemplate(template.id, template.title, template.category, template.description, template.thumbnail, subPath);
           return;
         }
       }
 
-      // 5. Default
-      updatePageMetadata();
+      // 4. Customizer Route (Generic)
+      if (activeTab === 'customizer') {
+        const recipientName = customizationParams?.recipientName || 'Your Loved One';
+        updatePageMetadata({
+          title: `Customize ${recipientName}'s Surprise Page`,
+          description: `Personalize photos, custom love letters, background music, and secret passcode for ${recipientName} on OnlineWishes.in.`,
+          canonicalUrl: 'https://onlinewishes.in/customize',
+        });
+        return;
+      }
+
+      // 5. Static Tab Pages
+      if (activeTab === 'templates' || currentPath === '/templates') {
+        updatePageMetadata({
+          title: 'All Scrapbook & Birthday Surprise Templates',
+          description: 'Explore 14+ interactive surprise website templates for besties, lovers, sisters, birthdays, and anniversaries on OnlineWishes.in.',
+          canonicalUrl: 'https://onlinewishes.in/templates',
+        });
+        return;
+      }
+
+      if (activeTab === 'pricing' || currentPath === '/pricing') {
+        updatePageMetadata({
+          title: 'Pricing & Custom AI Website Plans',
+          description: 'All interactive templates at flat Rs. 49 and custom AI website blueprints at flat Rs. 79. Instant delivery with zero subscription fees.',
+          canonicalUrl: 'https://onlinewishes.in/pricing',
+        });
+        return;
+      }
+
+      if (activeTab === 'custom_AI' || currentPath === '/custom_AI') {
+        updatePageMetadata({
+          title: 'AI Custom Website Blueprint Generator',
+          description: 'Tell our AI Architect your idea and get a bespoke custom surprise website blueprint generated in seconds.',
+          canonicalUrl: 'https://onlinewishes.in/custom_AI',
+        });
+        return;
+      }
+
+      // 6. Default Homepage
+      updatePageMetadata({
+        title: 'OnlineWishes.in - Personalized Digital Surprises & Scrapbooks',
+        description: 'Create personalized digital surprises, memory books, birthday websites, and love scrapbooks for your loved ones at onlinewishes.in. Make their day special with custom digital gifts.',
+        canonicalUrl: 'https://onlinewishes.in/',
+      });
     }
 
     fetchAndSetMetadata();

@@ -555,23 +555,33 @@ export function AuthModal({
     setResetSuccess(false);
 
     try {
-      // Send OTP verification email from support@onlinewishes.in via server API
-      const res = await fetch('/api/send-reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmedEmail })
+      // 1. Send Firebase client reset link in parallel as backup
+      sendPasswordResetEmail(auth, trimmedEmail).catch((fErr) => {
+        console.warn('Firebase client password reset notice:', fErr);
       });
-      const data = await res.json();
 
-      if (res.ok && data.success) {
-        setResetStep('verify');
-        setResetSuccess(true);
-      } else {
-        setError(data.error || 'Failed to send OTP verification email. Please check your email address and try again.');
+      // 2. Send custom OTP verification email from support@onlinewishes.in via server API
+      try {
+        const res = await fetch('/api/send-reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok && data.error) {
+          console.warn('Server reset notice:', data.error);
+        }
+      } catch (fetchErr) {
+        console.warn('Server fetch reset warning:', fetchErr);
       }
+
+      // Always show step 2 (verify OTP or link) so user is NEVER blocked by network/Resend issues!
+      setResetStep('verify');
+      setResetSuccess(true);
     } catch (err: any) {
       console.error('Password reset error:', err);
-      setError('Failed to connect to email server. Please check your network and try again.');
+      setResetStep('verify');
+      setResetSuccess(true);
     } finally {
       setLoading(false);
     }

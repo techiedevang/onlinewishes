@@ -278,27 +278,6 @@ async function updateUserPasswordInFirebaseAuth(email: string, newPassword: stri
   }
 }
 
-async function sendPasswordChangeConfirmationEmail(email: string) {
-  const cleanEmail = email.trim().toLowerCase();
-  await sendEmailWithFallback({
-    to: cleanEmail,
-    subject: "🎉 Password Changed Successfully - OnlineWishes",
-    html: `
-      <div style="font-family: Arial, sans-serif; padding: 28px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
-        <h2 style="color: #10b981; margin-top: 0; font-size: 22px; text-align: center;">Password Updated Successfully!</h2>
-        <p style="color: #cbd5e1; font-size: 14px;">Hello,</p>
-        <p style="color: #cbd5e1; font-size: 14px;">The password for your OnlineWishes account registered under <strong>${cleanEmail}</strong> has been updated successfully.</p>
-        <div style="background-color: #1e293b; padding: 16px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #10b981;">
-          <p style="color: #34d399; font-weight: bold; margin: 0; font-size: 15px;">You can now log in using your new password on OnlineWishes.in.</p>
-        </div>
-        <p style="color: #94a3b8; font-size: 12px;">If you did not make this change, please contact us immediately at support@onlinewishes.in.</p>
-        <hr style="border-color: #334155; margin: 24px 0 16px;"/>
-        <p style="font-size: 11px; color: #64748b; text-align: center;">Sent securely by support@onlinewishes.in</p>
-      </div>
-    `
-  });
-}
-
 function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT) || 587;
@@ -392,6 +371,27 @@ async function startServer() {
 
     console.error(`[Email Delivery Failure] Could not send email to ${to}:`, lastError);
     return { success: false, error: lastError || "Email delivery failed" };
+  }
+
+  async function sendPasswordChangeConfirmationEmail(email: string) {
+    const cleanEmail = email.trim().toLowerCase();
+    await sendEmailWithFallback({
+      to: cleanEmail,
+      subject: "🎉 Password Changed Successfully - OnlineWishes",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 28px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
+          <h2 style="color: #10b981; margin-top: 0; font-size: 22px; text-align: center;">Password Updated Successfully!</h2>
+          <p style="color: #cbd5e1; font-size: 14px;">Hello,</p>
+          <p style="color: #cbd5e1; font-size: 14px;">The password for your OnlineWishes account registered under <strong>${cleanEmail}</strong> has been updated successfully.</p>
+          <div style="background-color: #1e293b; padding: 16px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #10b981;">
+            <p style="color: #34d399; font-weight: bold; margin: 0; font-size: 15px;">You can now log in using your new password on OnlineWishes.in.</p>
+          </div>
+          <p style="color: #94a3b8; font-size: 12px;">If you did not make this change, please contact us immediately at support@onlinewishes.in.</p>
+          <hr style="border-color: #334155; margin: 24px 0 16px;"/>
+          <p style="font-size: 11px; color: #64748b; text-align: center;">Sent securely by support@onlinewishes.in</p>
+        </div>
+      `
+    });
   }
 
   // Email Validation Endpoint

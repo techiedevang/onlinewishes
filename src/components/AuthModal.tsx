@@ -303,31 +303,12 @@ export function AuthModal({
         console.warn('Firestore password verify check:', fErr);
       }
 
-      // If Firebase Auth has backend / operation-not-allowed restriction, auto-login or create local session
-      if (
-        errCode === 'auth/operation-not-allowed' ||
-        errCode === 'auth/configuration-not-found' ||
-        errCode === 'auth/unauthorized-domain' ||
-        errCode === 'auth/internal-error' ||
-        errMessage.includes('auth/operation-not-allowed') ||
-        errMessage.includes('operation-not-allowed')
-      ) {
-        const fallbackUser: User = {
-          id: 'user_' + Date.now(),
-          name: trimmedEmail.split('@')[0] || 'Valued User',
-          email: trimmedEmail,
-          role: 'user',
-          mfaEnabled: false,
-        };
-        saveLocalUser({ ...fallbackUser, password });
-        await saveUserToFirestore(fallbackUser);
-        onLogin(fallbackUser, true, false);
-        onClose();
-        return;
-      }
-
       console.warn('Sign in error:', err);
-      setError(mapAuthErrorToMessage(err));
+      if (errCode === 'auth/user-not-found' || errCode === 'auth/invalid-credential' || errCode === 'auth/wrong-password') {
+        setError('Invalid email address or password. If you do not have an account yet, please click "Create Account" to sign up.');
+      } else {
+        setError(mapAuthErrorToMessage(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -476,27 +457,50 @@ export function AuthModal({
           return;
         }
 
-        // Fallback account creation if Firebase Auth restricts runtime domain
-        const newUser: User = {
-          id: 'user_' + Date.now(),
-          name: trimmedName,
-          email: trimmedEmail,
-          role: 'user',
-          mfaEnabled: false,
-        };
-        saveLocalUser({ ...newUser, password });
-        await saveUserToFirestore(newUser);
+        if (errCode === 'auth/invalid-email' || errMessage.includes('invalid-email')) {
+          setError('This email address is invalid. Please enter a real, valid email address.');
+          setLoading(false);
+          return;
+        }
 
-        try {
-          await fetch('/api/send-welcome', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
-          });
-        } catch (e) {}
+        if (errCode === 'auth/weak-password' || errMessage.includes('weak-password')) {
+          setError('Password must be at least 6 characters long.');
+          setLoading(false);
+          return;
+        }
 
-        onLogin(newUser, true, true);
-        onClose();
+        // Fallback account creation ONLY if Firebase Auth blocks Cloud Run runtime preview domain
+        if (
+          errCode === 'auth/operation-not-allowed' ||
+          errCode === 'auth/configuration-not-found' ||
+          errCode === 'auth/unauthorized-domain' ||
+          errMessage.includes('auth/operation-not-allowed') ||
+          errMessage.includes('unauthorized-domain')
+        ) {
+          const newUser: User = {
+            id: 'user_' + Date.now(),
+            name: trimmedName,
+            email: trimmedEmail,
+            role: 'user',
+            mfaEnabled: false,
+          };
+          saveLocalUser({ ...newUser, password });
+          await saveUserToFirestore(newUser);
+
+          try {
+            await fetch('/api/send-welcome', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
+            });
+          } catch (e) {}
+
+          onLogin(newUser, true, true);
+          onClose();
+          return;
+        }
+
+        setError(mapAuthErrorToMessage(err));
       }
     } catch (err: any) {
       setError(mapAuthErrorToMessage(err));

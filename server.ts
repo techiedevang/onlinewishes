@@ -479,15 +479,45 @@ async function startServer() {
     try {
       const email = (req.query.email as string || "").trim().toLowerCase();
       if (!email || !email.includes("@")) {
-        return res.status(400).json({ valid: false, error: "Please enter a valid email address." });
+        return res.status(200).json({ valid: false, error: "Please enter a valid email address." });
       }
 
       const parts = email.split("@");
       const username = parts[0];
       const domain = parts[1];
 
-      if (!username || username.length < 2 || !domain) {
+      if (!username || username.length < 2 || !domain || !domain.includes(".")) {
         return res.status(200).json({ valid: false, reason: "regex", error: "Invalid email address structure." });
+      }
+
+      // Filter obviously fake or placeholder usernames
+      const FAKE_USERNAMES = new Set([
+        "test", "testing", "fake", "fakeuser", "dummy", "asdf", "qwerty", "abcd",
+        "1234", "12345", "123456", "admin", "user", "email", "sample", "temp",
+        "noemail", "invalid", "nonexistent", "null", "undefined", "anonymous"
+      ]);
+
+      if (FAKE_USERNAMES.has(username) || /^([a-z0-9])\1+$/.test(username) || /^[0-9]+$/.test(username)) {
+        return res.status(200).json({
+          valid: false,
+          reason: "fake_username",
+          error: "Please enter a real, personal email address (fake or test accounts are not allowed)."
+        });
+      }
+
+      // Filter obviously fake domains
+      const FAKE_DOMAINS = new Set([
+        "fake.com", "fake.org", "fake.net", "test.com", "test.org", "test.net",
+        "example.com", "example.org", "example.net", "xyz.com", "abc.com",
+        "sample.com", "invalid.com", "domain.com", "email.com", "temp.com"
+      ]);
+
+      if (FAKE_DOMAINS.has(domain)) {
+        return res.status(200).json({
+          valid: false,
+          reason: "fake_domain",
+          error: "Please enter a real email address. Fake or test domains are not allowed."
+        });
       }
 
       // Check typo domains
@@ -495,7 +525,7 @@ async function startServer() {
         "gmaill.com": "gmail.com", "gmai.com": "gmail.com", "gamil.com": "gmail.com",
         "gmial.com": "gmail.com", "gmal.com": "gmail.com", "gmail.co": "gmail.com",
         "yaho.com": "yahoo.com", "yahooo.com": "yahoo.com", "hotmial.com": "hotmail.com",
-        "outlok.com": "outlook.com", "iclaud.com": "icloud.com"
+        "outlok.com": "outlook.com", "iclaud.com": "icloud.com", "rediffmial.com": "rediffmail.com"
       };
 
       if (TYPO_DOMAINS[domain]) {
@@ -511,14 +541,16 @@ async function startServer() {
         "tempmail.com", "mailinator.com", "10minutemail.com", "guerrillamail.com",
         "trashmail.com", "yopmail.com", "dispostable.com", "sharklasers.com",
         "getnada.com", "fakeinbox.com", "throwawaymail.com", "temp-mail.org",
-        "bmail.com", "disposable.com", "fake.com", "example.com", "test.com"
+        "bmail.com", "disposable.com", "fake.com", "example.com", "test.com",
+        "maildrop.cc", "mohmal.com", "generator.email", "inboxalias.com",
+        "0-mail.com", "10minutemail.net", "anonbox.net", "getairmail.com"
       ]);
 
       if (DISPOSABLE_DOMAINS.has(domain)) {
         return res.status(200).json({
           valid: false,
           reason: "disposable",
-          error: "Disposable email addresses are not allowed. Please enter a real email."
+          error: "Disposable email addresses are not allowed. Please enter your real email address."
         });
       }
 
@@ -555,7 +587,7 @@ async function startServer() {
           return res.status(200).json({
             valid: false,
             reason: deepRes.reason || "invalid",
-            error: "This email address failed validation checks. Please enter a real email address."
+            error: "This email address failed validation. Please enter a real, active email address."
           });
         }
       } catch (e) {
@@ -596,7 +628,6 @@ async function startServer() {
 
       await saveUserSignupOtpToFirestore(cleanEmail, otpCode, expiresAt);
 
-      let delivered = false;
       const subject = `🎉 OnlineWishes Account Verification Code: ${otpCode}`;
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; padding: 28px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
@@ -612,49 +643,14 @@ async function startServer() {
         </div>
       `;
 
-      if (process.env.RESEND_API_KEY) {
-        try {
-          const resend = new Resend(process.env.RESEND_API_KEY);
-          let sendRes = await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL || "OnlineWishes <support@onlinewishes.in>",
-            to: cleanEmail,
-            subject,
-            html: htmlContent
-          });
-          if (sendRes.data && !sendRes.error) delivered = true;
-          else if (sendRes.error) {
-            sendRes = await resend.emails.send({
-              from: "OnlineWishes <onboarding@resend.dev>",
-              to: cleanEmail,
-              subject,
-              html: htmlContent
-            });
-            if (sendRes.data && !sendRes.error) delivered = true;
-          }
-        } catch (rErr) {
-          console.warn("Resend signup OTP error:", rErr);
-        }
-      }
+      const emailResult = await sendEmailWithFallback({
+        to: cleanEmail,
+        subject,
+        html: htmlContent
+      });
 
-      if (!delivered) {
-        const transporter = getTransporter();
-        if (transporter) {
-          try {
-            await transporter.sendMail({
-              from: `"OnlineWishes Support" <${process.env.SMTP_USER || "codelearnpoint@gmail.com"}>`,
-              to: cleanEmail,
-              subject,
-              html: htmlContent
-            });
-            delivered = true;
-          } catch (sErr) {
-            console.warn("SMTP signup OTP error:", sErr);
-          }
-        }
-      }
-
-      if (!delivered) {
-        return res.status(400).json({ error: "Failed to send verification email. Please make sure the email exists and is accessible." });
+      if (!emailResult.success) {
+        return res.status(400).json({ error: "Failed to send verification email. Please make sure the email exists and can receive messages." });
       }
 
       res.json({ success: true, message: "Verification code sent to " + cleanEmail });

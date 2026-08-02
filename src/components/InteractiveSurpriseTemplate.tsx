@@ -1492,7 +1492,7 @@ A story forever to be told.`}
             >
               <div className="max-w-xl w-full bg-white p-8 md:p-12 rounded-lg shadow-2xl border border-rose-100 relative">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-300 via-orange-400 to-rose-400 rounded-t-lg"></div>
-                <h2 className="text-3xl font-serif text-rose-800 mb-6 text-center italic">The Sisterhood Oath</h2>
+                <h2 className="text-3xl font-serif text-rose-800 mb-6 text-center italic">{customization.sisterhoodOathTitle || "The Sisterhood Oath"}</h2>
                 <div className="space-y-4 text-rose-900/80 font-serif text-lg text-center mb-8 leading-relaxed">
                   {(customization.sisterhoodPromises && customization.sisterhoodPromises.length > 0 ? customization.sisterhoodPromises : [
                     "I promise to always be your safe space.",

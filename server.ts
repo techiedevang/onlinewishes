@@ -1052,45 +1052,33 @@ async function startServer() {
       await saveOtpToFirestore("admin@onlinewishes.in", otpCode, expiresAt);
 
       const recipientEmail = process.env.ADMIN_RECIPIENT_EMAIL || process.env.SMTP_USER || "itsmedevu16@gmail.com";
-      const transporter = getTransporter();
 
-      let emailSent = false;
-      let emailError: string | null = null;
-
-      
-      try {
-        await resend.emails.send({
-          from: "OnlineWishes Admin <support@onlinewishes.in>",
-          to: recipientEmail,
-          subject: "🔐 Admin Portal Verification Code: " + otpCode,
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; border: 1px solid #334155;">
-              <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
-              <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>admin@onlinewishes.in</strong>.</p>
-              <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
-                <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
-              </div>
-              <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code to complete sign-in. This code expires in 10 minutes.</p>
-              <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
-              <p style="font-size: 11px; color: #64748b;">Delivered securely to: <strong>${recipientEmail}</strong></p>
+      const emailResult = await sendEmailWithFallback({
+        to: recipientEmail,
+        subject: "🔐 Admin Portal Verification Code: " + otpCode,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
+            <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
+            <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>admin@onlinewishes.in</strong>.</p>
+            <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
+              <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
             </div>
-          `,
+            <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code to complete sign-in. This code expires in 10 minutes.</p>
+            <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
+            <p style="font-size: 11px; color: #64748b;">Delivered securely to: <strong>${recipientEmail}</strong></p>
+          </div>
+        `
+      });
+
+      if (!emailResult.success) {
+        return res.status(400).json({
+          error: "Failed to send Admin OTP email to " + recipientEmail + ". " + (emailResult.error || "Please check server email settings.")
         });
-        emailSent = true;
-      } catch (mailErr: any) {
-        console.error("Failed to send OTP email via Resend:", mailErr);
-        emailError = mailErr.message || "Resend API error";
       }
 
       res.json({
         success: true,
-        emailSent,
-        emailError,
-        recipient: "registered secure inbox",
-        message: emailSent
-          ? "Verification code sent successfully to your authorized email address."
-          : "Verification code generated successfully.",
-        fallbackOtp: emailSent ? undefined : otpCode,
+        message: "Verification code sent to " + recipientEmail + ". Please check your inbox (including Spam folder)."
       });
     } catch (err: any) {
       console.error("Admin OTP Error:", err);

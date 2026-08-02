@@ -137,6 +137,7 @@ export interface UserCustomization {
   insideJokes?: InsideJoke[];
   timelineEvents?: TimelineEvent[];
   sisterhoodPromises?: string[];
+  sisterhoodOathTitle?: string;
   gratitudeReasons?: string[];
   scratchCardAttachments?: Array<{ photoUrl?: string; sticker?: string }>;
   arcadeGamerTag?: string;

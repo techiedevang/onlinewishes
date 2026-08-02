@@ -47,6 +47,7 @@ A story forever to be told.`,
     'I promise to keep your secrets and share your joys.',
     'I promise that no matter how much we grow, we will always be sisters first.'
   ],
+  sisterhoodOathTitle: 'The Sisterhood Oath',
   gratitudeReasons: [
     'For always having my back, no matter what.',
     'For the late night talks and endless laughter.',

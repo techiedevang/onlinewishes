@@ -44,6 +44,18 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if true;
     }
+    match /users_passwords/{userId} {
+      allow read, write: if true;
+    }
+    match /sessions/{sessionId} {
+      allow read, write: if true;
+    }
+    match /coupons/{couponId} {
+      allow read, write: if true;
+    }
+    match /abandoned_drafts/{draftId} {
+      allow read, write: if true;
+    }
     match /admin_otps/{otpId} {
       allow read, write: if true;
     }

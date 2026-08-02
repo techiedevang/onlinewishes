@@ -27,7 +27,6 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
   );
   const [adminEmail, setAdminEmail] = useState<string>('admin@onlinewishes.in');
   const [otpSent, setOtpSent] = useState<boolean>(false);
-  const [generatedOtp, setGeneratedOtp] = useState<string>('');
   const [userOtp, setUserOtp] = useState<string>('');
   const [isWaitingForOtp, setIsWaitingForOtp] = useState<boolean>(false);
   const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
@@ -63,6 +62,8 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
           });
         });
         setUsersList(loadedUsers.filter(u => u.email !== 'admin@onlinewishes.in'));
+      }, (err) => {
+        console.warn("Users onSnapshot error:", err);
       });
 
       unsubSessions = onSnapshot(collection(db, 'sessions'), (snapshot) => {
@@ -82,6 +83,8 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
           }
         });
         setActiveSessionsCount(count);
+      }, (err) => {
+        console.warn("Sessions onSnapshot error:", err);
       });
 
       unsubScrapbooks = onSnapshot(collection(db, 'scrapbooks'), (snapshot) => {
@@ -101,6 +104,8 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
           });
         });
         setPublishedWishes(loadedWishes);
+      }, (err) => {
+        console.warn("Scrapbooks onSnapshot error:", err);
       });
 
       // Keep payments as getDocs for now or also make it onSnapshot
@@ -282,17 +287,10 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
       });
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok && data.success) {
         setOtpSent(true);
         setIsWaitingForOtp(true);
-        if (data.fallbackOtp) {
-          setGeneratedOtp(data.fallbackOtp);
-        }
-        if (data.emailSent) {
-          setEmailStatusMessage(data.message || `Verification code sent successfully. Please check your authorized inbox or spam folder.`);
-        } else {
-          setEmailStatusMessage(data.message || `Verification code generated successfully.`);
-        }
+        setEmailStatusMessage(data.message || 'Verification code sent to your Gmail inbox. Please check your email.');
         setOtpCountdown(60);
 
         const interval = setInterval(() => {
@@ -305,15 +303,11 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
           });
         }, 1000);
       } else {
-        setLoginError(data.error || 'Failed to dispatch OTP code.');
+        setLoginError(data.error || 'Failed to send OTP code.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Client OTP error:", err);
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(code);
-      setOtpSent(true);
-      setIsWaitingForOtp(true);
-      setEmailStatusMessage(`Verification code generated successfully.`);
+      setLoginError('Failed to send verification code. Please check server logs and try again.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -331,7 +325,7 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
       });
       const data = await res.json();
 
-      if (data.success || (generatedOtp && userOtp.trim() === generatedOtp)) {
+      if (res.ok && data.success) {
         const adminUser: User = {
           id: 'admin-master-id',
           name: 'Master Admin',
@@ -356,28 +350,7 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         setLoginError(data.error || 'Invalid 6-Digit OTP. Please check your verification code.');
       }
     } catch (err) {
-      if (generatedOtp && userOtp.trim() === generatedOtp) {
-        const adminUser: User = {
-          id: 'admin-master-id',
-          name: 'Master Admin',
-          email: adminEmail.trim(),
-          role: 'admin',
-          mfaEnabled: true,
-        };
-        setIsAdminAuthenticated(true);
-        if (onLogin) {
-          onLogin(adminUser);
-        }
-      } else {
-        setLoginError('Invalid 6-Digit OTP code.');
-      }
-    }
-  };
-
-  const handleQuickFillOtp = () => {
-    if (generatedOtp) {
-      setUserOtp(generatedOtp);
-      setLoginError(null);
+      setLoginError('Error verifying OTP code. Please try again.');
     }
   };
 
@@ -607,21 +580,6 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
               {loginError && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold text-center">
                   {loginError}
-                </div>
-              )}
-
-              {generatedOtp && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Development OTP</p>
-                    <p className="text-lg font-black text-emerald-300 tracking-widest">{generatedOtp}</p>
-                  </div>
-                  <button
-                    onClick={handleQuickFillOtp}
-                    className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-xs font-bold transition-colors"
-                  >
-                    Quick Fill
-                  </button>
                 </div>
               )}
 

@@ -2466,17 +2466,45 @@ export function CustomizerStudio({
                     onTranscribed={(text) => updateField('customPoem', text)}
                   />
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Sisterhood Oath / Heartfelt Verse
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={customization.customPoem}
-                      onChange={(e) => updateField('customPoem', e.target.value)}
-                      placeholder="Through childhood memories to endless dreams..."
-                      className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    />
+                  {/* Sisterhood Oath Section */}
+                  <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-rose-200 dark:border-rose-900/60 space-y-4">
+                    <h5 className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4 text-rose-500" />
+                      <span>Sisterhood Oath Customization (Page 3)</span>
+                    </h5>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sisterhood Oath Heading (Page 3 Title)
+                      </label>
+                      <input
+                        type="text"
+                        value={customization.sisterhoodOathTitle || 'The Sisterhood Oath'}
+                        onChange={(e) => updateField('sisterhoodOathTitle', e.target.value)}
+                        placeholder="e.g. The Sisterhood Oath, My Oath To You, Sisterhood Forever"
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Sisterhood Promises / Verses (One promise per line)
+                      </label>
+                      <textarea
+                        rows={5}
+                        value={(customization.sisterhoodPromises || [
+                          "I promise to always be your safe space.",
+                          "I promise to keep your secrets and share your joys.",
+                          "I promise that no matter how much we grow,",
+                          "or how far life takes us,",
+                          "We will always be sisters first."
+                        ]).join('\n')}
+                        onChange={(e) => updateField('sisterhoodPromises', e.target.value.split('\n'))}
+                        placeholder="Enter each promise on a new line..."
+                        className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                      />
+                      <p className="text-[11px] text-slate-500 mt-1">Each line appears as an individual clause on the Oath card.</p>
+                    </div>
                   </div>
                 </div>
               )}

@@ -382,6 +382,36 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
   };
 
   
+  const handleResendReceipt = async (txn: PaymentTransaction) => {
+    if (!txn.userEmail) {
+      alert("No email address for this transaction.");
+      return;
+    }
+    try {
+      const res = await fetch('/api/send-payment-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: txn.userEmail,
+          name: txn.userName,
+          paymentId: txn.id,
+          orderId: txn.orderId,
+          amount: txn.amount,
+          templateTitle: txn.templateTitle,
+          websiteUrl: 'https://onlinewishes.in'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Receipt email sent successfully to ${txn.userEmail} from support@onlinewishes.in!`);
+      } else {
+        alert(`Failed: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err: any) {
+      alert(`Error sending receipt: ${err.message}`);
+    }
+  };
+
   const handleToggleRefundStatus = (txnId: string) => {
     setTransactions((prev) =>
       prev.map((t) =>
@@ -854,12 +884,22 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
                               </span>
                             </td>
                             <td className="p-3">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => handleResendReceipt(txn)}
+                                  className="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold flex items-center gap-1"
+                                  title="Resend payment thank you receipt email"
+                                >
+                                  <Send className="w-3 h-3" />
+                                  <span>Send Email</span>
+                                </button>
                                 <button
                                   onClick={() => handleToggleRefundStatus(txn.id)}
                                   className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] font-bold"
                                 >
                                   {txn.status === 'REFUNDED' ? 'Mark Success' : 'Refund'}
                                 </button>
+                              </div>
                             </td>
                           </tr>
                         ))}

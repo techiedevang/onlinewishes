@@ -278,6 +278,224 @@ async function startServer() {
     }
   });
 
+  // Payment Confirmation Thank You Receipt Email API
+  app.post("/api/send-payment-receipt", async (req, res) => {
+    try {
+      const { email, name, paymentId, orderId, amount, templateTitle, websiteUrl } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: "Recipient email is required" });
+      }
+
+      const siteUrl = websiteUrl || "https://onlinewishes.in";
+      const userDisplayName = name || "Valued Creator";
+      const payId = paymentId || `pay_${Date.now()}`;
+      const paidAmount = amount !== undefined && amount !== null ? `₹${amount}` : "₹199";
+      const title = templateTitle || "Digital Surprise Website License";
+      const formattedDate = new Date().toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+
+      await resend.emails.send({
+        from: "OnlineWishes <support@onlinewishes.in>",
+        to: email,
+        subject: `Thank You for Your Payment! 🎉 | Receipt #${payId.slice(-8)}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 32px 20px; background-color: #f8fafc; color: #1e293b; max-width: 580px; margin: 0 auto; border-radius: 20px; border: 1px solid #e2e8f0;">
+            
+            <!-- Header Brand -->
+            <div style="text-align: center; padding-bottom: 24px;">
+              <h1 style="color: #f43f5e; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; text-transform: lowercase;">onlinewishes<span style="color: #fda4af;">.in</span></h1>
+              <p style="color: #64748b; font-size: 13px; margin-top: 4px; font-weight: 500;">Crafting Unforgettable Digital Memories & Surprises</p>
+            </div>
+
+            <!-- Main Content Card -->
+            <div style="background-color: #ffffff; padding: 32px 28px; border-radius: 16px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+              
+              <div style="text-align: center; margin-bottom: 20px;">
+                <span style="font-size: 42px; display: inline-block;">🎉</span>
+                <h2 style="color: #0f172a; margin-top: 8px; margin-bottom: 8px; font-size: 22px; font-weight: 800;">Payment Received! Thank You!</h2>
+                <p style="color: #64748b; font-size: 14px; margin: 0;">Your transaction was processed successfully.</p>
+              </div>
+
+              <p style="color: #334155; font-size: 15px; line-height: 1.6;">Hi <strong>${userDisplayName}</strong>,</p>
+              <p style="color: #475569; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                Thank you so much for your payment at <strong>OnlineWishes</strong>! Your digital surprise feature / website license is now fully unlocked and ready to bring joy to your loved one.
+              </p>
+
+              <!-- Receipt Box -->
+              <div style="background-color: #fff1f2; border: 1px dashed #f43f5e; padding: 20px; border-radius: 14px; margin-bottom: 28px;">
+                <p style="margin: 0 0 12px 0; color: #be123c; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Official Transaction Receipt
+                </p>
+                
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                  <tr style="border-bottom: 1px solid #ffe4e6;">
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Payment ID:</td>
+                    <td style="padding: 8px 0; text-align: right; font-family: monospace; font-weight: 700; color: #0f172a;">${payId}</td>
+                  </tr>
+                  ${orderId ? `
+                  <tr style="border-bottom: 1px solid #ffe4e6;">
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Order ID:</td>
+                    <td style="padding: 8px 0; text-align: right; font-family: monospace; color: #334155;">${orderId}</td>
+                  </tr>
+                  ` : ''}
+                  <tr style="border-bottom: 1px solid #ffe4e6;">
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Description:</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #0f172a;">${title}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #ffe4e6;">
+                    <td style="padding: 8px 0; color: #64748b; font-weight: 500;">Date & Time:</td>
+                    <td style="padding: 8px 0; text-align: right; color: #334155; font-size: 13px;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0 2px 0; color: #0f172a; font-weight: 700;">Total Amount Paid:</td>
+                    <td style="padding: 10px 0 2px 0; text-align: right; font-size: 18px; font-weight: 900; color: #15803d;">${paidAmount}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Call to action button -->
+              <div style="text-align: center; margin: 28px 0 20px 0;">
+                <a href="${siteUrl}" target="_blank" style="background-color: #f43f5e; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);">
+                  Visit Website & View Surprise 🚀
+                </a>
+              </div>
+
+              <p style="text-align: center; font-size: 12px; color: #64748b; margin-top: 12px;">
+                Website Link: <a href="${siteUrl}" style="color: #f43f5e; font-weight: 600; text-decoration: underline;">${siteUrl}</a>
+              </p>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align: center; padding-top: 24px; color: #94a3b8; font-size: 12px; line-height: 1.6;">
+              <p style="margin: 0 0 4px 0;">Need any assistance? Write to us anytime at <a href="mailto:support@onlinewishes.in" style="color: #f43f5e; font-weight: 600; text-decoration: none;">support@onlinewishes.in</a></p>
+              <p style="margin: 0;">Sent with ❤️ from OnlineWishes.in</p>
+            </div>
+
+          </div>
+        `
+      });
+
+      res.json({ success: true, message: "Payment receipt email sent successfully." });
+    } catch (error: any) {
+      console.error("Payment Receipt Email Error:", error);
+      res.status(500).json({ error: "Failed to send payment receipt email: " + (error.message || String(error)) });
+    }
+  });
+
+  // Password Reset Email API via support@onlinewishes.in
+  const resetOtpsMap = new Map<string, { code: string; expiresAt: number }>();
+
+  app.post("/api/send-reset-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ error: "Valid email is required" });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
+
+      resetOtpsMap.set(cleanEmail, { code: otpCode, expiresAt });
+
+      await resend.emails.send({
+        from: "OnlineWishes <support@onlinewishes.in>",
+        to: cleanEmail,
+        subject: `🔐 Password Reset Verification Code: ${otpCode} | OnlineWishes.in`,
+        html: `
+          <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 32px 20px; background-color: #f8fafc; color: #1e293b; max-width: 540px; margin: 0 auto; border-radius: 20px; border: 1px solid #e2e8f0;">
+            
+            <!-- Brand Header -->
+            <div style="text-align: center; padding-bottom: 20px;">
+              <h1 style="color: #f43f5e; margin: 0; font-size: 26px; font-weight: 800; text-transform: lowercase; letter-spacing: -0.5px;">onlinewishes<span style="color: #fda4af;">.in</span></h1>
+              <p style="color: #64748b; font-size: 13px; margin-top: 4px; font-weight: 500;">Account Password Reset Security Code</p>
+            </div>
+
+            <!-- Content Box -->
+            <div style="background-color: #ffffff; padding: 28px 24px; border-radius: 16px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+              <h2 style="color: #0f172a; margin-top: 0; font-size: 20px; font-weight: 700; text-align: center;">Reset Your Account Password</h2>
+              <p style="color: #475569; font-size: 14px; line-height: 1.6;">
+                Hi there! We received a request to reset the password for your OnlineWishes account registered under <strong>${cleanEmail}</strong>.
+              </p>
+              <p style="color: #475569; font-size: 14px; line-height: 1.6;">
+                Use the 6-digit security code below in the password reset window to choose a new password:
+              </p>
+
+              <!-- OTP Box -->
+              <div style="background-color: #fff1f2; border: 2px dashed #f43f5e; padding: 20px; border-radius: 14px; text-align: center; margin: 24px 0;">
+                <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #e11d48; font-family: monospace;">${otpCode}</span>
+              </div>
+
+              <p style="color: #64748b; font-size: 12px; text-align: center; line-height: 1.5;">
+                This OTP code is valid for <strong>15 minutes</strong>. If you didn't request a password reset, please ignore this email or contact support.
+              </p>
+
+              <div style="text-align: center; margin-top: 24px;">
+                <a href="https://onlinewishes.in" target="_blank" style="background-color: #f43f5e; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);">
+                  Open OnlineWishes.in 🚀
+                </a>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align: center; padding-top: 20px; color: #94a3b8; font-size: 12px; line-height: 1.5;">
+              <p style="margin: 0 0 4px 0;">Sent with security from <strong style="color: #475569;">support@onlinewishes.in</strong></p>
+              <p style="margin: 0;">OnlineWishes.in — Digital Surprises & Scrapbooks</p>
+            </div>
+
+          </div>
+        `
+      });
+
+      res.json({ success: true, message: "Password reset verification email sent successfully." });
+    } catch (error: any) {
+      console.error("Password Reset Email Error:", error);
+      res.status(500).json({ error: "Failed to send reset email: " + (error.message || String(error)) });
+    }
+  });
+
+  app.post("/api/verify-reset-password", async (req, res) => {
+    try {
+      const { email, code, newPassword } = req.body;
+      if (!email || !code) {
+        return res.status(400).json({ error: "Email and verification code are required" });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const record = resetOtpsMap.get(cleanEmail);
+
+      if (!record) {
+        return res.status(400).json({ error: "No reset request found for this email or code expired. Please request a new code." });
+      }
+
+      if (Date.now() > record.expiresAt) {
+        resetOtpsMap.delete(cleanEmail);
+        return res.status(400).json({ error: "The verification code has expired. Please request a new code." });
+      }
+
+      if (record.code !== code.trim()) {
+        return res.status(400).json({ error: "Invalid 6-digit verification code. Please check your email and try again." });
+      }
+
+      if (newPassword && newPassword.trim().length < 6) {
+        return res.status(400).json({ error: "New password must be at least 6 characters long." });
+      }
+
+      // Valid OTP
+      resetOtpsMap.delete(cleanEmail);
+      res.json({ success: true, message: "Password reset and updated successfully!" });
+    } catch (error: any) {
+      console.error("Verify Reset Error:", error);
+      res.status(500).json({ error: "Verification failed. Please try again." });
+    }
+  });
+
   app.post("/api/admin/send-otp", async (req, res) => {
     try {
       const { adminEmail } = req.body;
@@ -503,10 +721,21 @@ async function startServer() {
         return res.status(500).send("Configuration Error: API Key not found");
       }
 
-      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/uploaded_images/${docId}?key=${apiKey}`;
+      const primaryDb = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+      let url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${primaryDb}/documents/uploaded_images/${docId}?key=${apiKey}`;
       
-      const response = await fetch(url);
-      const data = await response.json();
+      let response = await fetch(url);
+      let data = await response.json();
+
+      if (!data || !data.fields) {
+        const fallbackDb = primaryDb === "(default)" ? "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a" : "(default)";
+        const fallbackUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${fallbackDb}/documents/uploaded_images/${docId}?key=${apiKey}`;
+        const fbRes = await fetch(fallbackUrl);
+        const fbData = await fbRes.json();
+        if (fbData && fbData.fields) {
+          data = fbData;
+        }
+      }
       
       if (data && data.fields && data.fields.data && data.fields.data.stringValue) {
         const base64 = data.fields.data.stringValue;

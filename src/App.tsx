@@ -425,10 +425,10 @@ A story forever to be told.`,
 
         // Handle other static routes
         const knownTabs = ['templates', 'pricing', 'custom_AI', 'how-it-works', 'reviews', 'contact'];
-        if (possibleTemplateId === 'privacy-policy') { setPolicyTab('privacy'); setShowPolicyModal(true); return; }
-        if (possibleTemplateId === 'terms-of-service') { setPolicyTab('terms'); setShowPolicyModal(true); return; }
-        if (possibleTemplateId === 'refund-policy') { setPolicyTab('refund'); setShowPolicyModal(true); return; }
-        if (possibleTemplateId === 'about-us') { setPolicyTab('about'); setShowPolicyModal(true); return; }
+        if (possibleTemplateId === 'privacy-policy') { setPolicyTab('privacy'); return; }
+        if (possibleTemplateId === 'terms-of-service') { setPolicyTab('terms'); return; }
+        if (possibleTemplateId === 'refund-policy') { setPolicyTab('refund'); return; }
+        if (possibleTemplateId === 'about-us') { setPolicyTab('about'); return; }
         if (knownTabs.includes(possibleTemplateId)) {
            setActiveTab(possibleTemplateId);
            return;

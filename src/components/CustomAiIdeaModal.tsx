@@ -2,7 +2,8 @@ import React, { useState, useRef } from 'react';
 import { UserCustomization, CustomAiBlueprint, CustomWebsiteRequest } from '../types';
 import { 
   X, Sparkles, Bot, ArrowRight, CheckCircle2, Wand2, RefreshCw, 
-  Mic, Square, Play, Trash2, Volume2, Phone, Globe, MessageCircle, Send, Check 
+  Mic, Square, Play, Trash2, Volume2, Phone, Globe, MessageCircle, Send, Check,
+  Tag, Ticket, Percent
 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { saveCustomWebsiteRequest } from '../lib/customRequestService';
@@ -200,6 +201,91 @@ Respond strictly in valid JSON format.`;
   };
 
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null);
+  const [finalPrice, setFinalPrice] = useState<number | null>(null);
+  const [promoMessage, setPromoMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleApplyPromoCode = async (e?: React.FormEvent, customCode?: string) => {
+    if (e) e.preventDefault();
+    setPromoMessage(null);
+    const cleaned = (customCode || promoCodeInput).trim().toUpperCase();
+    if (!cleaned) {
+      setPromoMessage({ type: 'error', text: 'Please enter a redeem code.' });
+      return;
+    }
+
+    const basePrice = generatedBlueprint?.estimatedPrice || 79;
+
+    if (cleaned === 'FIRSTWISH') {
+      try {
+        setPromoMessage({ type: 'success', text: 'Verifying FIRSTWISH code...' });
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const { db } = await import('../lib/firebase');
+
+        const checkEmail = whatsappNumber.trim() || 'user';
+        if (checkEmail.includes('@')) {
+          const qPay = query(collection(db, 'payments'), where('userEmail', '==', checkEmail.toLowerCase()));
+          const paySnap = await getDocs(qPay);
+          if (paySnap.size >= 2) {
+            setPromoMessage({ type: 'error', text: 'This promo code is only valid for your first 2 payments.' });
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Firestore payment check note:', err);
+      }
+
+      setFinalPrice(1);
+      setAppliedPromoCode('FIRSTWISH');
+      setPromoMessage({ type: 'success', text: '🎉 Redeem code FIRSTWISH applied! Price is reduced to Rs. 1.' });
+      return;
+    }
+
+    if (cleaned === 'WISHES10' || cleaned === 'SAVE20' || cleaned === 'WISHES20') {
+      const discounted = Math.max(1, Math.round(basePrice * 0.8));
+      setFinalPrice(discounted);
+      setAppliedPromoCode(cleaned);
+      setPromoMessage({ type: 'success', text: `🎉 Redeem code ${cleaned} applied! 20% OFF — Price is Rs. ${discounted}.` });
+      return;
+    }
+
+    if (cleaned === 'SPECIAL50' || cleaned === 'HALF50') {
+      const discounted = Math.max(1, Math.round(basePrice * 0.5));
+      setFinalPrice(discounted);
+      setAppliedPromoCode(cleaned);
+      setPromoMessage({ type: 'success', text: `🎉 Redeem code ${cleaned} applied! 50% OFF — Price is Rs. ${discounted}.` });
+      return;
+    }
+
+    if (cleaned === 'FREE79' || cleaned === 'FREEWISH' || cleaned === 'FREE100') {
+      setFinalPrice(1);
+      setAppliedPromoCode(cleaned);
+      setPromoMessage({ type: 'success', text: `🎉 Redeem code ${cleaned} applied! Price reduced to Rs. 1.` });
+      return;
+    }
+
+    // Check Firestore 'coupons' collection
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../lib/firebase');
+      const couponSnap = await getDoc(doc(db, 'coupons', cleaned));
+      if (couponSnap.exists()) {
+        const data = couponSnap.data();
+        const disc = data.discountPercent || 20;
+        const fixPrice = data.fixedPrice;
+        const calcPrice = fixPrice !== undefined ? fixPrice : Math.max(1, Math.round(basePrice * (1 - disc / 100)));
+        setFinalPrice(calcPrice);
+        setAppliedPromoCode(cleaned);
+        setPromoMessage({ type: 'success', text: `🎉 Redeem code ${cleaned} applied! Price is Rs. ${calcPrice}.` });
+        return;
+      }
+    } catch (cErr) {
+      console.warn('Firestore coupon lookup note:', cErr);
+    }
+
+    setPromoMessage({ type: 'error', text: 'Invalid or expired redeem code. Try FIRSTWISH or WISHES10.' });
+  };
 
   const handleSendToAdmin = async () => {
     if (!clientPrompt.trim() && !audioUrl) {
@@ -214,7 +300,7 @@ Respond strictly in valid JSON format.`;
     setIsProcessingPayment(true);
     
     try {
-      const price = generatedBlueprint?.estimatedPrice || 79;
+      const price = finalPrice !== null ? finalPrice : (generatedBlueprint?.estimatedPrice || 79);
       const res = await fetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -304,6 +390,7 @@ Respond strictly in valid JSON format.`;
     setIsSaving(true);
     try {
       const cleanSlug = requestedSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || `${recipientName.toLowerCase().replace(/\s+/g, '-')}-special`;
+      const priceToSave = finalPrice !== null ? finalPrice : (generatedBlueprint?.estimatedPrice || 79);
 
       const req = await saveCustomWebsiteRequest({
         recipientName: recipientName || 'Special Someone',
@@ -313,7 +400,7 @@ Respond strictly in valid JSON format.`;
         audioDuration: recordingTime > 0 ? recordingTime : undefined,
         whatsappNumber: whatsappNumber.trim(),
         requestedSlug: cleanSlug,
-        estimatedPrice: generatedBlueprint?.estimatedPrice || 79,
+        estimatedPrice: priceToSave,
         aiBlueprintTitle: generatedBlueprint?.title || `${recipientName}'s Custom Website`,
       });
 
@@ -667,6 +754,81 @@ Respond strictly in valid JSON format.`;
 
                 </div>
 
+                {/* REDEEM PROMO CODE SECTION */}
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center space-x-1.5">
+                      <Tag className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Redeem Code / Promo Coupon</span>
+                    </label>
+                    {appliedPromoCode && (
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                        CODE APPLIED: {appliedPromoCode}
+                      </span>
+                    )}
+                  </div>
+
+                  <form onSubmit={(e) => handleApplyPromoCode(e)} className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Ticket className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="e.g. FIRSTWISH, WISHES10"
+                        value={promoCodeInput}
+                        onChange={(e) => setPromoCodeInput(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono tracking-wider font-bold uppercase text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-colors shrink-0"
+                    >
+                      Apply Code
+                    </button>
+                  </form>
+
+                  {/* Quick Redeem Code Suggestion Pills */}
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Quick redeem codes:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromoCodeInput('FIRSTWISH');
+                        handleApplyPromoCode(undefined, 'FIRSTWISH');
+                      }}
+                      className="text-[10px] font-mono font-bold bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 px-2 py-0.5 rounded-md border border-rose-500/20 transition-colors"
+                    >
+                      FIRSTWISH (Rs. 1)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromoCodeInput('WISHES10');
+                        handleApplyPromoCode(undefined, 'WISHES10');
+                      }}
+                      className="text-[10px] font-mono font-bold bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 px-2 py-0.5 rounded-md border border-purple-500/20 transition-colors"
+                    >
+                      WISHES10 (20% OFF)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromoCodeInput('SPECIAL50');
+                        handleApplyPromoCode(undefined, 'SPECIAL50');
+                      }}
+                      className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/20 transition-colors"
+                    >
+                      SPECIAL50 (50% OFF)
+                    </button>
+                  </div>
+
+                  {promoMessage && (
+                    <p className={`mt-2 text-xs font-bold ${promoMessage.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {promoMessage.text}
+                    </p>
+                  )}
+                </div>
+
                 {/* Primary Action Button: Submit Request */}
                 <div className="pt-2 space-y-2">
                   <button
@@ -688,7 +850,9 @@ Respond strictly in valid JSON format.`;
                     ) : (
                       <>
                         <Send className="w-4 h-4 text-slate-950" />
-                        <span>Submit Custom Idea & Request Website (Rs. 79)</span>
+                        <span>
+                          Submit Custom Idea & Request Website ({finalPrice !== null ? `Rs. ${finalPrice}` : 'Rs. 79'})
+                        </span>
                       </>
                     )}
                   </button>
@@ -735,7 +899,14 @@ Respond strictly in valid JSON format.`;
 
                     <div className="bg-slate-200 dark:bg-slate-800 p-3 rounded-2xl border border-slate-300 dark:border-slate-700 text-center min-w-[110px]">
                       <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Custom Charge</span>
-                      <span className="text-2xl font-black text-emerald-400">Rs. {generatedBlueprint.estimatedPrice}</span>
+                      {finalPrice !== null ? (
+                        <div>
+                          <span className="text-xs text-slate-400 line-through block">Rs. {generatedBlueprint.estimatedPrice || 79}</span>
+                          <span className="text-2xl font-black text-emerald-400">Rs. {finalPrice}</span>
+                        </div>
+                      ) : (
+                        <span className="text-2xl font-black text-emerald-400">Rs. {generatedBlueprint.estimatedPrice || 79}</span>
+                      )}
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 block">One-time payment</span>
                     </div>
                   </div>

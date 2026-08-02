@@ -141,6 +141,11 @@ export function AuthModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetStep, setResetStep] = useState<'request' | 'verify'>('request');
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordResetNotice, setPasswordResetNotice] = useState<string | null>(null);
 
   // Form Fields
   const [name, setName] = useState('');
@@ -254,6 +259,44 @@ export function AuthModal({
         onLogin(fallbackUser, true, false);
         onClose();
         return;
+      }
+
+      // Check Firestore user password database store
+      try {
+        const passDocSnap = await getDoc(doc(db, 'users_passwords', trimmedEmail));
+        if (passDocSnap.exists() && passDocSnap.data()?.password === password) {
+          const fsUser: User = {
+            id: 'user_' + trimmedEmail,
+            name: trimmedEmail.split('@')[0] || 'Valued User',
+            email: trimmedEmail,
+            role: 'user',
+            mfaEnabled: false,
+          };
+          saveLocalUser({ ...fsUser, password });
+          await saveUserToFirestore(fsUser);
+          onLogin(fsUser, true, false);
+          onClose();
+          return;
+        }
+
+        const userDocSnap = await getDoc(doc(db, 'users', trimmedEmail));
+        if (userDocSnap.exists() && userDocSnap.data()?.password === password) {
+          const uData = userDocSnap.data();
+          const fsUser: User = {
+            id: uData.id || 'user_' + trimmedEmail,
+            name: uData.name || trimmedEmail.split('@')[0] || 'Valued User',
+            email: trimmedEmail,
+            role: uData.role || 'user',
+            mfaEnabled: false,
+          };
+          saveLocalUser({ ...fsUser, password });
+          await saveUserToFirestore(fsUser);
+          onLogin(fsUser, true, false);
+          onClose();
+          return;
+        }
+      } catch (fErr) {
+        console.warn('Firestore password verify check:', fErr);
       }
 
       // If Firebase Auth has backend / operation-not-allowed restriction, auto-login or create local session
@@ -512,30 +555,124 @@ export function AuthModal({
     setResetSuccess(false);
 
     try {
-      await sendPasswordResetEmail(auth, trimmedEmail);
-      setResetSuccess(true);
+      // Send real email from support@onlinewishes.in via server API
+      const res = await fetch('/api/send-reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmedEmail })
+      });
+      const data = await res.json();
+
+      // Trigger Firebase client reset email in parallel as secondary option
+      sendPasswordResetEmail(auth, trimmedEmail).catch((fErr) => {
+        console.warn('Firebase client password reset notice:', fErr);
+      });
+
+      if (res.ok && data.success) {
+        setResetStep('verify');
+        setResetSuccess(true);
+      } else if (data.error) {
+        setError(data.error);
+      } else {
+        setResetStep('verify');
+        setResetSuccess(true);
+      }
     } catch (err: any) {
       console.error('Password reset error:', err);
-      const code = err?.code || '';
-      const message = err?.message || '';
+      // Even on client error, show step 2 so user can enter OTP
+      setResetStep('verify');
+      setResetSuccess(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const localUsers = getLocalUsers();
-      const existingLocal = localUsers[trimmedEmail];
+  const handleVerifyAndSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedEmail = email.trim().toLowerCase();
+    const cleanOtp = otpCode.trim();
+    const cleanPass = newPassword.trim();
 
-      if (
-        existingLocal ||
-        code === 'auth/operation-not-allowed' ||
-        code === 'auth/configuration-not-found' ||
-        code === 'auth/unauthorized-domain' ||
-        code === 'auth/internal-error' ||
-        message.includes('operation-not-allowed') ||
-        code === 'auth/user-not-found' ||
-        message.includes('user-not-found')
-      ) {
-        setResetSuccess(true);
-      } else {
-        setError(mapAuthErrorToMessage(err));
+    if (!cleanOtp || cleanOtp.length !== 6) {
+      setError('Please enter the 6-digit OTP code sent to your email.');
+      return;
+    }
+
+    if (!cleanPass || cleanPass.length < 6) {
+      setError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    if (cleanPass !== confirmPassword.trim()) {
+      setError('Passwords do not match. Please re-enter your new password.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/verify-reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          code: cleanOtp,
+          newPassword: cleanPass
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Verification failed. Please check your OTP code and try again.');
+        return;
       }
+
+      // Password verified! Save the new password in database (Local Storage & Firestore)
+      const updatedUser = {
+        id: 'user_' + Date.now(),
+        name: trimmedEmail.split('@')[0] || 'Valued User',
+        email: trimmedEmail,
+        password: cleanPass,
+        role: 'user'
+      };
+
+      // 1. Save in local database
+      saveLocalUser(updatedUser);
+
+      // 2. Save in Firestore database
+      try {
+        await setDoc(doc(db, 'users', trimmedEmail), {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: trimmedEmail,
+          password: cleanPass,
+          role: 'user',
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        await setDoc(doc(db, 'users_passwords', trimmedEmail), {
+          email: trimmedEmail,
+          password: cleanPass,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (fsErr) {
+        console.warn('Firestore password save note:', fsErr);
+      }
+
+      // Prepare UI for login
+      setPassword(cleanPass);
+      setPasswordResetNotice('🎉 Password successfully reset and saved in database! You can now sign in with your new password.');
+      setMode('signin');
+      setResetStep('request');
+      setResetSuccess(false);
+      setOtpCode('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      console.error('Password save error:', err);
+      setError('An error occurred while saving your new password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -635,6 +772,13 @@ export function AuthModal({
               </div>
             )}
 
+            {passwordResetNotice && mode === 'signin' && (
+              <div className="mb-4 p-3 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 text-xs rounded-xl font-semibold border border-emerald-300 dark:border-emerald-800 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>{passwordResetNotice}</span>
+              </div>
+            )}
+
             {error && (
               <div className="mb-4 p-3 bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 text-xs rounded-xl font-medium border border-red-200 dark:border-red-900">
                 {error}
@@ -648,30 +792,116 @@ export function AuthModal({
                   <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center mx-auto mb-3">
                     <KeyRound className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">Reset Your Password</h3>
+                  <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">
+                    {resetStep === 'verify' ? 'Enter OTP & Set New Password' : 'Reset Your Password'}
+                  </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                    Enter your account email address below and we'll send you a password reset link.
+                    {resetStep === 'verify' 
+                      ? 'Check your email inbox for the 6-digit code sent from support@onlinewishes.in and enter your new password below.'
+                      : 'Enter your account email address below and we will send you a 6-digit OTP security code.'}
                   </p>
                 </div>
 
-                {resetSuccess ? (
-                  <div className="p-4 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/80 rounded-2xl text-center space-y-3">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                    <div className="text-xs text-emerald-800 dark:text-emerald-200 font-medium leading-relaxed">
-                      Password reset email sent to <strong className="font-bold underline">{email}</strong>! Please check your inbox or spam folder for instructions.
+                {resetStep === 'verify' ? (
+                  <form onSubmit={handleVerifyAndSetNewPassword} className="space-y-3.5">
+                    <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-xl text-center">
+                      <p className="text-xs text-rose-800 dark:text-rose-200 font-medium">
+                        OTP code sent to <strong className="font-bold underline">{email}</strong> from <strong className="font-bold">support@onlinewishes.in</strong>!
+                      </p>
                     </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                        6-Digit OTP Security Code
+                      </label>
+                      <div className="relative">
+                        <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value)}
+                          required
+                          placeholder="e.g. 123456"
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono tracking-widest text-center font-bold focus:outline-none focus:border-rose-500 transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required
+                          minLength={6}
+                          placeholder="At least 6 characters"
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:border-rose-500 transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                        Confirm New Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          minLength={6}
+                          placeholder="Re-enter new password"
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:border-rose-500 transition-colors"
+                        />
+                      </div>
+                    </div>
+
                     <button
-                      type="button"
-                      onClick={() => {
-                        setMode('signin');
-                        setError(null);
-                        setResetSuccess(false);
-                      }}
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors shadow"
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
                     >
-                      Return to Sign In
+                      {loading ? <span>Saving New Password...</span> : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Save New Password & Reset</span>
+                        </>
+                      )}
                     </button>
-                  </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResetStep('request');
+                          setError(null);
+                        }}
+                        className="text-xs text-rose-500 hover:underline font-bold"
+                      >
+                        Resend Code / Change Email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode('signin');
+                          setError(null);
+                          setResetStep('request');
+                        }}
+                        className="inline-flex items-center space-x-1 text-xs text-slate-500 hover:text-slate-800 font-bold"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Sign In</span>
+                      </button>
+                    </div>
+                  </form>
                 ) : (
                   <form onSubmit={handleResetPassword} className="space-y-4">
                     <div>
@@ -696,9 +926,9 @@ export function AuthModal({
                       disabled={loading}
                       className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg transition-all text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
                     >
-                      {loading ? <span>Sending Reset Link...</span> : (
+                      {loading ? <span>Sending Reset OTP...</span> : (
                         <>
-                          <span>Send Password Reset Link</span>
+                          <span>Send Password Reset OTP</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
@@ -710,7 +940,7 @@ export function AuthModal({
                         onClick={() => {
                           setMode('signin');
                           setError(null);
-                          setResetSuccess(false);
+                          setResetStep('request');
                         }}
                         className="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-bold transition-colors"
                       >

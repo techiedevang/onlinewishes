@@ -24,8 +24,8 @@ export interface SavedScrapbookRecord {
 // Test initial connection to Firestore
 export async function testFirestoreConnection() {
   try {
-    await getDocFromServer,
-  increment(doc(db, 'test', 'connection'));
+    const testDoc = doc(db, 'test', 'connection');
+    await getDocFromServer(testDoc);
   } catch (error) {
     if (error instanceof Error && error.message.includes('the client is offline')) {
       console.error('Please check your Firebase configuration.');
@@ -161,6 +161,25 @@ export async function recordPaymentInCloud(
     await setDoc(doc(db, 'payments', paymentId), payload);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
+  }
+
+  // Trigger Thank-You Receipt Email from support@onlinewishes.in
+  try {
+    await fetch('/api/send-payment-receipt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: userEmail,
+        name: userName,
+        paymentId: paymentId,
+        orderId: orderId,
+        amount: amount,
+        templateTitle: templateTitle,
+        websiteUrl: typeof window !== 'undefined' ? window.location.origin : 'https://onlinewishes.in'
+      })
+    });
+  } catch (emailErr) {
+    console.error('Failed to send thank-you payment receipt email:', emailErr);
   }
 }
 

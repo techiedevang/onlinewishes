@@ -4,6 +4,8 @@ import {
   Volume2, VolumeX, Play, Pause, Heart, Sparkles, Music, Check, RefreshCw, 
   Camera, Smile, Image as ImageIcon, ChevronRight, ChevronLeft, Plus, X, Upload 
 } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { UserCustomization, Memory } from '../types';
 import { SafeImage } from './SafeImage';
 import confetti from 'canvas-confetti';
@@ -121,16 +123,24 @@ const ScratchCard = ({
       }
     };
 
+    let isCancelled = false;
+
     if (photoUrl) {
       const img = new Image();
-      // Do not set crossOrigin to anonymous to avoid CORS blocks on user images.
-      // We don't need to read pixel data from this canvas anyway.
-      img.onload = () => drawScratchSurface(img);
-      img.onerror = () => drawScratchSurface();
+      img.onload = () => {
+        if (!isCancelled) drawScratchSurface(img);
+      };
+      img.onerror = () => {
+        if (!isCancelled) drawScratchSurface();
+      };
       img.src = photoUrl;
     } else {
       drawScratchSurface();
     }
+
+    return () => {
+      isCancelled = true;
+    };
   }, [isRevealed, photoUrl, sticker]);
 
   const scratch = (clientX: number, clientY: number) => {

@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Check, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface ImageCropperProps {
   imageUrl: string;
@@ -10,6 +12,7 @@ interface ImageCropperProps {
 export function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCropperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const resolvedSrc = imageUrl;
   
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -161,7 +164,7 @@ export function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCropperProps) 
       >
         <img
           ref={imageRef}
-          src={imageUrl}
+          src={resolvedSrc}
           alt="To crop"
           draggable={false}
           style={{

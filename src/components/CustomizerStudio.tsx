@@ -108,14 +108,17 @@ export function CustomizerStudio({
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
   const [promoMessage, setPromoMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleApplyPromoCode = async (e?: React.FormEvent) => {
+  const handleApplyPromoCode = async (e?: React.FormEvent, customCode?: string) => {
     if (e) e.preventDefault();
     setPromoMessage(null);
-    const cleaned = promoCodeInput.trim().toUpperCase();
+    const cleaned = (customCode || promoCodeInput).trim().toUpperCase();
     if (!cleaned) {
       setPromoMessage({ type: 'error', text: 'Please enter a redeem code.' });
       return;
     }
+
+    const basePrice = selectedTemplate?.price || 79;
+
     if (cleaned === 'FIRSTWISH') {
       if (!currentUser) {
         setPromoMessage({ type: 'error', text: 'Please sign in to use this promo code.' });
@@ -132,7 +135,7 @@ export function CustomizerStudio({
         if (paySnap.size < 2) {
           setFinalPrice(1);
           setDiscountPercent(0);
-          setPromoMessage({ type: 'success', text: 'Redeem code FIRSTWISH applied! Price is Rs. 1.' });
+          setPromoMessage({ type: 'success', text: '🎉 Redeem code FIRSTWISH applied! Price is Rs. 1.' });
         } else {
           setPromoMessage({ type: 'error', text: 'This promo code is only valid for your first 2 payments.' });
         }
@@ -140,9 +143,52 @@ export function CustomizerStudio({
         console.error(err);
         setPromoMessage({ type: 'error', text: 'Failed to verify promo code.' });
       }
-    } else {
-      setPromoMessage({ type: 'error', text: 'Invalid or expired redeem code.' });
+      return;
     }
+
+    if (cleaned === 'WISHES10' || cleaned === 'SAVE20' || cleaned === 'WISHES20') {
+      const discounted = Math.max(1, Math.round(basePrice * 0.8));
+      setFinalPrice(discounted);
+      setDiscountPercent(20);
+      setPromoMessage({ type: 'success', text: `🎉 Redeem code ${cleaned} applied! 20% OFF — Price is Rs. ${discounted}.` });
+      return;
+    }
+
+    if (cleaned === 'SPECIAL50' || cleaned === 'HALF50') {
+      const discounted = Math.max(1, Math.round(basePrice * 0.5));
+      setFinalPrice(discounted);
+      setDiscountPercent(50);
+      setPromoMessage({ type: 'success', text: `🎉 Redeem code ${cleaned} applied! 50% OFF — Price is Rs. ${discounted}.` });
+      return;
+    }
+
+    if (cleaned === 'FREE79' || cleaned === 'FREEWISH' || cleaned === 'FREE100') {
+      setFinalPrice(1);
+      setDiscountPercent(0);
+      setPromoMessage({ type: 'success', text: `🎉 Redeem code ${cleaned} applied! Price reduced to Rs. 1.` });
+      return;
+    }
+
+    // Check Firestore 'coupons' collection
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../lib/firebase');
+      const couponSnap = await getDoc(doc(db, 'coupons', cleaned));
+      if (couponSnap.exists()) {
+        const data = couponSnap.data();
+        const disc = data.discountPercent || 20;
+        const fixPrice = data.fixedPrice;
+        const calcPrice = fixPrice !== undefined ? fixPrice : Math.max(1, Math.round(basePrice * (1 - disc / 100)));
+        setFinalPrice(calcPrice);
+        setDiscountPercent(disc);
+        setPromoMessage({ type: 'success', text: `🎉 Redeem code ${cleaned} applied! Price is Rs. ${calcPrice}.` });
+        return;
+      }
+    } catch (cErr) {
+      console.warn('Firestore coupon lookup note:', cErr);
+    }
+
+    setPromoMessage({ type: 'error', text: 'Invalid or expired redeem code. Try FIRSTWISH or WISHES10.' });
   };
 
   // Function to save state to localStorage and update timestamp
@@ -325,7 +371,7 @@ export function CustomizerStudio({
   useEffect(() => {
     const handleBeforeUnload = () => {
       // Only send if logged in, hasn't paid, and has done some customization
-      if (currentUser && currentUser.email && customization.paymentStatus !== 'completed') {
+      if (currentUser && currentUser.email && (customization as any).paymentStatus !== 'completed') {
         const payload = JSON.stringify({ 
           email: currentUser.email, 
           name: currentUser.name, 
@@ -337,7 +383,7 @@ export function CustomizerStudio({
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [currentUser, customization.paymentStatus, customization.bgTheme]);
+  }, [currentUser, (customization as any).paymentStatus, customization.bgTheme]);
 
   // Save customization to Cloud Firestore Database
   const handleSaveToCloudDatabase = async () => {
@@ -1698,7 +1744,7 @@ export function CustomizerStudio({
                                 <div className="flex items-center gap-2">
                                   {currentAtt.photoUrl ? (
                                     <div className="flex items-center gap-2 w-full">
-                                      <img src={currentAtt.photoUrl} alt="Cover" className="w-9 h-9 rounded-md object-cover border border-emerald-300 shrink-0" />
+                                      <SafeImage src={currentAtt.photoUrl} fallbackUrl="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800" alt="Cover" className="w-9 h-9 rounded-md object-cover border border-emerald-300 shrink-0" />
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -1866,7 +1912,7 @@ export function CustomizerStudio({
                             <div className="flex items-start gap-3">
                               <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-300 mt-1">
                                 {mem.imageUrl ? (
-                                  <img src={mem.imageUrl} alt={`Memory ${idx + 1}`} className="w-full h-full object-cover" />
+                                  <SafeImage src={mem.imageUrl} fallbackUrl="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800" alt={`Memory ${idx + 1}`} className="w-full h-full object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
                                     #{idx + 1}
@@ -1936,8 +1982,9 @@ export function CustomizerStudio({
                     {(customization.coverPhotoUrl || customization.heroPhotoUrl) && (
                       <div className="flex items-center justify-between p-2 bg-amber-50 dark:bg-slate-800 rounded-xl border border-amber-200">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={customization.coverPhotoUrl || customization.heroPhotoUrl}
+                          <SafeImage
+                            src={customization.coverPhotoUrl || customization.heroPhotoUrl || ''}
+                            fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=600&q=80"
                             alt="Cover photo preview"
                             className="w-12 h-12 object-cover rounded-lg border border-amber-300"
                           />
@@ -2081,8 +2128,9 @@ export function CustomizerStudio({
                     {(customization.coverPhotoUrl || customization.heroPhotoUrl) && (
                       <div className="flex items-center justify-between p-2 bg-rose-50 dark:bg-slate-800 rounded-xl border border-rose-200">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={customization.coverPhotoUrl || customization.heroPhotoUrl}
+                          <SafeImage
+                            src={customization.coverPhotoUrl || customization.heroPhotoUrl || ''}
+                            fallbackUrl="https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=600&q=80"
                             alt="Cover photo preview"
                             className="w-12 h-12 object-cover rounded-lg border border-rose-300"
                           />
@@ -2726,7 +2774,7 @@ export function CustomizerStudio({
                       {customization.finalImageUrl ? (
                         <div className="flex items-center space-x-3 w-full">
                           <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-purple-300 shrink-0">
-                            <img src={customization.finalImageUrl} alt="Final photo" className="w-full h-full object-cover" />
+                            <SafeImage src={customization.finalImageUrl} fallbackUrl="" alt="Final photo" className="w-full h-full object-cover" />
                           </div>
                           <button
                             type="button"

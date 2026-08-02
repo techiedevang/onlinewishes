@@ -16,39 +16,9 @@ export function SafeImage({ src, fallbackUrl, className, alt = "", style, loadin
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
     setHasError(false);
-
-    if (src && src.startsWith('/api/images/')) {
-      const docId = src.split('/').pop();
-      if (docId) {
-        const fetchFromFirestore = async () => {
-          try {
-            const docRef = doc(db, 'uploaded_images', docId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists() && isMounted) {
-              const data = docSnap.data();
-              if (data.data) {
-                setImgSrc(data.data);
-                return;
-              }
-            }
-          } catch (e) {
-            console.error('Failed to load image from Firestore:', e);
-          }
-          // Fallback to API if client fetch fails
-          if (isMounted) setImgSrc(src);
-        };
-        fetchFromFirestore();
-      } else {
-        setImgSrc(src);
-      }
-    } else {
-      setImgSrc(src);
-    }
-
-    return () => { isMounted = false; };
-  }, [src]);
+    setImgSrc(src || fallbackUrl);
+  }, [src, fallbackUrl]);
 
   const handleError = () => {
     if (!hasError && fallbackUrl) {

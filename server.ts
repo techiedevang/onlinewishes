@@ -158,19 +158,26 @@ async function deleteOtpFromFirestore(adminEmail: string) {
 // User Password Reset OTP Firestore Persistence Helpers
 const resetOtpsMap = new Map<string, { code: string; expiresAt: number }>();
 
+function getOtpDocId(email: string): string {
+  const clean = email.trim().toLowerCase();
+  return Buffer.from(clean).toString('hex');
+}
+
 async function saveUserResetOtpToFirestore(email: string, otpCode: string, expiresAt: number) {
-  resetOtpsMap.set(email, { code: otpCode, expiresAt });
+  const cleanEmail = email.trim().toLowerCase();
+  resetOtpsMap.set(cleanEmail, { code: otpCode, expiresAt });
 
   try {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) return;
 
-    const docId = encodeURIComponent(email);
-    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}&updateMask.fieldPaths=code&updateMask.fieldPaths=expiresAt`;
+    const docId = getOtpDocId(cleanEmail);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}`;
     const body = {
       fields: {
         code: { stringValue: otpCode },
-        expiresAt: { stringValue: String(expiresAt) }
+        expiresAt: { stringValue: String(expiresAt) },
+        email: { stringValue: cleanEmail }
       }
     };
 
@@ -185,7 +192,8 @@ async function saveUserResetOtpToFirestore(email: string, otpCode: string, expir
 }
 
 async function getUserResetOtpFromFirestore(email: string) {
-  const memoryData = resetOtpsMap.get(email);
+  const cleanEmail = email.trim().toLowerCase();
+  const memoryData = resetOtpsMap.get(cleanEmail);
   if (memoryData && Date.now() <= memoryData.expiresAt) {
     return memoryData;
   }
@@ -194,7 +202,7 @@ async function getUserResetOtpFromFirestore(email: string) {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) return memoryData || null;
 
-    const docId = encodeURIComponent(email);
+    const docId = getOtpDocId(cleanEmail);
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}`;
 
     const response = await fetch(url);
@@ -205,7 +213,7 @@ async function getUserResetOtpFromFirestore(email: string) {
     const expiresAt = Number(data.fields?.expiresAt?.stringValue || "0");
 
     if (code && expiresAt) {
-      resetOtpsMap.set(email, { code, expiresAt });
+      resetOtpsMap.set(cleanEmail, { code, expiresAt });
       return { code, expiresAt };
     }
   } catch (err) {
@@ -216,19 +224,79 @@ async function getUserResetOtpFromFirestore(email: string) {
 }
 
 async function deleteUserResetOtpFromFirestore(email: string) {
-  resetOtpsMap.delete(email);
+  const cleanEmail = email.trim().toLowerCase();
+  resetOtpsMap.delete(cleanEmail);
 
   try {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) return;
 
-    const docId = encodeURIComponent(email);
+    const docId = getOtpDocId(cleanEmail);
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}`;
 
     await fetch(url, { method: 'DELETE' });
   } catch (err) {
     console.warn("Firestore delete user reset OTP error:", err);
   }
+}
+
+async function updateUserPasswordInFirebaseAuth(email: string, newPassword: string) {
+  try {
+    const { apiKey } = getFirestoreConfig();
+    if (!apiKey) return false;
+
+    // 1. Lookup user localId
+    const lookupUrl = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`;
+    const lookupRes = await fetch(lookupUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: [email] })
+    });
+
+    if (!lookupRes.ok) return false;
+
+    const lookupData: any = await lookupRes.json();
+    const user = lookupData.users && lookupData.users[0];
+    if (!user || !user.localId) return false;
+
+    // 2. Update password
+    const updateUrl = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`;
+    const updateRes = await fetch(updateUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        localId: user.localId,
+        password: newPassword,
+        returnSecureToken: false
+      })
+    });
+
+    return updateRes.ok;
+  } catch (err) {
+    console.warn("FirebaseAuth update password error:", err);
+    return false;
+  }
+}
+
+async function sendPasswordChangeConfirmationEmail(email: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  await sendEmailWithFallback({
+    to: cleanEmail,
+    subject: "🎉 Password Changed Successfully - OnlineWishes",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 28px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
+        <h2 style="color: #10b981; margin-top: 0; font-size: 22px; text-align: center;">Password Updated Successfully!</h2>
+        <p style="color: #cbd5e1; font-size: 14px;">Hello,</p>
+        <p style="color: #cbd5e1; font-size: 14px;">The password for your OnlineWishes account registered under <strong>${cleanEmail}</strong> has been updated successfully.</p>
+        <div style="background-color: #1e293b; padding: 16px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #10b981;">
+          <p style="color: #34d399; font-weight: bold; margin: 0; font-size: 15px;">You can now log in using your new password on OnlineWishes.in.</p>
+        </div>
+        <p style="color: #94a3b8; font-size: 12px;">If you did not make this change, please contact us immediately at support@onlinewishes.in.</p>
+        <hr style="border-color: #334155; margin: 24px 0 16px;"/>
+        <p style="font-size: 11px; color: #64748b; text-align: center;">Sent securely by support@onlinewishes.in</p>
+      </div>
+    `
+  });
 }
 
 function getTransporter() {
@@ -614,11 +682,12 @@ async function startServer() {
     }
   });
 
-  app.post("/api/verify-reset-password", async (req, res) => {
+  // Verify OTP Code endpoint (Step 2)
+  app.post("/api/verify-reset-otp", async (req, res) => {
     try {
-      const { email, code, newPassword } = req.body;
+      const { email, code } = req.body;
       if (!email || !code) {
-        return res.status(400).json({ error: "Email and verification code are required" });
+        return res.status(400).json({ error: "Email and verification code are required." });
       }
 
       const cleanEmail = email.trim().toLowerCase();
@@ -633,20 +702,60 @@ async function startServer() {
         return res.status(400).json({ error: "The verification code has expired. Please request a new code." });
       }
 
-      if (record.code !== code.trim()) {
+      if (record.code.trim() !== code.trim()) {
         return res.status(400).json({ error: "Invalid 6-digit verification code. Please check your email and try again." });
       }
 
-      if (newPassword && newPassword.trim().length < 6) {
+      res.json({ success: true, verified: true, message: "OTP code verified successfully!" });
+    } catch (error: any) {
+      console.error("Verify OTP Error:", error);
+      res.status(500).json({ error: "Verification failed. Please try again." });
+    }
+  });
+
+  // Set New Password & Finish Reset endpoint (Step 3)
+  app.post("/api/verify-reset-password", async (req, res) => {
+    try {
+      const { email, code, newPassword } = req.body;
+      if (!email || !code || !newPassword) {
+        return res.status(400).json({ error: "Email, code, and new password are required." });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPass = newPassword.trim();
+
+      if (cleanPass.length < 6) {
         return res.status(400).json({ error: "New password must be at least 6 characters long." });
       }
 
-      // Valid OTP
+      const record = await getUserResetOtpFromFirestore(cleanEmail);
+
+      if (!record) {
+        return res.status(400).json({ error: "No reset request found for this email or code expired. Please request a new code." });
+      }
+
+      if (Date.now() > record.expiresAt) {
+        await deleteUserResetOtpFromFirestore(cleanEmail);
+        return res.status(400).json({ error: "The verification code has expired. Please request a new code." });
+      }
+
+      if (record.code.trim() !== code.trim()) {
+        return res.status(400).json({ error: "Invalid 6-digit verification code. Please check your email and try again." });
+      }
+
+      // Valid OTP! Update password in Firebase Auth
+      await updateUserPasswordInFirebaseAuth(cleanEmail, cleanPass);
+
+      // Clean up OTP from Firestore
       await deleteUserResetOtpFromFirestore(cleanEmail);
-      res.json({ success: true, message: "Password reset and updated successfully!" });
+
+      // Send Password Change Confirmation Email
+      sendPasswordChangeConfirmationEmail(cleanEmail).catch(e => console.warn("Confirmation email notice:", e));
+
+      res.json({ success: true, message: "Password updated successfully!" });
     } catch (error: any) {
       console.error("Verify Reset Error:", error);
-      res.status(500).json({ error: "Verification failed. Please try again." });
+      res.status(500).json({ error: "Failed to update password. Please try again." });
     }
   });
 

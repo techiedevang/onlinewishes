@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { Resend } from "resend";
 import fs from "fs";
 import path from "path";
 
@@ -38,12 +39,17 @@ function getFirestoreConfig() {
   return { projectId, dbId, apiKey };
 }
 
+function getOtpDocId(email) {
+  const clean = email.trim().toLowerCase();
+  return Buffer.from(clean).toString('hex');
+}
+
 async function getUserResetOtpFromFirestore(email) {
   try {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) return null;
 
-    const docId = encodeURIComponent(email);
+    const docId = getOtpDocId(email);
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}`;
 
     const response = await fetch(url);
@@ -68,12 +74,83 @@ async function deleteUserResetOtpFromFirestore(email) {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) return;
 
-    const docId = encodeURIComponent(email);
+    const docId = getOtpDocId(email);
     const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}`;
 
     await fetch(url, { method: 'DELETE' });
   } catch (err) {
     console.warn("Firestore delete user reset OTP error:", err);
+  }
+}
+
+async function updateUserPasswordInFirebaseAuth(email, newPassword) {
+  try {
+    const { apiKey } = getFirestoreConfig();
+    if (!apiKey) return false;
+
+    // 1. Lookup user localId
+    const lookupUrl = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`;
+    const lookupRes = await fetch(lookupUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: [email] })
+    });
+
+    if (!lookupRes.ok) return false;
+
+    const lookupData = await lookupRes.json();
+    const user = lookupData.users && lookupData.users[0];
+    if (!user || !user.localId) return false;
+
+    // 2. Update password
+    const updateUrl = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`;
+    const updateRes = await fetch(updateUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        localId: user.localId,
+        password: newPassword,
+        returnSecureToken: false
+      })
+    });
+
+    return updateRes.ok;
+  } catch (err) {
+    console.warn("FirebaseAuth update password error:", err);
+    return false;
+  }
+}
+
+async function sendPasswordChangeConfirmationEmail(email) {
+  const cleanEmail = email.trim().toLowerCase();
+  const resendApiKey = process.env.RESEND_API_KEY || "re_bA1Ksk9b_K883yvR9JThgM7CqvhKq5K9T";
+
+  if (resendApiKey) {
+    try {
+      const resend = new Resend(resendApiKey);
+      const customSender = process.env.RESEND_FROM_EMAIL || "OnlineWishes <support@onlinewishes.in>";
+
+      await resend.emails.send({
+        from: customSender,
+        to: cleanEmail,
+        subject: "🎉 Password Changed Successfully - OnlineWishes",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 28px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
+            <h2 style="color: #10b981; margin-top: 0; font-size: 22px; text-align: center;">Password Updated Successfully!</h2>
+            <p style="color: #cbd5e1; font-size: 14px;">Hello,</p>
+            <p style="color: #cbd5e1; font-size: 14px;">The password for your OnlineWishes account registered under <strong>${cleanEmail}</strong> has been updated successfully.</p>
+            <div style="background-color: #1e293b; padding: 16px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #10b981;">
+              <p style="color: #34d399; font-weight: bold; margin: 0; font-size: 15px;">You can now log in using your new password on OnlineWishes.in.</p>
+            </div>
+            <p style="color: #94a3b8; font-size: 12px;">If you did not make this change, please contact us immediately at support@onlinewishes.in.</p>
+            <hr style="border-color: #334155; margin: 24px 0 16px;"/>
+            <p style="font-size: 11px; color: #64748b; text-align: center;">Sent securely by support@onlinewishes.in</p>
+          </div>
+        `
+      });
+    } catch (err) {
+      console.warn("Send password change confirmation email error:", err);
+    }
   }
 }
 
@@ -94,6 +171,12 @@ export default async function handler(req, res) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = newPassword.trim();
+
+    if (cleanPass.length < 6) {
+      return res.status(400).json({ error: "New password must be at least 6 characters long." });
+    }
+
     const record = await getUserResetOtpFromFirestore(cleanEmail);
 
     if (!record) {
@@ -109,8 +192,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid verification code. Please check the code sent to your email." });
     }
 
-    // Valid OTP code
+    // Valid OTP code! Update password in Firebase Auth
+    await updateUserPasswordInFirebaseAuth(cleanEmail, cleanPass);
+
+    // Clean up OTP from Firestore
     await deleteUserResetOtpFromFirestore(cleanEmail);
+
+    // Send confirmation email to user
+    sendPasswordChangeConfirmationEmail(cleanEmail).catch(e => console.warn("Confirmation notice:", e));
 
     res.json({
       success: true,

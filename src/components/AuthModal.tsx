@@ -141,7 +141,7 @@ export function AuthModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
-  const [resetStep, setResetStep] = useState<'request' | 'verify'>('request');
+  const [resetStep, setResetStep] = useState<'request' | 'otp' | 'new_password'>('request');
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -575,28 +575,64 @@ export function AuthModal({
         console.warn('Server fetch reset warning:', fetchErr);
       }
 
-      // Always show step 2 (verify OTP or link) so user is NEVER blocked by network/Resend issues!
-      setResetStep('verify');
+      // Move to step 'otp'
+      setResetStep('otp');
       setResetSuccess(true);
     } catch (err: any) {
       console.error('Password reset error:', err);
-      setResetStep('verify');
+      setResetStep('otp');
       setResetSuccess(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyAndSetNewPassword = async (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedEmail = email.trim().toLowerCase();
     const cleanOtp = otpCode.trim();
-    const cleanPass = newPassword.trim();
 
     if (!cleanOtp || cleanOtp.length !== 6) {
       setError('Please enter the 6-digit OTP code sent to your email.');
       return;
     }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/verify-reset-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          code: cleanOtp
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Invalid or expired OTP code. Please check your email and try again.');
+        return;
+      }
+
+      // OTP Verified successfully! Move to Step 3: New Password
+      setResetStep('new_password');
+      setError(null);
+    } catch (err: any) {
+      console.error('Verify OTP error:', err);
+      setError('Failed to verify OTP code. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedEmail = email.trim().toLowerCase();
+    const cleanOtp = otpCode.trim();
+    const cleanPass = newPassword.trim();
 
     if (!cleanPass || cleanPass.length < 6) {
       setError('New password must be at least 6 characters long.');
@@ -622,14 +658,14 @@ export function AuthModal({
         })
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        setError(data.error || 'Verification failed. Please check your OTP code and try again.');
+        setError(data.error || 'Password update failed. Please try again.');
         return;
       }
 
-      // Password verified! Save the new password in database (Local Storage & Firestore)
+      // Password updated in backend! Save locally & in Firestore as fallback
       const updatedUser = {
         id: 'user_' + Date.now(),
         name: trimmedEmail.split('@')[0] || 'Valued User',
@@ -638,10 +674,8 @@ export function AuthModal({
         role: 'user'
       };
 
-      // 1. Save in local database
       saveLocalUser(updatedUser);
 
-      // 2. Save in Firestore database
       try {
         await setDoc(doc(db, 'users', trimmedEmail), {
           id: updatedUser.id,
@@ -661,9 +695,8 @@ export function AuthModal({
         console.warn('Firestore password save note:', fsErr);
       }
 
-      // Prepare UI for login
       setPassword(cleanPass);
-      setPasswordResetNotice('🎉 Password successfully reset and saved in database! You can now sign in with your new password.');
+      setPasswordResetNotice('🎉 Password changed successfully! A confirmation email has been sent to ' + trimmedEmail + '. You can now sign in with your new password.');
       setMode('signin');
       setResetStep('request');
       setResetSuccess(false);
@@ -793,20 +826,27 @@ export function AuthModal({
                     <KeyRound className="w-6 h-6" />
                   </div>
                   <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">
-                    {resetStep === 'verify' ? 'Enter OTP & Set New Password' : 'Reset Your Password'}
+                    {resetStep === 'new_password'
+                      ? 'Create New Password'
+                      : resetStep === 'otp'
+                      ? 'Verify Security OTP Code'
+                      : 'Reset Your Password'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                    {resetStep === 'verify' 
-                      ? 'Check your email inbox for the 6-digit code sent from support@onlinewishes.in and enter your new password below.'
+                    {resetStep === 'new_password'
+                      ? 'Enter your new password below to update your account.'
+                      : resetStep === 'otp'
+                      ? 'Enter the 6-digit verification code sent to your email address.'
                       : 'Enter your account email address below and we will send you a 6-digit OTP security code.'}
                   </p>
                 </div>
 
-                {resetStep === 'verify' ? (
-                  <form onSubmit={handleVerifyAndSetNewPassword} className="space-y-3.5">
+                {resetStep === 'otp' ? (
+                  /* STEP 2: VERIFY OTP ONLY */
+                  <form onSubmit={handleVerifyOtp} className="space-y-3.5">
                     <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-xl text-center">
                       <p className="text-xs text-rose-800 dark:text-rose-200 font-medium">
-                        OTP security code sent to <strong className="font-bold underline">{email}</strong>! Please check your inbox / spam folder.
+                        OTP security code sent to <strong className="font-bold underline">{email}</strong>! Check your inbox / spam folder.
                       </p>
                     </div>
 
@@ -826,6 +866,53 @@ export function AuthModal({
                           className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono tracking-widest text-center font-bold focus:outline-none focus:border-rose-500 transition-colors"
                         />
                       </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg transition-all text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                    >
+                      {loading ? <span>Verifying OTP Code...</span> : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Verify OTP Code</span>
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResetStep('request');
+                          setError(null);
+                        }}
+                        className="text-xs text-rose-500 hover:underline font-bold"
+                      >
+                        Resend Code / Change Email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode('signin');
+                          setError(null);
+                          setResetStep('request');
+                        }}
+                        className="inline-flex items-center space-x-1 text-xs text-slate-500 hover:text-slate-800 font-bold"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>Sign In</span>
+                      </button>
+                    </div>
+                  </form>
+                ) : resetStep === 'new_password' ? (
+                  /* STEP 3: CREATE NEW PASSWORD */
+                  <form onSubmit={handleSetNewPassword} className="space-y-3.5">
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 rounded-xl text-center">
+                      <p className="text-xs text-emerald-800 dark:text-emerald-200 font-medium">
+                        ✅ OTP Verified! Create a new password for <strong className="font-bold underline">{email}</strong> below.
+                      </p>
                     </div>
 
                     <div>
@@ -877,17 +964,7 @@ export function AuthModal({
                       )}
                     </button>
 
-                    <div className="flex items-center justify-between pt-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setResetStep('request');
-                          setError(null);
-                        }}
-                        className="text-xs text-rose-500 hover:underline font-bold"
-                      >
-                        Resend Code / Change Email
-                      </button>
+                    <div className="text-center pt-1">
                       <button
                         type="button"
                         onClick={() => {
@@ -895,14 +972,15 @@ export function AuthModal({
                           setError(null);
                           setResetStep('request');
                         }}
-                        className="inline-flex items-center space-x-1 text-xs text-slate-500 hover:text-slate-800 font-bold"
+                        className="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold"
                       >
                         <ArrowLeft className="w-3.5 h-3.5" />
-                        <span>Sign In</span>
+                        <span>Cancel & Return to Sign In</span>
                       </button>
                     </div>
                   </form>
                 ) : (
+                  /* STEP 1: REQUEST OTP */
                   <form onSubmit={handleResetPassword} className="space-y-4">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">

@@ -40,17 +40,23 @@ function getFirestoreConfig() {
   return { projectId, dbId, apiKey };
 }
 
+function getOtpDocId(email) {
+  const clean = email.trim().toLowerCase();
+  return Buffer.from(clean).toString('hex');
+}
+
 async function saveUserResetOtpToFirestore(email, otpCode, expiresAt) {
   try {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) return;
 
-    const docId = encodeURIComponent(email);
-    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}&updateMask.fieldPaths=code&updateMask.fieldPaths=expiresAt`;
+    const docId = getOtpDocId(email);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}`;
     const body = {
       fields: {
         code: { stringValue: otpCode },
-        expiresAt: { stringValue: String(expiresAt) }
+        expiresAt: { stringValue: String(expiresAt) },
+        email: { stringValue: email }
       }
     };
 
@@ -136,7 +142,6 @@ export default async function handler(req, res) {
         if (sendRes.data && !sendRes.error) {
           emailDelivered = true;
         } else if (sendRes.error) {
-          // Fallback to onboarding@resend.dev
           sendRes = await resend.emails.send({
             from: "OnlineWishes <onboarding@resend.dev>",
             to: cleanEmail,

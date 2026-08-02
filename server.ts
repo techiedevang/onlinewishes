@@ -375,10 +375,10 @@ function getTransporter() {
   return null;
 }
 
+export const app = express();
+
 async function startServer() {
   const resend = new Resend(process.env.RESEND_API_KEY);
-
-  const app = express();
   const PORT = 3000;
 
   app.use(express.json());
@@ -1619,3 +1619,5 @@ async function startServer() {
 }
 
 startServer();
+
+export default app;

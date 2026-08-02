@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import dns from "node:dns/promises";
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from "vite";
 import validator from "deep-email-validator";
@@ -240,6 +241,85 @@ async function deleteUserResetOtpFromFirestore(email: string) {
   }
 }
 
+const signupOtpsMap = new Map<string, { code: string; expiresAt: number }>();
+
+async function saveUserSignupOtpToFirestore(email: string, otpCode: string, expiresAt: number) {
+  const cleanEmail = email.trim().toLowerCase();
+  signupOtpsMap.set(cleanEmail, { code: otpCode, expiresAt });
+
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) return;
+
+    const docId = getOtpDocId(cleanEmail);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_signup_otps/${docId}?key=${apiKey}`;
+    const body = {
+      fields: {
+        code: { stringValue: otpCode },
+        expiresAt: { stringValue: String(expiresAt) },
+        email: { stringValue: cleanEmail }
+      }
+    };
+
+    await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  } catch (err) {
+    console.warn("Firestore save user signup OTP error:", err);
+  }
+}
+
+async function getUserSignupOtpFromFirestore(email: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  const memoryData = signupOtpsMap.get(cleanEmail);
+  if (memoryData && Date.now() <= memoryData.expiresAt) {
+    return memoryData;
+  }
+
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) return memoryData || null;
+
+    const docId = getOtpDocId(cleanEmail);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_signup_otps/${docId}?key=${apiKey}`;
+
+    const response = await fetch(url);
+    if (!response.ok) return memoryData || null;
+
+    const data: any = await response.json();
+    const code = data.fields?.code?.stringValue;
+    const expiresAt = Number(data.fields?.expiresAt?.stringValue || "0");
+
+    if (code && expiresAt) {
+      signupOtpsMap.set(cleanEmail, { code, expiresAt });
+      return { code, expiresAt };
+    }
+  } catch (err) {
+    console.warn("Firestore read user signup OTP error:", err);
+  }
+
+  return memoryData || null;
+}
+
+async function deleteUserSignupOtpFromFirestore(email: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  signupOtpsMap.delete(cleanEmail);
+
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) return;
+
+    const docId = getOtpDocId(cleanEmail);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_signup_otps/${docId}?key=${apiKey}`;
+
+    await fetch(url, { method: 'DELETE' });
+  } catch (err) {
+    console.warn("Firestore delete user signup OTP error:", err);
+  }
+}
+
 async function updateUserPasswordInFirebaseAuth(email: string, newPassword: string) {
   try {
     const { apiKey } = getFirestoreConfig();
@@ -397,24 +477,223 @@ async function startServer() {
   // Email Validation Endpoint
   app.get("/api/validate-email", async (req, res) => {
     try {
-      const email = req.query.email as string;
-      if (!email) {
-        return res.status(400).json({ valid: false, error: "Email is required" });
+      const email = (req.query.email as string || "").trim().toLowerCase();
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ valid: false, error: "Please enter a valid email address." });
       }
 
-      const result = await validator({
-        email,
-        validateRegex: true,
-        validateMx: false, // Don't block valid emails on transient DNS/MX check
-        validateTypo: true,
-        validateDisposable: true,
-        validateSMTP: false
-      });
+      const parts = email.split("@");
+      const username = parts[0];
+      const domain = parts[1];
 
-      res.json(result);
+      if (!username || username.length < 2 || !domain) {
+        return res.status(200).json({ valid: false, reason: "regex", error: "Invalid email address structure." });
+      }
+
+      // Check typo domains
+      const TYPO_DOMAINS: Record<string, string> = {
+        "gmaill.com": "gmail.com", "gmai.com": "gmail.com", "gamil.com": "gmail.com",
+        "gmial.com": "gmail.com", "gmal.com": "gmail.com", "gmail.co": "gmail.com",
+        "yaho.com": "yahoo.com", "yahooo.com": "yahoo.com", "hotmial.com": "hotmail.com",
+        "outlok.com": "outlook.com", "iclaud.com": "icloud.com"
+      };
+
+      if (TYPO_DOMAINS[domain]) {
+        return res.status(200).json({
+          valid: false,
+          reason: "typo",
+          error: `Did you mean ${username}@${TYPO_DOMAINS[domain]}? The domain '${domain}' has a typo.`
+        });
+      }
+
+      // Check disposable domains
+      const DISPOSABLE_DOMAINS = new Set([
+        "tempmail.com", "mailinator.com", "10minutemail.com", "guerrillamail.com",
+        "trashmail.com", "yopmail.com", "dispostable.com", "sharklasers.com",
+        "getnada.com", "fakeinbox.com", "throwawaymail.com", "temp-mail.org",
+        "bmail.com", "disposable.com", "fake.com", "example.com", "test.com"
+      ]);
+
+      if (DISPOSABLE_DOMAINS.has(domain)) {
+        return res.status(200).json({
+          valid: false,
+          reason: "disposable",
+          error: "Disposable email addresses are not allowed. Please enter a real email."
+        });
+      }
+
+      // DNS MX check
+      try {
+        const mxRecords = await dns.resolveMx(domain);
+        if (!mxRecords || mxRecords.length === 0) {
+          return res.status(200).json({
+            valid: false,
+            reason: "mx",
+            error: `The email domain '${domain}' does not exist or has no mail servers.`
+          });
+        }
+      } catch (dnsErr) {
+        return res.status(200).json({
+          valid: false,
+          reason: "mx",
+          error: `The email domain '${domain}' does not exist or cannot receive emails.`
+        });
+      }
+
+      // Deep email validator
+      try {
+        const deepRes = await validator({
+          email,
+          validateRegex: true,
+          validateMx: true,
+          validateTypo: true,
+          validateDisposable: true,
+          validateSMTP: false
+        });
+
+        if (!deepRes.valid) {
+          return res.status(200).json({
+            valid: false,
+            reason: deepRes.reason || "invalid",
+            error: "This email address failed validation checks. Please enter a real email address."
+          });
+        }
+      } catch (e) {
+        console.warn("Deep validator skip:", e);
+      }
+
+      res.json({ valid: true });
     } catch (error) {
       console.error("Email validation error:", error);
-      res.json({ valid: true }); // Fallback to allow standard email addresses
+      res.json({ valid: true });
+    }
+  });
+
+  // Send Signup Email Verification OTP
+  app.post("/api/send-signup-otp", async (req, res) => {
+    try {
+      const { email, name } = req.body || {};
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ error: "Valid email address is required." });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const userDisplayName = name && name.trim() ? name.trim() : "Valued Creator";
+      const domain = cleanEmail.split("@")[1];
+
+      // Check DNS MX before sending OTP
+      try {
+        const mxRecords = await dns.resolveMx(domain);
+        if (!mxRecords || mxRecords.length === 0) {
+          return res.status(400).json({ error: `The email domain '${domain}' does not exist or cannot receive emails.` });
+        }
+      } catch (e) {
+        return res.status(400).json({ error: `The email domain '${domain}' does not exist. Please check your email address.` });
+      }
+
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = Date.now() + 15 * 60 * 1000;
+
+      await saveUserSignupOtpToFirestore(cleanEmail, otpCode, expiresAt);
+
+      let delivered = false;
+      const subject = `🎉 OnlineWishes Account Verification Code: ${otpCode}`;
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 28px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
+          <h2 style="color: #f43f5e; margin-top: 0; font-size: 22px; text-align: center;">Verify Your Email - OnlineWishes</h2>
+          <p style="color: #cbd5e1; font-size: 14px;">Hi <strong>${userDisplayName}</strong>,</p>
+          <p style="color: #cbd5e1; font-size: 14px;">Welcome to OnlineWishes! Please enter the 6-digit verification code below to complete your account registration for <strong>${cleanEmail}</strong>:</p>
+          <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 2px solid #f43f5e;">
+            <span style="font-size: 38px; font-weight: 900; letter-spacing: 10px; color: #fb7185;">${otpCode}</span>
+          </div>
+          <p style="color: #94a3b8; font-size: 13px;">This code is valid for 15 minutes. Do not share this code with anyone.</p>
+          <hr style="border-color: #334155; margin: 24px 0 16px;"/>
+          <p style="font-size: 11px; color: #64748b; text-align: center;">Sent securely by support@onlinewishes.in</p>
+        </div>
+      `;
+
+      if (process.env.RESEND_API_KEY) {
+        try {
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          let sendRes = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || "OnlineWishes <support@onlinewishes.in>",
+            to: cleanEmail,
+            subject,
+            html: htmlContent
+          });
+          if (sendRes.data && !sendRes.error) delivered = true;
+          else if (sendRes.error) {
+            sendRes = await resend.emails.send({
+              from: "OnlineWishes <onboarding@resend.dev>",
+              to: cleanEmail,
+              subject,
+              html: htmlContent
+            });
+            if (sendRes.data && !sendRes.error) delivered = true;
+          }
+        } catch (rErr) {
+          console.warn("Resend signup OTP error:", rErr);
+        }
+      }
+
+      if (!delivered) {
+        const transporter = getTransporter();
+        if (transporter) {
+          try {
+            await transporter.sendMail({
+              from: `"OnlineWishes Support" <${process.env.SMTP_USER || "codelearnpoint@gmail.com"}>`,
+              to: cleanEmail,
+              subject,
+              html: htmlContent
+            });
+            delivered = true;
+          } catch (sErr) {
+            console.warn("SMTP signup OTP error:", sErr);
+          }
+        }
+      }
+
+      if (!delivered) {
+        return res.status(400).json({ error: "Failed to send verification email. Please make sure the email exists and is accessible." });
+      }
+
+      res.json({ success: true, message: "Verification code sent to " + cleanEmail });
+    } catch (err: any) {
+      console.error("Send signup OTP error:", err);
+      res.status(500).json({ error: "Failed to send verification email: " + (err.message || String(err)) });
+    }
+  });
+
+  // Verify Signup Email Verification OTP
+  app.post("/api/verify-signup-otp", async (req, res) => {
+    try {
+      const { email, otpCode } = req.body || {};
+      if (!email || !otpCode) {
+        return res.status(400).json({ error: "Email and verification code are required." });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanOtp = otpCode.trim();
+
+      const record = await getUserSignupOtpFromFirestore(cleanEmail);
+      if (!record) {
+        return res.status(400).json({ error: "No verification code requested or code expired. Please request a new code." });
+      }
+
+      if (Date.now() > record.expiresAt) {
+        await deleteUserSignupOtpFromFirestore(cleanEmail);
+        return res.status(400).json({ error: "Verification code has expired. Please request a new code." });
+      }
+
+      if (record.code !== cleanOtp) {
+        return res.status(400).json({ error: "Incorrect verification code. Please check your email and try again." });
+      }
+
+      await deleteUserSignupOtpFromFirestore(cleanEmail);
+      res.json({ success: true, message: "Email verified successfully!" });
+    } catch (err: any) {
+      console.error("Verify signup OTP error:", err);
+      res.status(500).json({ error: "Failed to verify email code: " + (err.message || String(err)) });
     }
   });
 

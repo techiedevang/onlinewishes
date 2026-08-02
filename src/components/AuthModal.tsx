@@ -147,6 +147,10 @@ export function AuthModal({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordResetNotice, setPasswordResetNotice] = useState<string | null>(null);
 
+  // Signup Email Verification States
+  const [signupStep, setSignupStep] = useState<'form' | 'otp'>('form');
+  const [signupOtpCode, setSignupOtpCode] = useState('');
+
   // Form Fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -368,88 +372,78 @@ export function AuthModal({
     setError(null);
 
     try {
-      // Validate email existence and MX records
-      try {
-        const response = await fetch(`/api/validate-email?email=${encodeURIComponent(trimmedEmail)}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (!data.valid) {
-            let errorMsg = 'Please enter a valid, existing email address.';
-            if (data.reason === 'disposable') errorMsg = 'Disposable email addresses are not allowed.';
-            if (data.reason === 'mx') errorMsg = 'The email domain does not exist or cannot receive emails.';
-            if (data.reason === 'typo') errorMsg = 'There seems to be a typo in your email address.';
-            
-            setError(errorMsg);
-            setLoading(false);
-            return;
-          }
+      // 1. Strict Email Domain & MX Validation Check
+      const response = await fetch(`/api/validate-email?email=${encodeURIComponent(trimmedEmail)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (!data.valid) {
+          setError(data.error || 'Please enter a valid, existing email address.');
+          setLoading(false);
+          return;
         }
-      } catch (err) {
-        console.warn('Email validation service unavailable:', err);
       }
 
-      const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
-      const user = userCredential.user;
-
-      // Update displayName in auth profile
-      await updateProfile(user, {
-        displayName: trimmedName,
+      // 2. Send 6-digit Email Verification OTP
+      const otpRes = await fetch('/api/send-signup-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
       });
 
-      
-      // Send welcome email
-      try {
-        await fetch('/api/send-welcome', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
-        });
-      } catch (e) {
-        console.error('Failed to send welcome email', e);
-      }
-
-      const newUser: User = {
-        id: user.uid,
-        name: trimmedName,
-        email: user.email || trimmedEmail,
-        role: 'user',
-        mfaEnabled: false,
-      };
-
-      saveLocalUser({ ...newUser, password });
-      await saveUserToFirestore(newUser);
-      onLogin(newUser, true, true);
-      onClose();
-    } catch (err: any) {
-      const errCode = err?.code || '';
-      const errMessage = err?.message || err?.toString() || '';
-
-      if (errCode === 'auth/email-already-in-use' || errMessage.includes('email-already-in-use')) {
-        setError('An account with this email address already exists. Please sign in instead.');
+      const otpData = await otpRes.json();
+      if (!otpRes.ok || !otpData.success) {
+        setError(otpData.error || 'Failed to send verification code to this email address. Please make sure the email address exists.');
         setLoading(false);
         return;
       }
 
-      // If Firebase Auth operation-not-allowed / backend config restriction, register user locally
-      if (
-        errCode === 'auth/operation-not-allowed' ||
-        errCode === 'auth/configuration-not-found' ||
-        errCode === 'auth/unauthorized-domain' ||
-        errCode === 'auth/internal-error' ||
-        errMessage.includes('auth/operation-not-allowed') ||
-        errMessage.includes('operation-not-allowed')
-      ) {
-        const newUser: User = {
-          id: 'user_' + Date.now(),
-          name: trimmedName,
-          email: trimmedEmail,
-          role: 'user',
-          mfaEnabled: false,
-        };
-        saveLocalUser({ ...newUser, password });
-        await saveUserToFirestore(newUser);
+      setSignupStep('otp');
+      setSignupOtpCode('');
+      setError(null);
+    } catch (err: any) {
+      console.warn('Signup verification step warning:', err);
+      setError('Failed to process verification. Please check your internet connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // Send welcome email for fallback sign up
+  const handleVerifySignupOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (!signupOtpCode || signupOtpCode.trim().length < 6) {
+      setError('Please enter the complete 6-digit verification code sent to your email.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Verify Email OTP Code
+      const verifyRes = await fetch('/api/verify-signup-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmedEmail, otpCode: signupOtpCode.trim() })
+      });
+
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok || !verifyData.success) {
+        setError(verifyData.error || 'Incorrect verification code. Please check your inbox and try again.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Create User Account after Email Verification
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
+        const user = userCredential.user;
+
+        await updateProfile(user, { displayName: trimmedName });
+
+        // Send welcome email
         try {
           await fetch('/api/send-welcome', {
             method: 'POST',
@@ -460,12 +454,51 @@ export function AuthModal({
           console.error('Failed to send welcome email', e);
         }
 
+        const newUser: User = {
+          id: user.uid,
+          name: trimmedName,
+          email: user.email || trimmedEmail,
+          role: 'user',
+          mfaEnabled: false,
+        };
+
+        saveLocalUser({ ...newUser, password });
+        await saveUserToFirestore(newUser);
         onLogin(newUser, true, true);
         onClose();
-        return;
-      }
+      } catch (err: any) {
+        const errCode = err?.code || '';
+        const errMessage = err?.message || err?.toString() || '';
 
-      console.warn('Sign up error:', err);
+        if (errCode === 'auth/email-already-in-use' || errMessage.includes('email-already-in-use')) {
+          setError('An account with this email address already exists. Please sign in instead.');
+          setLoading(false);
+          return;
+        }
+
+        // Fallback account creation if Firebase Auth restricts runtime domain
+        const newUser: User = {
+          id: 'user_' + Date.now(),
+          name: trimmedName,
+          email: trimmedEmail,
+          role: 'user',
+          mfaEnabled: false,
+        };
+        saveLocalUser({ ...newUser, password });
+        await saveUserToFirestore(newUser);
+
+        try {
+          await fetch('/api/send-welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
+          });
+        } catch (e) {}
+
+        onLogin(newUser, true, true);
+        onClose();
+      }
+    } catch (err: any) {
       setError(mapAuthErrorToMessage(err));
     } finally {
       setLoading(false);
@@ -792,7 +825,7 @@ export function AuthModal({
               <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-6">
                 <button
                   type="button"
-                  onClick={() => { setMode('signin'); setError(null); }}
+                  onClick={() => { setMode('signin'); setSignupStep('form'); setError(null); }}
                   className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
                     mode === 'signin'
                       ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
@@ -804,7 +837,7 @@ export function AuthModal({
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setMode('signup'); setError(null); }}
+                  onClick={() => { setMode('signup'); setSignupStep('form'); setError(null); }}
                   className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
                     mode === 'signup'
                       ? 'bg-rose-500 text-white shadow-sm'
@@ -1116,6 +1149,67 @@ export function AuthModal({
                     </>
                   )}
                 </button>
+              </form>
+            ) : signupStep === 'otp' ? (
+              /* SIGNUP OTP VERIFICATION FORM */
+              <form onSubmit={handleVerifySignupOtp} className="space-y-3.5">
+                <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-xl text-center">
+                  <p className="text-xs text-rose-800 dark:text-rose-200 font-medium">
+                    A 6-digit verification code was sent to <strong className="font-bold underline">{email}</strong>. Check your inbox or spam folder to complete registration.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                    6-Digit Email Verification Code
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={signupOtpCode}
+                      onChange={(e) => setSignupOtpCode(e.target.value)}
+                      required
+                      placeholder="e.g. 123456"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono tracking-widest text-center font-bold focus:outline-none focus:border-rose-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg transition-all text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {loading ? <span>Verifying Email...</span> : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Verify Email & Complete Sign Up</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignupStep('form');
+                      setError(null);
+                    }}
+                    className="text-xs text-rose-500 hover:underline font-bold"
+                  >
+                    Edit Details / Re-enter Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSignUp}
+                    disabled={loading}
+                    className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium"
+                  >
+                    Resend Code
+                  </button>
+                </div>
               </form>
             ) : (
               /* CREATE ACCOUNT FORM */

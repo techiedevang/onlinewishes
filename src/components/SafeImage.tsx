@@ -20,10 +20,30 @@ export function SafeImage({ src, fallbackUrl, className, alt = "", style, loadin
     setImgSrc(src || fallbackUrl);
   }, [src, fallbackUrl]);
 
-  const handleError = () => {
-    if (!hasError && fallbackUrl) {
-      setImgSrc(fallbackUrl);
-      setHasError(true);
+  const handleError = async () => {
+    if (!hasError) {
+      // If src is an /api/images/ URL, attempt client-side direct Firestore fetch before falling back!
+      if (src && (src.includes('/api/images/') || src.startsWith('sb_') || src.startsWith('img_'))) {
+        const parts = src.split('/api/images/');
+        const imageId = parts.length > 1 ? parts[1].split('?')[0] : src;
+        if (imageId) {
+          try {
+            const docRef = doc(db, 'uploaded_images', imageId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists() && docSnap.data()?.data) {
+              setImgSrc(docSnap.data().data);
+              return; // Recovered real photo!
+            }
+          } catch (err) {
+            console.warn("Client side image recovery failed for id:", imageId, err);
+          }
+        }
+      }
+
+      if (fallbackUrl) {
+        setImgSrc(fallbackUrl);
+        setHasError(true);
+      }
     }
   };
 

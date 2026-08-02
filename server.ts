@@ -788,10 +788,9 @@ async function startServer() {
 
       projectId = projectId || "gen-lang-client-0123999783";
       dbId = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
+      apiKey = apiKey || "AIzaSyAAsl785OWTeliRX3BvzybSWnI7thRCoBI";
 
-      if (!apiKey) {
-        return res.status(500).send("Configuration Error: API Key not found");
-      }
+      res.setHeader("Access-Control-Allow-Origin", "*");
 
       const primaryDb = dbId || "ai-studio-bestiescrapbook-e95b4bbe-fcce-4da3-8e13-ccd86dd2f84a";
       let url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${primaryDb}/documents/uploaded_images/${docId}?key=${apiKey}`;
@@ -812,8 +811,9 @@ async function startServer() {
       if (data && data.fields && data.fields.data && data.fields.data.stringValue) {
         const base64 = data.fields.data.stringValue;
         const parts = base64.split(",");
-        const mime = parts[0].split(":")[1].split(";")[0];
-        const buffer = Buffer.from(parts[1], "base64");
+        const mime = parts.length > 1 ? (parts[0].split(":")[1]?.split(";")[0] || "image/jpeg") : "image/jpeg";
+        const base64Content = parts.length > 1 ? parts[1] : parts[0];
+        const buffer = Buffer.from(base64Content, "base64");
         
         res.setHeader("Content-Type", mime);
         res.setHeader("Cache-Control", "public, max-age=31536000");

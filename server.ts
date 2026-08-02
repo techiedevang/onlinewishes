@@ -173,7 +173,7 @@ function getTransporter() {
 }
 
 async function startServer() {
-  const resend = new Resend(process.env.RESEND_API_KEY || "re_L9Ltr58p_Q7Vy9FYQHMhMwVUt2HrX6Txv");
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   const app = express();
   const PORT = 3000;

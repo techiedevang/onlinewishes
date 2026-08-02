@@ -354,26 +354,45 @@ export function AuthModal({
 
     try {
       // 1. Strict Email Domain & MX Validation Check
-      const response = await fetch(`/api/validate-email?email=${encodeURIComponent(trimmedEmail)}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (!data.valid) {
-          setError(data.error || 'Please enter a valid, existing email address.');
-          setLoading(false);
-          return;
+      let data: any = null;
+      try {
+        const response = await fetch(`/api/validate-email?email=${encodeURIComponent(trimmedEmail)}`);
+        if (response.ok) {
+          data = await response.json();
         }
+      } catch (e) {
+        console.warn('Validate email fetch error:', e);
+      }
+
+      if (data && data.valid === false) {
+        setError(data.error || 'Please enter a valid, existing email address.');
+        setLoading(false);
+        return;
       }
 
       // 2. Send 6-digit Email Verification OTP
-      const otpRes = await fetch('/api/send-signup-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
-      });
+      let otpRes: Response;
+      try {
+        otpRes = await fetch('/api/send-signup-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
+        });
+      } catch (e: any) {
+        setError('Network error connecting to verification server. Please check your connection and try again.');
+        setLoading(false);
+        return;
+      }
 
-      const otpData = await otpRes.json();
-      if (!otpRes.ok || !otpData.success) {
-        setError(otpData.error || 'Failed to send verification code to this email address. Please make sure the email address exists.');
+      let otpData: any = {};
+      try {
+        otpData = await otpRes.json();
+      } catch (e) {
+        console.warn('Non-JSON response from send-signup-otp');
+      }
+
+      if (!otpRes.ok || !otpData?.success) {
+        setError(otpData?.error || 'Failed to send verification code to this email address. Please make sure the email address exists.');
         setLoading(false);
         return;
       }
@@ -383,7 +402,8 @@ export function AuthModal({
       setError(null);
     } catch (err: any) {
       console.warn('Signup verification step warning:', err);
-      setError('Failed to process verification. Please check your internet connection and try again.');
+      const errMsg = err?.message || err?.toString() || '';
+      setError(errMsg || 'Failed to process verification. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -404,15 +424,28 @@ export function AuthModal({
 
     try {
       // 1. Verify Email OTP Code
-      const verifyRes = await fetch('/api/verify-signup-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmedEmail, otpCode: signupOtpCode.trim() })
-      });
+      let verifyRes: Response;
+      try {
+        verifyRes = await fetch('/api/verify-signup-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, otpCode: signupOtpCode.trim() })
+        });
+      } catch (e: any) {
+        setError('Network error connecting to verification server. Please check your connection and try again.');
+        setLoading(false);
+        return;
+      }
 
-      const verifyData = await verifyRes.json();
-      if (!verifyRes.ok || !verifyData.success) {
-        setError(verifyData.error || 'Incorrect verification code. Please check your inbox and try again.');
+      let verifyData: any = {};
+      try {
+        verifyData = await verifyRes.json();
+      } catch (e) {
+        console.warn('Non-JSON response from verify-signup-otp');
+      }
+
+      if (!verifyRes.ok || !verifyData?.success) {
+        setError(verifyData?.error || 'Incorrect verification code. Please check your inbox and try again.');
         setLoading(false);
         return;
       }

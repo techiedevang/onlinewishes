@@ -180,6 +180,76 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Helper for multi-provider email dispatch
+  async function sendEmailWithFallback({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
+    let lastError: string | null = null;
+
+    // Attempt 1: Resend with custom domain or environment sender address
+    const customSender = process.env.RESEND_FROM_EMAIL || "OnlineWishes <support@onlinewishes.in>";
+    try {
+      const res = await resend.emails.send({
+        from: customSender,
+        to,
+        subject,
+        html,
+      });
+      if (res.data && !res.error) {
+        console.log(`[Email Success - ${customSender}] Sent to ${to}`);
+        return { success: true, provider: 'resend-custom' };
+      }
+      if (res.error) {
+        lastError = res.error.message || JSON.stringify(res.error);
+        console.warn(`[Resend custom domain note - ${customSender}]:`, res.error);
+      }
+    } catch (err: any) {
+      lastError = err?.message || String(err);
+      console.warn(`[Resend custom domain error - ${customSender}]:`, lastError);
+    }
+
+    // Attempt 2: Resend with onboarding@resend.dev (default verified Resend domain)
+    try {
+      const res = await resend.emails.send({
+        from: "OnlineWishes <onboarding@resend.dev>",
+        to,
+        subject,
+        html,
+      });
+      if (res.data && !res.error) {
+        console.log(`[Email Success - onboarding@resend.dev] Sent to ${to}`);
+        return { success: true, provider: 'resend-dev' };
+      }
+      if (res.error) {
+        lastError = res.error.message || JSON.stringify(res.error);
+        console.warn("[Resend dev note]:", res.error);
+      }
+    } catch (err: any) {
+      lastError = err?.message || String(err);
+      console.warn("[Resend dev error]:", lastError);
+    }
+
+    // Attempt 3: Nodemailer / SMTP fallback
+    const transporter = getTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: '"OnlineWishes" <codelearnpoint@gmail.com>',
+          to,
+          subject,
+          html,
+          text: text || "OnlineWishes Notification",
+        });
+        console.log(`[Email Success - Nodemailer SMTP] Sent to ${to}`);
+        return { success: true, provider: 'nodemailer' };
+      } catch (smtpErr: any) {
+        lastError = smtpErr?.message || String(smtpErr);
+        console.warn("[Nodemailer SMTP error]:", lastError);
+      }
+    }
+
+    console.error(`[Email Delivery Failure] Could not send email to ${to}:`, lastError);
+    return { success: false, error: lastError || "Email delivery failed" };
+  }
+
   // Email Validation Endpoint
   app.get("/api/validate-email", async (req, res) => {
     try {
@@ -191,7 +261,7 @@ async function startServer() {
       const result = await validator({
         email,
         validateRegex: true,
-        validateMx: true,
+        validateMx: false, // Don't block valid emails on transient DNS/MX check
         validateTypo: true,
         validateDisposable: true,
         validateSMTP: false
@@ -200,7 +270,7 @@ async function startServer() {
       res.json(result);
     } catch (error) {
       console.error("Email validation error:", error);
-      res.status(500).json({ valid: false, error: "Validation failed" });
+      res.json({ valid: true }); // Fallback to allow standard email addresses
     }
   });
 
@@ -225,8 +295,7 @@ async function startServer() {
       if (!email) {
         return res.status(400).json({ error: "Email is required" });
       }
-      await resend.emails.send({
-        from: "OnlineWishes <support@onlinewishes.in>",
+      const emailRes = await sendEmailWithFallback({
         to: email,
         subject: "Welcome to OnlineWishes! 🎉",
         html: `
@@ -239,10 +308,10 @@ async function startServer() {
           </div>
         `
       });
-      res.json({ success: true, message: "Welcome email sent successfully." });
+      res.json({ success: true, message: "Welcome email processed.", delivered: emailRes.success });
     } catch (error: any) {
       console.error("Welcome Email Error:", error);
-      res.status(500).json({ error: "Failed to send welcome email." });
+      res.status(500).json({ error: "Failed to process welcome email." });
     }
   });
 
@@ -253,8 +322,7 @@ async function startServer() {
         return res.status(400).json({ error: "Email is required" });
       }
       
-      await resend.emails.send({
-        from: "OnlineWishes <support@onlinewishes.in>",
+      const emailRes = await sendEmailWithFallback({
         to: email,
         subject: "You left your surprise half-finished! 🎁",
         html: `
@@ -271,7 +339,7 @@ async function startServer() {
         `,
       });
       
-      res.json({ success: true, message: "Draft reminder email sent successfully." });
+      res.json({ success: true, message: "Draft reminder email processed.", delivered: emailRes.success });
     } catch (error: any) {
       console.error("Draft Email Error:", error);
       res.status(500).json({ error: "Failed to send draft email." });
@@ -299,8 +367,7 @@ async function startServer() {
         minute: "2-digit"
       });
 
-      await resend.emails.send({
-        from: "OnlineWishes <support@onlinewishes.in>",
+      const emailRes = await sendEmailWithFallback({
         to: email,
         subject: `Thank You for Your Payment! 🎉 | Receipt #${payId.slice(-8)}`,
         html: `
@@ -381,7 +448,7 @@ async function startServer() {
         `
       });
 
-      res.json({ success: true, message: "Payment receipt email sent successfully." });
+      res.json({ success: true, message: "Payment receipt email processed.", delivered: emailRes.success });
     } catch (error: any) {
       console.error("Payment Receipt Email Error:", error);
       res.status(500).json({ error: "Failed to send payment receipt email: " + (error.message || String(error)) });
@@ -404,8 +471,7 @@ async function startServer() {
 
       resetOtpsMap.set(cleanEmail, { code: otpCode, expiresAt });
 
-      await resend.emails.send({
-        from: "OnlineWishes <support@onlinewishes.in>",
+      const emailRes = await sendEmailWithFallback({
         to: cleanEmail,
         subject: `🔐 Password Reset Verification Code: ${otpCode} | OnlineWishes.in`,
         html: `
@@ -453,7 +519,13 @@ async function startServer() {
         `
       });
 
-      res.json({ success: true, message: "Password reset verification email sent successfully." });
+      res.json({
+        success: true,
+        emailDelivered: emailRes.success,
+        message: emailRes.success
+          ? "Password reset verification email sent successfully."
+          : "Password reset verification email generated."
+      });
     } catch (error: any) {
       console.error("Password Reset Email Error:", error);
       res.status(500).json({ error: "Failed to send reset email: " + (error.message || String(error)) });

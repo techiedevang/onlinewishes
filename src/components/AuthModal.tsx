@@ -806,7 +806,7 @@ export function AuthModal({
                   <form onSubmit={handleVerifyAndSetNewPassword} className="space-y-3.5">
                     <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-xl text-center">
                       <p className="text-xs text-rose-800 dark:text-rose-200 font-medium">
-                        OTP code sent to <strong className="font-bold underline">{email}</strong> from <strong className="font-bold">support@onlinewishes.in</strong>!
+                        OTP security code sent to <strong className="font-bold underline">{email}</strong>! Please check your inbox / spam folder.
                       </p>
                     </div>
 

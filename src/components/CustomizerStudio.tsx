@@ -320,6 +320,25 @@ export function CustomizerStudio({
 
   // ... 
 
+
+  // Abandoned Draft Email Trigger
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Only send if logged in, hasn't paid, and has done some customization
+      if (currentUser && currentUser.email && customization.paymentStatus !== 'completed') {
+        const payload = JSON.stringify({ 
+          email: currentUser.email, 
+          name: currentUser.name, 
+          templateName: TEMPLATES.find(t => t.id === customization.bgTheme)?.title || 'Memory Scrapbook'
+        });
+        const blob = new Blob([payload], { type: 'application/json' });
+        navigator.sendBeacon('/api/send-draft-reminder', blob);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [currentUser, customization.paymentStatus, customization.bgTheme]);
+
   // Save customization to Cloud Firestore Database
   const handleSaveToCloudDatabase = async () => {
     setIsSavingCloud(true);

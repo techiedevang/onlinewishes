@@ -141,7 +141,7 @@ export const TEMPLATES: Template[] = [
     badge: '🥹 Soft & Heartfelt',
     rating: 4.99,
     reviewsCount: 530,
-    thumbnail: '/thumbnails/sorry-apology-real.svg',
+    thumbnail: '/thumbnails/sorry-apology-v2.svg',
     features: ['Custom Recipient Selector (Bestie/GF/Friend)', 'Interactive Forgiveness Meter (0-100%)', 'Playful Evasive Forgive Button', 'Origami Reasons Envelopes', 'Promises I Make Checklist', 'Soothing Background Music'],
     themeColor: 'from-rose-400 to-pink-500',
     interactivePreviewType: 'sorry_apology',

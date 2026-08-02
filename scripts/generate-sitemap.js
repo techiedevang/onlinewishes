@@ -104,7 +104,7 @@ async function run() {
     ).join('\n')}\n</sitemapindex>`;
 
     fs.writeFileSync(path.join(publicDir, 'sitemap-index.xml'), sitemapIndexXml, 'utf8');
-    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapIndexXml, 'utf8');
+    fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), consolidatedSitemapXml, 'utf8');
 
     const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nSitemap: ${SITE_URL}/sitemap-index.xml\nSitemap: ${SITE_URL}/sitemap-flat.xml`;
     fs.writeFileSync(path.join(publicDir, 'robots.txt'), robotsTxt, 'utf8');

@@ -353,6 +353,18 @@ export function AuthModal({
         displayName: trimmedName,
       });
 
+      
+      // Send welcome email
+      try {
+        await fetch('/api/send-welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
+        });
+      } catch (e) {
+        console.error('Failed to send welcome email', e);
+      }
+
       const newUser: User = {
         id: user.uid,
         name: trimmedName,

@@ -10,7 +10,7 @@
       <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.6"/>
     </filter>
   </defs>
-  <image href="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&amp;q=80" width="800" height="800" preserveAspectRatio="xMidYMid slice" />
+  <image href="/thumbnails/sorry-bg.jpg" width="800" height="800" preserveAspectRatio="xMidYMid slice" />
   <rect width="800" height="800" fill="url(#grad_overlay)" />
   
   <text x="50%" y="15%" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="70" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" letter-spacing="4" filter="url(#shadow)">I AM SORRY 😔</text>

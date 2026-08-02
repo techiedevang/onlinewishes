@@ -155,6 +155,82 @@ async function deleteOtpFromFirestore(adminEmail: string) {
   }
 }
 
+// User Password Reset OTP Firestore Persistence Helpers
+const resetOtpsMap = new Map<string, { code: string; expiresAt: number }>();
+
+async function saveUserResetOtpToFirestore(email: string, otpCode: string, expiresAt: number) {
+  resetOtpsMap.set(email, { code: otpCode, expiresAt });
+
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) return;
+
+    const docId = encodeURIComponent(email);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}&updateMask.fieldPaths=code&updateMask.fieldPaths=expiresAt`;
+    const body = {
+      fields: {
+        code: { stringValue: otpCode },
+        expiresAt: { stringValue: String(expiresAt) }
+      }
+    };
+
+    await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  } catch (err) {
+    console.warn("Firestore save user reset OTP error:", err);
+  }
+}
+
+async function getUserResetOtpFromFirestore(email: string) {
+  const memoryData = resetOtpsMap.get(email);
+  if (memoryData && Date.now() <= memoryData.expiresAt) {
+    return memoryData;
+  }
+
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) return memoryData || null;
+
+    const docId = encodeURIComponent(email);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}`;
+
+    const response = await fetch(url);
+    if (!response.ok) return memoryData || null;
+
+    const data: any = await response.json();
+    const code = data.fields?.code?.stringValue;
+    const expiresAt = Number(data.fields?.expiresAt?.stringValue || "0");
+
+    if (code && expiresAt) {
+      resetOtpsMap.set(email, { code, expiresAt });
+      return { code, expiresAt };
+    }
+  } catch (err) {
+    console.warn("Firestore read user reset OTP error:", err);
+  }
+
+  return memoryData || null;
+}
+
+async function deleteUserResetOtpFromFirestore(email: string) {
+  resetOtpsMap.delete(email);
+
+  try {
+    const { projectId, dbId, apiKey } = getFirestoreConfig();
+    if (!apiKey) return;
+
+    const docId = encodeURIComponent(email);
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${dbId}/documents/user_reset_otps/${docId}?key=${apiKey}`;
+
+    await fetch(url, { method: 'DELETE' });
+  } catch (err) {
+    console.warn("Firestore delete user reset OTP error:", err);
+  }
+}
+
 function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT) || 587;
@@ -456,8 +532,6 @@ async function startServer() {
   });
 
   // Password Reset Email API via support@onlinewishes.in
-  const resetOtpsMap = new Map<string, { code: string; expiresAt: number }>();
-
   app.post("/api/send-reset-password", async (req, res) => {
     try {
       const { email } = req.body;
@@ -469,7 +543,8 @@ async function startServer() {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
 
-      resetOtpsMap.set(cleanEmail, { code: otpCode, expiresAt });
+      // Save to Firestore and memory
+      await saveUserResetOtpToFirestore(cleanEmail, otpCode, expiresAt);
 
       const emailRes = await sendEmailWithFallback({
         to: cleanEmail,
@@ -519,12 +594,15 @@ async function startServer() {
         `
       });
 
+      if (!emailRes.success) {
+        console.warn(`[Password Reset Delivery Error] Failed to deliver OTP to ${cleanEmail}: ${emailRes.error}`);
+        return res.status(500).json({ error: "Failed to send reset email: " + (emailRes.error || "Delivery failed. Check email address or server configuration.") });
+      }
+
       res.json({
         success: true,
-        emailDelivered: emailRes.success,
-        message: emailRes.success
-          ? "Password reset verification email sent successfully."
-          : "Password reset verification email generated."
+        emailDelivered: true,
+        message: "Password reset verification email sent successfully to " + cleanEmail
       });
     } catch (error: any) {
       console.error("Password Reset Email Error:", error);
@@ -540,14 +618,14 @@ async function startServer() {
       }
 
       const cleanEmail = email.trim().toLowerCase();
-      const record = resetOtpsMap.get(cleanEmail);
+      const record = await getUserResetOtpFromFirestore(cleanEmail);
 
       if (!record) {
         return res.status(400).json({ error: "No reset request found for this email or code expired. Please request a new code." });
       }
 
       if (Date.now() > record.expiresAt) {
-        resetOtpsMap.delete(cleanEmail);
+        await deleteUserResetOtpFromFirestore(cleanEmail);
         return res.status(400).json({ error: "The verification code has expired. Please request a new code." });
       }
 
@@ -560,7 +638,7 @@ async function startServer() {
       }
 
       // Valid OTP
-      resetOtpsMap.delete(cleanEmail);
+      await deleteUserResetOtpFromFirestore(cleanEmail);
       res.json({ success: true, message: "Password reset and updated successfully!" });
     } catch (error: any) {
       console.error("Verify Reset Error:", error);

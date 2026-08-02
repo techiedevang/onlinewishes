@@ -555,7 +555,7 @@ export function AuthModal({
     setResetSuccess(false);
 
     try {
-      // Send real email from support@onlinewishes.in via server API
+      // Send OTP verification email from support@onlinewishes.in via server API
       const res = await fetch('/api/send-reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -563,25 +563,15 @@ export function AuthModal({
       });
       const data = await res.json();
 
-      // Trigger Firebase client reset email in parallel as secondary option
-      sendPasswordResetEmail(auth, trimmedEmail).catch((fErr) => {
-        console.warn('Firebase client password reset notice:', fErr);
-      });
-
       if (res.ok && data.success) {
         setResetStep('verify');
         setResetSuccess(true);
-      } else if (data.error) {
-        setError(data.error);
       } else {
-        setResetStep('verify');
-        setResetSuccess(true);
+        setError(data.error || 'Failed to send OTP verification email. Please check your email address and try again.');
       }
     } catch (err: any) {
       console.error('Password reset error:', err);
-      // Even on client error, show step 2 so user can enter OTP
-      setResetStep('verify');
-      setResetSuccess(true);
+      setError('Failed to connect to email server. Please check your network and try again.');
     } finally {
       setLoading(false);
     }

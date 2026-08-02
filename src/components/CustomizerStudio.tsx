@@ -274,21 +274,24 @@ export function CustomizerStudio({
         console.warn('Razorpay keys not configured. Simulating successful mock payment.');
         alert('Notice: Razorpay API keys are not configured on the server. Simulating a successful mock payment for testing.');
         const mockPayId = `pay_mock_${Date.now()}`;
+        const finalId = await handleSaveToCloudDatabase();
+        const publishedWebsiteUrl = `https://onlinewishes.in/p/${finalId || customization.subdomain || 'bestie-surprise'}`;
+
         try {
           await recordPaymentInCloud(
             order.id, 
             mockPayId, 
             payablePrice, 
             `Premium License for ${customization.recipientName || 'Bestie'}'s Surprise Page`,
-            currentUser
+            currentUser,
+            publishedWebsiteUrl
           );
         } catch (payErr) {
           console.error("Failed to write mock payment record to cloud:", payErr);
         }
-        setTimeout(async () => {
+        setTimeout(() => {
           setIsProcessingPayment(false);
           setShowPaymentModal(false);
-          const finalId = await handleSaveToCloudDatabase();
           onPublish(finalId);
         }, 1500);
         return;
@@ -308,20 +311,24 @@ export function CustomizerStudio({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(response)
           });
+
+          const finalId = await handleSaveToCloudDatabase();
+          const publishedWebsiteUrl = `https://onlinewishes.in/p/${finalId || customization.subdomain || 'bestie-surprise'}`;
+
           try {
             await recordPaymentInCloud(
               order.id, 
               response.razorpay_payment_id || `pay_${Date.now()}`, 
               payablePrice, 
               `Premium License for ${customization.recipientName || 'Bestie'}'s Surprise Page`,
-              currentUser
+              currentUser,
+              publishedWebsiteUrl
             );
           } catch (payErr) {
             console.error("Failed to write payment record to cloud:", payErr);
           }
           setIsProcessingPayment(false);
           setShowPaymentModal(false);
-          const finalId = await handleSaveToCloudDatabase();
           onPublish(finalId);
         },
         prefill: {
@@ -333,6 +340,7 @@ export function CustomizerStudio({
         modal: {
           ondismiss: function() {
             setIsProcessingPayment(false);
+            triggerAbandonedReminder('payment_dismissed');
           }
         }
       };
@@ -367,15 +375,36 @@ export function CustomizerStudio({
   // ... 
 
 
-  // Abandoned Draft Email Trigger
+  // Trigger abandoned customization reminder email
+  const triggerAbandonedReminder = async (reason?: string) => {
+    if (currentUser && currentUser.email && (customization as any).paymentStatus !== 'completed') {
+      try {
+        await fetch('/api/send-draft-reminder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: currentUser.email,
+            name: currentUser.name || (currentUser as any).displayName || 'Valued Creator',
+            templateName: TEMPLATES.find(t => t.id === customization.bgTheme)?.title || 'Memory Website',
+            websiteUrl: typeof window !== 'undefined' ? window.location.origin : 'https://onlinewishes.in'
+          })
+        });
+      } catch (e) {
+        console.warn('Failed to send draft reminder email:', e);
+      }
+    }
+  };
+
+  // Abandoned Draft Email Trigger on unload
   useEffect(() => {
     const handleBeforeUnload = () => {
       // Only send if logged in, hasn't paid, and has done some customization
       if (currentUser && currentUser.email && (customization as any).paymentStatus !== 'completed') {
         const payload = JSON.stringify({ 
           email: currentUser.email, 
-          name: currentUser.name, 
-          templateName: TEMPLATES.find(t => t.id === customization.bgTheme)?.title || 'Memory Scrapbook'
+          name: currentUser.name || (currentUser as any).displayName || 'Valued Creator', 
+          templateName: TEMPLATES.find(t => t.id === customization.bgTheme)?.title || 'Memory Scrapbook',
+          websiteUrl: typeof window !== 'undefined' ? window.location.origin : 'https://onlinewishes.in'
         });
         const blob = new Blob([payload], { type: 'application/json' });
         navigator.sendBeacon('/api/send-draft-reminder', blob);
@@ -3461,7 +3490,14 @@ export function CustomizerStudio({
               </div>
               <span className="text-white font-bold text-sm tracking-wide">Razorpay Checkout</span>
             </div>
-            <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-white" disabled={isProcessingPayment}>
+            <button 
+              onClick={() => {
+                setShowPaymentModal(false);
+                triggerAbandonedReminder('payment_cancelled');
+              }} 
+              className="text-slate-400 hover:text-white" 
+              disabled={isProcessingPayment}
+            >
               <X className="w-5 h-5" />
             </button>
           </div>

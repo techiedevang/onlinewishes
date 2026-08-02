@@ -114,7 +114,7 @@ export default async function handler(req, res) {
     let deliveryError = null;
 
     // Resend attempt
-    const resendApiKey = process.env.RESEND_API_KEY || "re_bA1Ksk9b_K883yvR9JThgM7CqvhKq5K9T";
+    const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
       try {
         const resend = new Resend(resendApiKey);

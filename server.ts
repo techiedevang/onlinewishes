@@ -750,7 +750,7 @@ async function startServer() {
       await deleteUserResetOtpFromFirestore(cleanEmail);
 
       // Send Password Change Confirmation Email
-      sendPasswordChangeConfirmationEmail(cleanEmail).catch(e => console.warn("Confirmation email notice:", e));
+      await sendPasswordChangeConfirmationEmail(cleanEmail).catch(e => console.warn("Confirmation email notice:", e));
 
       res.json({ success: true, message: "Password updated successfully!" });
     } catch (error: any) {

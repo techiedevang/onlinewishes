@@ -137,12 +137,14 @@ export async function recordPaymentInCloud(
   paymentId: string,
   amount: number,
   templateTitle: string,
-  explicitUser?: { id: string, email: string, name: string } | null
+  explicitUser?: { id: string, email: string, name: string } | null,
+  websiteUrl?: string
 ): Promise<void> {
   const path = `payments/${paymentId}`;
   const currentUser = auth.currentUser;
   const userEmail = explicitUser?.email || currentUser?.email || 'guest@onlinewishes.in';
   const userName = explicitUser?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Guest User';
+  const customSiteUrl = websiteUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://onlinewishes.in');
 
   const payload = {
     id: paymentId,
@@ -152,6 +154,7 @@ export async function recordPaymentInCloud(
     amount: amount,
     currency: 'INR',
     templateTitle: templateTitle,
+    websiteUrl: customSiteUrl,
     paymentGateway: 'Razorpay UPI',
     status: 'SUCCESS',
     createdAt: new Date().toISOString(),
@@ -175,7 +178,7 @@ export async function recordPaymentInCloud(
         orderId: orderId,
         amount: amount,
         templateTitle: templateTitle,
-        websiteUrl: typeof window !== 'undefined' ? window.location.origin : 'https://onlinewishes.in'
+        websiteUrl: customSiteUrl
       })
     });
   } catch (emailErr) {

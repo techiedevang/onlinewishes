@@ -448,6 +448,18 @@ export function AuthModal({
         };
         saveLocalUser({ ...newUser, password });
         await saveUserToFirestore(newUser);
+
+        // Send welcome email for fallback sign up
+        try {
+          await fetch('/api/send-welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
+          });
+        } catch (e) {
+          console.error('Failed to send welcome email', e);
+        }
+
         onLogin(newUser, true, true);
         onClose();
         return;
@@ -493,6 +505,19 @@ export function AuthModal({
       };
       const isNewUser = getAdditionalUserInfo(res)?.isNewUser ?? false;
       await saveUserToFirestore(gUser);
+
+      if (isNewUser && realEmail) {
+        try {
+          await fetch('/api/send-welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: realEmail, name: realName })
+          });
+        } catch (e) {
+          console.error('Failed to send welcome email on Google sign in', e);
+        }
+      }
+
       onLogin(gUser, true, isNewUser);
       onClose();
     } catch (err: any) {

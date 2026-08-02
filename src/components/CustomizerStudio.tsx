@@ -733,6 +733,44 @@ export function CustomizerStudio({
     setDraggedIndex(null);
   };
 
+  if (!currentUser) {
+    return (
+      <div id="customizer" className="py-16 md:py-24 bg-white dark:bg-slate-900 transition-colors">
+        <div className="max-w-md mx-auto px-4 text-center">
+          <div className="p-8 bg-gradient-to-b from-rose-50/80 via-white to-pink-50/50 dark:from-slate-800/90 dark:via-slate-900 dark:to-slate-900 rounded-3xl border-2 border-rose-200 dark:border-rose-900/60 shadow-2xl space-y-6">
+            <div className="w-16 h-16 bg-gradient-to-tr from-rose-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg shadow-rose-500/30">
+              <Lock className="w-8 h-8" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Sign In Required to Customize
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Please sign in or create a free account to customize templates, add photos, write messages, and build your digital surprise websites.
+              </p>
+            </div>
+
+            <div className="pt-2 space-y-3">
+              <button
+                onClick={() => onOpenAuth && onOpenAuth('signin')}
+                className="w-full py-3.5 px-6 bg-gradient-to-r from-pink-500 via-rose-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold text-sm rounded-2xl shadow-xl shadow-rose-500/25 transition-all hover:scale-[1.02] flex items-center justify-center space-x-2 cursor-pointer"
+              >
+                <LogIn className="w-5 h-5" />
+                <span>Sign In / Create Account</span>
+              </button>
+            </div>
+
+            <div className="pt-4 border-t border-rose-100 dark:border-slate-800 flex items-center justify-center space-x-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <Shield className="w-4 h-4 text-emerald-500" />
+              <span>100% Free Account • Instant Studio Access</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="customizer" className="py-12 md:py-16 bg-white dark:bg-slate-900 transition-colors">
       <div className="w-full px-4 sm:px-8 lg:px-12 space-y-8">

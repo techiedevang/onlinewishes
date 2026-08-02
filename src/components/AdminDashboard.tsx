@@ -303,11 +303,12 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
           });
         }, 1000);
       } else {
-        setLoginError(data.error || 'Failed to send OTP code.');
+        setLoginError(data?.error || 'Failed to send OTP code.');
       }
     } catch (err: any) {
       console.error("Client OTP error:", err);
-      setLoginError('Failed to send verification code. Please check server logs and try again.');
+      const msg = err?.message || err?.toString() || '';
+      setLoginError(msg ? `Error: ${msg}` : 'Failed to send verification code. Please check your network connection and try again.');
     } finally {
       setIsSendingOtp(false);
     }

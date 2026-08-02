@@ -71,6 +71,10 @@ export function Header({
                 href={item.id === 'home' ? '/' : `/${item.id}`}
                 onClick={(e) => {
                   e.preventDefault();
+                  if (item.id === 'customizer' && !currentUser) {
+                    onOpenAuth();
+                    return;
+                  }
                   setActiveTab(item.id);
                 }}
                 className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
@@ -210,6 +214,11 @@ export function Header({
                 href={item.id === 'home' ? '/' : `/${item.id}`}
                 onClick={(e) => {
                   e.preventDefault();
+                  if (item.id === 'customizer' && !currentUser) {
+                    onOpenAuth();
+                    setMobileMenuOpen(false);
+                    return;
+                  }
                   setActiveTab(item.id);
                   setMobileMenuOpen(false);
                 }}

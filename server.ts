@@ -376,14 +376,11 @@ function getTransporter() {
 }
 
 export const app = express();
+app.use(express.json());
 
-async function startServer() {
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const PORT = 3000;
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-  app.use(express.json());
-
-  // Helper for multi-provider email dispatch
+// Helper for multi-provider email dispatch
   async function sendEmailWithFallback({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
     let lastError: string | null = null;
 
@@ -1578,6 +1575,9 @@ async function startServer() {
       return next();
     }
   });
+
+async function startServer() {
+  const PORT = 3000;
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

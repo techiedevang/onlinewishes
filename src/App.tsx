@@ -358,6 +358,10 @@ A story forever to be told.`,
   useDynamicSEO(currentPath, activeTab, customization);
 
   const handleSelectTemplateToBuild = (template: Template) => {
+    if (!currentUser) {
+      handleOpenAuth('signin');
+      return;
+    }
     if (window.location.pathname !== `/${template.id}/customize`) {
       window.history.pushState(null, '', `/${template.id}/customize`);
     }
@@ -410,6 +414,11 @@ A story forever to be told.`,
         const foundTemplate = TEMPLATES.find(t => t.id === possibleTemplateId);
         if (foundTemplate) {
           if (isCustomize) {
+            if (!currentUser) {
+              handleOpenAuth('signin');
+              setActiveTab('templates');
+              return;
+            }
             // Only set the tab and ensure we have the right template selected
             setActiveTab('customizer');
             if (customization.bgTheme !== foundTemplate.id) {
@@ -457,6 +466,10 @@ A story forever to be told.`,
 
 
   const handleApplyAiBlueprint = (blueprint: CustomAiBlueprint, customData: UserCustomization) => {
+    if (!currentUser) {
+      handleOpenAuth('signin');
+      return;
+    }
     setCustomization(customData);
     setActiveTab('customizer');
     const elem = document.getElementById('customizer');
@@ -697,7 +710,13 @@ A story forever to be told.`,
                     setActiveTab('templates');
                     document.getElementById('templates')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  onOpenCustomizer={() => setActiveTab('customizer')}
+                  onOpenCustomizer={() => {
+                    if (!currentUser) {
+                      handleOpenAuth('signin');
+                    } else {
+                      setActiveTab('customizer');
+                    }
+                  }}
                   onTrySamplePreview={() => setPreviewTemplate(TEMPLATES[0])}
                 />
               </AnimatedSection>
@@ -831,6 +850,11 @@ A story forever to be told.`,
               }
             }}
             onCustomizeThis={() => {
+              if (!currentUser) {
+                setPreviewTemplate(null);
+                handleOpenAuth('signin');
+                return;
+              }
               let sound = 'rainy_cafe';
               if (previewTemplate.id === 'romantic-love-story') sound = 'romantic_piano';
               else if (previewTemplate.id === 'celestial-galaxy') sound = 'stargazing_night';

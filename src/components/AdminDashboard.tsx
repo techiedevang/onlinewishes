@@ -285,7 +285,15 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminEmail: adminEmail.trim() }),
       });
-      const data = await res.json();
+      
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        console.error("Non-JSON server response:", responseText);
+        throw new Error("Server communication error. Please try again in a moment.");
+      }
 
       if (res.ok && data.success) {
         setOtpSent(true);
@@ -308,7 +316,7 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
     } catch (err: any) {
       console.error("Client OTP error:", err);
       const msg = err?.message || err?.toString() || '';
-      setLoginError(msg ? `Error: ${msg}` : 'Failed to send verification code. Please check your network connection and try again.');
+      setLoginError(msg ? msg : 'Failed to send verification code. Please check your network connection and try again.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -324,7 +332,15 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminEmail: adminEmail.trim(), otp: userOtp.trim() }),
       });
-      const data = await res.json();
+      
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        console.error("Non-JSON server response:", responseText);
+        throw new Error("Server communication error. Please try again.");
+      }
 
       if (res.ok && data.success) {
         const adminUser: User = {

@@ -377,10 +377,9 @@ async function updateUserPasswordInFirebaseAuth(email: string, newPassword: stri
 
 function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  // Vercel serverless blocks port 587 often, so default to 465 (SMTPS) which is usually allowed.
   const port = Number(process.env.SMTP_PORT) || 465;
   const user = process.env.SMTP_USER || "codelearnpoint@gmail.com";
-  const pass = process.env.SMTP_PASS;
+  const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
 
   if (pass) {
     return nodemailer.createTransport({
@@ -388,9 +387,9 @@ function getTransporter() {
       port,
       secure: port === 465,
       auth: { user, pass },
-      connectionTimeout: 4000,
-      greetingTimeout: 4000,
-      socketTimeout: 4000,
+      connectionTimeout: 6000,
+      greetingTimeout: 6000,
+      socketTimeout: 6000,
     });
   }
   return null;
@@ -427,75 +426,80 @@ function getResendClient() {
   async function _sendEmailWithFallbackCore({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
     let errors: string[] = [];
     
-    // Attempt 1: Direct Nodemailer SMTP using configured App Password & settings
-    const transporter = getTransporter();
-    if (transporter) {
-      const smtpUser = process.env.SMTP_USER || "codelearnpoint@gmail.com";
-      try {
-        await transporter.sendMail({
-          from: `"OnlineWishes" <${smtpUser}>`,
-          to,
-          subject,
-          html,
-          text: text || "OnlineWishes Notification",
-        });
-        console.log(`[Email Success - Nodemailer SMTP] Sent to ${to}`);
-        return { success: true, provider: 'nodemailer' };
-      } catch (smtpErr: any) {
-        const msg = smtpErr?.message || String(smtpErr);
-        errors.push(`Nodemailer SMTP Error: ${msg}`);
-        console.warn("[Nodemailer SMTP error]:", msg);
-      }
-    }
-
-    // Attempt 2: Resend API fallback (if configured)
-    const resendClient = getResendClient();
-
-    if (resendClient) {
-      const customSender = process.env.RESEND_FROM_EMAIL || "OnlineWishes <support@onlinewishes.in>";
-      try {
-        const res = await resendClient.emails.send({
-          from: customSender,
-          to,
-          subject,
-          html,
-        });
-        if (res.data && !res.error) {
-          console.log(`[Email Success - ${customSender}] Sent to ${to}`);
-          return { success: true, provider: 'resend-custom' };
+    try {
+      // Attempt 1: Direct Nodemailer SMTP using configured App Password & settings
+      const transporter = getTransporter();
+      if (transporter) {
+        const smtpUser = process.env.SMTP_USER || "codelearnpoint@gmail.com";
+        try {
+          await transporter.sendMail({
+            from: `"OnlineWishes" <${smtpUser}>`,
+            to,
+            subject,
+            html,
+            text: text || "OnlineWishes Notification",
+          });
+          console.log(`[Email Success - Nodemailer SMTP] Sent to ${to}`);
+          return { success: true, provider: 'nodemailer' };
+        } catch (smtpErr: any) {
+          const msg = smtpErr?.message || String(smtpErr);
+          errors.push(`Nodemailer SMTP Error: ${msg}`);
+          console.warn("[Nodemailer SMTP error]:", msg);
         }
-        if (res.error) {
-          const msg = res.error.message || JSON.stringify(res.error);
-          errors.push(`Resend Custom Domain Error: ${msg}`);
-          console.warn(`[Resend custom domain note - ${customSender}]:`, res.error);
-        }
-      } catch (err: any) {
-        const msg = err?.message || String(err);
-        errors.push(`Resend Custom Domain Exception: ${msg}`);
-        console.warn(`[Resend custom domain error - ${customSender}]:`, msg);
       }
 
-      try {
-        const res = await resendClient.emails.send({
-          from: "OnlineWishes <onboarding@resend.dev>",
-          to,
-          subject,
-          html,
-        });
-        if (res.data && !res.error) {
-          console.log(`[Email Success - onboarding@resend.dev] Sent to ${to}`);
-          return { success: true, provider: 'resend-dev' };
+      // Attempt 2: Resend API fallback (if configured)
+      const resendClient = getResendClient();
+
+      if (resendClient) {
+        const customSender = process.env.RESEND_FROM_EMAIL || "OnlineWishes <support@onlinewishes.in>";
+        try {
+          const res = await resendClient.emails.send({
+            from: customSender,
+            to,
+            subject,
+            html,
+          });
+          if (res.data && !res.error) {
+            console.log(`[Email Success - ${customSender}] Sent to ${to}`);
+            return { success: true, provider: 'resend-custom' };
+          }
+          if (res.error) {
+            const msg = res.error.message || JSON.stringify(res.error);
+            errors.push(`Resend Custom Domain Error: ${msg}`);
+            console.warn(`[Resend custom domain note - ${customSender}]:`, res.error);
+          }
+        } catch (err: any) {
+          const msg = err?.message || String(err);
+          errors.push(`Resend Custom Domain Exception: ${msg}`);
+          console.warn(`[Resend custom domain error - ${customSender}]:`, msg);
         }
-        if (res.error) {
-          const msg = res.error.message || JSON.stringify(res.error);
-          errors.push(`Resend Onboarding Error: ${msg}`);
-          console.warn("[Resend dev note]:", res.error);
+
+        try {
+          const res = await resendClient.emails.send({
+            from: "OnlineWishes <onboarding@resend.dev>",
+            to,
+            subject,
+            html,
+          });
+          if (res.data && !res.error) {
+            console.log(`[Email Success - onboarding@resend.dev] Sent to ${to}`);
+            return { success: true, provider: 'resend-dev' };
+          }
+          if (res.error) {
+            const msg = res.error.message || JSON.stringify(res.error);
+            errors.push(`Resend Onboarding Error: ${msg}`);
+            console.warn("[Resend dev note]:", res.error);
+          }
+        } catch (err: any) {
+          const msg = err?.message || String(err);
+          errors.push(`Resend Onboarding Exception: ${msg}`);
+          console.warn("[Resend dev error]:", msg);
         }
-      } catch (err: any) {
-        const msg = err?.message || String(err);
-        errors.push(`Resend Onboarding Exception: ${msg}`);
-        console.warn("[Resend dev error]:", msg);
       }
+    } catch (topLevelErr: any) {
+      console.error("Email dispatch top level exception:", topLevelErr);
+      errors.push(topLevelErr?.message || String(topLevelErr));
     }
 
     const finalError = errors.length > 0 ? errors.join(" | ") : "Email delivery failed. Please check SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS environment variables.";

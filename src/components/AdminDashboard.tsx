@@ -267,23 +267,26 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
 
   const [emailStatusMessage, setEmailStatusMessage] = useState<string | null>(null);
 
-  // OTP Handlers connecting to real Nodemailer backend
-  const handleSendOtp = async (e: React.FormEvent) => {
+  // Admin Login Handler - supports direct Admin Password or OTP
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
     setEmailStatusMessage(null);
 
-    if (adminEmail.trim().toLowerCase() !== 'admin@onlinewishes.in') {
-      setLoginError('Unauthorized Admin Email! Only admin@onlinewishes.in has master admin rights.');
+    const emailToUse = adminEmail.trim().toLowerCase() || 'admin@onlinewishes.in';
+    const passOrOtp = userOtp.trim();
+
+    if (!passOrOtp) {
+      setLoginError('Please enter your Admin Password or OTP security code.');
       return;
     }
 
     setIsSendingOtp(true);
     try {
-      const res = await fetch('/api/admin/send-otp', {
+      const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminEmail: adminEmail.trim() }),
+        body: JSON.stringify({ adminEmail: emailToUse, password: passOrOtp, otp: passOrOtp }),
       });
       
       const responseText = await res.text();
@@ -292,63 +295,14 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         data = JSON.parse(responseText);
       } catch {
         console.error("Non-JSON server response:", responseText);
-        const cleanText = responseText.replace(/<[^>]*>/g, '').trim();
-        throw new Error(cleanText ? `Server response: ${cleanText.slice(0, 120)}` : "Server communication error. Please try again in a moment.");
-      }
-
-      if (res.ok && data.success) {
-        setOtpSent(true);
-        setIsWaitingForOtp(true);
-        setEmailStatusMessage(data.message || 'Verification code sent to your Gmail inbox. Please check your email.');
-        setOtpCountdown(60);
-
-        const interval = setInterval(() => {
-          setOtpCountdown((prev) => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      } else {
-        setLoginError(data?.error || 'Failed to send OTP code.');
-      }
-    } catch (err: any) {
-      console.error("Client OTP error:", err);
-      const msg = err?.message || err?.toString() || '';
-      setLoginError(msg ? msg : 'Failed to send verification code. Please check your network connection and try again.');
-    } finally {
-      setIsSendingOtp(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError(null);
-
-    try {
-      const res = await fetch('/api/admin/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminEmail: adminEmail.trim(), otp: userOtp.trim() }),
-      });
-      
-      const responseText = await res.text();
-      let data: any = {};
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        console.error("Non-JSON server response:", responseText);
-        const cleanText = responseText.replace(/<[^>]*>/g, '').trim();
-        throw new Error(cleanText ? `Server response: ${cleanText.slice(0, 120)}` : "Server communication error. Please try again.");
+        throw new Error("Server communication error. Please try again.");
       }
 
       if (res.ok && data.success) {
         const adminUser: User = {
           id: 'admin-master-id',
           name: 'Master Admin',
-          email: adminEmail.trim(),
+          email: emailToUse,
           role: 'admin',
           mfaEnabled: true,
         };
@@ -358,18 +312,48 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         }
         const newLog: SecurityLog = {
           id: Date.now().toString(),
-          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-          event: 'Admin Mail OTP Verified',
-          severity: 'low',
-          ipAddress: '127.0.0.1',
-          userEmail: adminEmail.trim(),
+          timestamp: new Date().toISOString(),
+          ip: '127.0.0.1',
+          action: 'Admin Console Authenticated',
+          status: 'success',
+          details: `Admin ${emailToUse} logged in successfully`,
         };
         setLogs((prev) => [newLog, ...prev]);
       } else {
-        setLoginError(data.error || 'Invalid 6-Digit OTP. Please check your verification code.');
+        setLoginError(data?.error || 'Invalid Admin Password or OTP. Please check your password and try again.');
       }
-    } catch (err) {
-      setLoginError('Error verifying OTP code. Please try again.');
+    } catch (err: any) {
+      console.error("Client Admin Login error:", err);
+      setLoginError(err?.message || 'Failed to authenticate. Please try again.');
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleSendOtpOnly = async () => {
+    setLoginError(null);
+    setEmailStatusMessage(null);
+
+    const emailToUse = adminEmail.trim().toLowerCase() || 'admin@onlinewishes.in';
+    setIsSendingOtp(true);
+    try {
+      const res = await fetch('/api/admin/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminEmail: emailToUse }),
+      });
+      
+      const data = await res.json().catch(() => ({}));
+
+      if (data.message) {
+        setEmailStatusMessage(data.message);
+      } else {
+        setEmailStatusMessage('OTP code generated! Enter it below or use your Admin Password.');
+      }
+    } catch (err: any) {
+      setEmailStatusMessage('OTP process ready. Enter your Admin Password below to log in directly.');
+    } finally {
+      setIsSendingOtp(false);
     }
   };
 
@@ -602,7 +586,13 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
                 </div>
               )}
 
-              <div className="space-y-4">
+              {emailStatusMessage && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold text-center">
+                  {emailStatusMessage}
+                </div>
+              )}
+
+              <form onSubmit={handleAdminLogin} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-400 px-1">Master Admin Email</label>
                   <input
@@ -614,38 +604,45 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
                   />
                 </div>
                 
-                {isWaitingForOtp ? (
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 px-1">6-Digit Verification Code</label>
-                    <div className="relative">
-                      <Key className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
-                      <input
-                        type="text"
-                        value={userOtp}
-                        onChange={(e) => setUserOtp(e.target.value)}
-                        placeholder="Enter OTP..."
-                        maxLength={6}
-                        className="w-full pl-9 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono tracking-widest focus:outline-none focus:border-amber-500 transition-colors"
-                      />
-                    </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 px-1 flex justify-between">
+                    <span>Admin Password or OTP</span>
+                    <button
+                      type="button"
+                      onClick={handleSendOtpOnly}
+                      disabled={isSendingOtp}
+                      className="text-amber-400 hover:underline hover:text-amber-300 font-normal"
+                    >
+                      {isSendingOtp ? 'Sending...' : 'Send OTP Email'}
+                    </button>
+                  </label>
+                  <div className="relative">
+                    <Key className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                    <input
+                      type="password"
+                      value={userOtp}
+                      onChange={(e) => setUserOtp(e.target.value)}
+                      placeholder="Enter Admin Password or 6-digit OTP..."
+                      className="w-full pl-9 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500 transition-colors"
+                    />
                   </div>
-                ) : null}
+                </div>
 
                 <button
-                  onClick={isWaitingForOtp ? handleVerifyOtp : handleSendOtp}
+                  type="submit"
                   disabled={isSendingOtp}
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2"
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
                   {isSendingOtp ? (
                     <RefreshCw className="w-5 h-5 animate-spin" />
                   ) : (
                     <>
-                      <span>{isWaitingForOtp ? 'Verify & Login' : 'Send OTP via Email'}</span>
+                      <span>Login to Admin Console</span>
                       <ChevronRight className="w-5 h-5" />
                     </>
                   )}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         ) : (

@@ -12,18 +12,14 @@ import validator from "deep-email-validator";
 // Helper to reliably check DNS MX without relying on node dns which is flaky in Vercel Edge/Serverless
 async function checkDomainMX(domain: string): Promise<boolean> {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(`https://dns.google/resolve?name=${domain}&type=MX`, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (!res.ok) return true; // Fail open
-    const data: any = await res.json();
-    if (data.Status !== 0) return false;
-    if (!data.Answer || data.Answer.length === 0) return false;
-    return true;
-  } catch (err) {
-    console.warn("Google DNS check failed:", err);
-    return true; // Fail open on timeout to not block real users
+    const mxPromise = dns.promises.resolveMx(domain);
+    const timeoutPromise = new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("DNS timeout")), 3000));
+    const mxRecords = await Promise.race([mxPromise, timeoutPromise]);
+    return mxRecords && mxRecords.length > 0;
+  } catch (err: any) {
+    console.warn(`DNS MX check failed for ${domain}:`, err.message);
+    // Be strict: if we can't find MX records, assume it doesn't exist.
+    return false;
   }
 }
 

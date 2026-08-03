@@ -611,7 +611,8 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
                 <h3 className="text-xl font-black text-white">Admin Authentication</h3>
                 <p className="text-sm text-slate-400">Verify your identity to access the cloud console</p>
               </div>
-              
+
+
               {loginError && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold text-center">
                   {loginError}

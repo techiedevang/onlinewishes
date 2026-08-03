@@ -7,6 +7,26 @@ import Razorpay from "razorpay";
 import SpotifyWebApi from "spotify-web-api-node";
 import nodemailer from "nodemailer";
 import { Resend } from "resend";
+import validator from "deep-email-validator";
+
+// Helper to reliably check DNS MX without relying on node dns which is flaky in Vercel Edge/Serverless
+async function checkDomainMX(domain: string): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`https://dns.google/resolve?name=${domain}&type=MX`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) return true; // Fail open
+    const data: any = await res.json();
+    if (data.Status !== 0) return false;
+    if (!data.Answer || data.Answer.length === 0) return false;
+    return true;
+  } catch (err) {
+    console.warn("Google DNS check failed:", err);
+    return true; // Fail open on timeout to not block real users
+  }
+}
+
 
 
 function getFirestoreConfig() {
@@ -390,8 +410,15 @@ function getResendClient() {
   }
 }
 
-// Helper for multi-provider email dispatch
-  async function sendEmailWithFallback({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
+// Helper for multi-provider email dispatch with timeout
+  async function sendEmailWithFallback(params: { to: string; subject: string; html: string; text?: string }) {
+    const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => {
+      setTimeout(() => reject(new Error("Email sending timed out after 7.5s. Please check server connection.")), 7500);
+    });
+    return Promise.race([_sendEmailWithFallbackCore(params), timeoutPromise]);
+  }
+
+  async function _sendEmailWithFallbackCore({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
     let lastError: string | null = null;
     const resendClient = getResendClient();
 
@@ -564,26 +591,36 @@ function getResendClient() {
         });
       }
 
-      // DNS MX check
+      // DNS MX check via reliable fetch
+      const hasMX = await checkDomainMX(domain);
+      if (!hasMX) {
+        return res.status(200).json({
+          valid: false,
+          reason: "mx",
+          error: `The email domain '${domain}' does not exist or has no mail servers.`
+        });
+      }
+
+      // Deep email validator for regex and disposable (no SMTP)
       try {
-        const mxPromise = dns.promises.resolveMx(domain);
-        const timeoutPromise = new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("DNS timeout")), 3000));
-        const mxRecords = await Promise.race([mxPromise, timeoutPromise]);
-        if (!mxRecords || mxRecords.length === 0) {
+        const deepRes = await validator({
+          email,
+          validateRegex: true,
+          validateMx: false, // We just did it ourselves
+          validateTypo: true,
+          validateDisposable: true,
+          validateSMTP: false
+        });
+
+        if (!deepRes.valid) {
           return res.status(200).json({
             valid: false,
-            reason: "mx",
-            error: `The email domain '${domain}' does not exist or has no mail servers.`
+            reason: deepRes.reason || "invalid",
+            error: "This email address failed validation. Please enter a real, active email address."
           });
         }
-      } catch (dnsErr: any) {
-        if (dnsErr.message !== "DNS timeout") {
-          return res.status(200).json({
-            valid: false,
-            reason: "mx",
-            error: `The email domain '${domain}' does not exist or cannot receive emails.`
-          });
-        }
+      } catch (e) {
+        console.warn("Deep validator skip:", e);
       }
 
       res.json({ valid: true });
@@ -606,17 +643,9 @@ function getResendClient() {
       const domain = cleanEmail.split("@")[1];
 
       // Check DNS MX before sending OTP
-      try {
-        const mxPromise = dns.promises.resolveMx(domain);
-        const timeoutPromise = new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("DNS timeout")), 3000));
-        const mxRecords = await Promise.race([mxPromise, timeoutPromise]);
-        if (!mxRecords || mxRecords.length === 0) {
-          return res.status(400).json({ error: `The email domain '${domain}' does not exist or cannot receive emails.` });
-        }
-      } catch (e: any) {
-        if (e.message !== "DNS timeout") {
-          return res.status(400).json({ error: `The email domain '${domain}' does not exist. Please check your email address.` });
-        }
+      const hasMX = await checkDomainMX(domain);
+      if (!hasMX) {
+        return res.status(400).json({ error: `The email domain '${domain}' does not exist or cannot receive emails.` });
       }
 
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();

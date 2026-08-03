@@ -12,14 +12,18 @@ import validator from "deep-email-validator";
 // Helper to reliably check DNS MX without relying on node dns which is flaky in Vercel Edge/Serverless
 async function checkDomainMX(domain: string): Promise<boolean> {
   try {
-    const mxPromise = dns.promises.resolveMx(domain);
-    const timeoutPromise = new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("DNS timeout")), 3000));
-    const mxRecords = await Promise.race([mxPromise, timeoutPromise]);
-    return mxRecords && mxRecords.length > 0;
-  } catch (err: any) {
-    console.warn(`DNS MX check failed for ${domain}:`, err.message);
-    // Be strict: if we can't find MX records, assume it doesn't exist.
-    return false;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`https://dns.google/resolve?name=${domain}&type=MX`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) return true; // Fail open
+    const data: any = await res.json();
+    if (data.Status !== 0) return false;
+    if (!data.Answer || data.Answer.length === 0) return false;
+    return true;
+  } catch (err) {
+    console.warn("Google DNS check failed:", err);
+    return true; // Fail open on timeout to not block real users
   }
 }
 
@@ -408,10 +412,15 @@ function getResendClient() {
 
 // Helper for multi-provider email dispatch with timeout
   async function sendEmailWithFallback(params: { to: string; subject: string; html: string; text?: string }) {
-    const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => {
-      setTimeout(() => reject(new Error("Email sending timed out after 7.5s. Please check server connection.")), 7500);
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<{success: boolean, error?: string}>((resolve) => {
+      timeoutId = setTimeout(() => resolve({ success: false, error: "Email sending timed out after 7.5s. Please check server connection." }), 7500);
     });
-    return Promise.race([_sendEmailWithFallbackCore(params), timeoutPromise]);
+    const corePromise = _sendEmailWithFallbackCore(params);
+    corePromise.catch(() => {}); // prevent unhandled rejection if it fails after timeout
+    const result = await Promise.race([corePromise, timeoutPromise]);
+    clearTimeout(timeoutId!);
+    return result;
   }
 
   async function _sendEmailWithFallbackCore({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
@@ -642,6 +651,26 @@ function getResendClient() {
       const hasMX = await checkDomainMX(domain);
       if (!hasMX) {
         return res.status(400).json({ error: `The email domain '${domain}' does not exist or cannot receive emails.` });
+      }
+
+      // Deep email validator for regex and disposable (no SMTP)
+      try {
+        const deepRes = await validator({
+          email: cleanEmail,
+          validateRegex: true,
+          validateMx: false,
+          validateTypo: true,
+          validateDisposable: true,
+          validateSMTP: false
+        });
+
+        if (!deepRes.valid) {
+          return res.status(400).json({
+            error: "This email address appears to be invalid or disposable. Please enter a real, active email address."
+          });
+        }
+      } catch (e) {
+        console.warn("Deep validator skip:", e);
       }
 
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();

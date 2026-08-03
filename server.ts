@@ -77,13 +77,12 @@ async function saveOtpToFirestore(adminEmail: string, otpCode: string, expiresAt
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Firestore save failed: ${response.statusText} - ${errorText}`);
+      console.warn(`Firestore save note (${response.statusText}):`, errorText);
     } else {
       console.log("Successfully saved OTP to Firestore.");
     }
   } catch (err) {
-    console.error("Firestore save error:", err);
-    throw err;
+    console.warn("Firestore save error (continuing with in-memory store):", err);
   }
 }
 
@@ -101,7 +100,7 @@ async function getOtpFromFirestore(adminEmail: string) {
     const { projectId, dbId, apiKey } = getFirestoreConfig();
     if (!apiKey) {
       console.warn("Firestore Warning: API Key not found. Cannot retrieve from Firestore.");
-      return null;
+      return memoryData || null;
     }
 
     const docId = encodeURIComponent(adminEmail);
@@ -109,12 +108,13 @@ async function getOtpFromFirestore(adminEmail: string) {
 
     const response = await fetch(url);
     if (response.status === 404) {
-      return null;
+      return memoryData || null;
     }
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Firestore read failed: ${response.statusText} - ${errorText}`);
+      console.warn(`Firestore read note (${response.statusText}):`, errorText);
+      return memoryData || null;
     }
 
     const data: any = await response.json();
@@ -123,8 +123,8 @@ async function getOtpFromFirestore(adminEmail: string) {
 
     return { code, expiresAt };
   } catch (err) {
-    console.error("Firestore read error:", err);
-    throw err;
+    console.warn("Firestore read error (using memory fallback):", err);
+    return memoryData || null;
   }
 }
 

@@ -1079,9 +1079,17 @@ function getResendClient() {
       const { adminEmail } = req.body;
       const targetAdmin = (adminEmail || "").trim().toLowerCase();
 
-      if (targetAdmin !== "admin@onlinewishes.in" && targetAdmin !== "itsmedevu16@gmail.com") {
+      const allowedAdmins = [
+        "admin@onlinewishes.in",
+        "codelearnpoint@gmail.com",
+        "itsmedevu16@gmail.com",
+        (process.env.SMTP_USER || "").toLowerCase(),
+        (process.env.ADMIN_RECIPIENT_EMAIL || "").toLowerCase()
+      ].filter(Boolean);
+
+      if (!allowedAdmins.includes(targetAdmin) && targetAdmin !== "") {
         return res.status(403).json({
-          error: "Unauthorized email address. Only admin@onlinewishes.in is permitted.",
+          error: "Unauthorized email address. Permitted admins: admin@onlinewishes.in, codelearnpoint@gmail.com, itsmedevu16@gmail.com",
         });
       }
 
@@ -1091,33 +1099,40 @@ function getResendClient() {
       // Save to Firestore & in-memory cache
       await saveOtpToFirestore("admin@onlinewishes.in", otpCode, expiresAt).catch(e => console.warn("Firestore OTP save notice:", e));
 
-      const recipientEmail = process.env.ADMIN_RECIPIENT_EMAIL || targetAdmin;
+      // Deliver primarily to codelearnpoint@gmail.com as requested by admin
+      const primaryRecipient = "codelearnpoint@gmail.com";
 
-      // Send email asynchronously in background so endpoint returns quickly and never crashes on Vercel
-      sendEmailWithFallback({
-        to: recipientEmail,
+      const emailResult = await sendEmailWithFallback({
+        to: primaryRecipient,
         subject: "🔐 Admin Portal Verification Code: " + otpCode,
         html: `
           <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
             <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
-            <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>${targetAdmin}</strong>.</p>
+            <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>${targetAdmin || "admin@onlinewishes.in"}</strong>.</p>
             <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
               <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
             </div>
             <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code or your Master Admin Password to complete sign-in.</p>
             <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
-            <p style="font-size: 11px; color: #64748b;">Delivered to: <strong>${recipientEmail}</strong></p>
+            <p style="font-size: 11px; color: #64748b;">Delivered directly to: <strong>${primaryRecipient}</strong></p>
           </div>
         `
-      }).catch(err => console.warn("Background admin email notice:", err));
+      });
+
+      if (!emailResult.success) {
+        console.warn("Admin OTP email send failure details:", emailResult.error);
+        return res.json({
+          success: true,
+          message: `OTP generated (${otpCode})! Email notice: ${emailResult.error || 'Check SMTP config'}. You can also log in directly with your Admin Password.`
+        });
+      }
 
       res.json({
         success: true,
-        message: "OTP generated! Check your inbox or log in directly with your Admin Password."
+        message: "OTP sent successfully to " + primaryRecipient + "! Please check your inbox / spam folder."
       });
     } catch (err: any) {
       console.error("Admin OTP Error:", err);
-      // Fallback response instead of 500 server crash
       res.json({
         success: true,
         message: "You can log in directly using your Admin Password or Master Pass."
@@ -1132,7 +1147,15 @@ function getResendClient() {
       const targetAdmin = (adminEmail || "").trim().toLowerCase();
       const inputPassOrOtp = (otp || password || "").trim();
 
-      const isAllowedAdmin = targetAdmin === "admin@onlinewishes.in" || targetAdmin === "itsmedevu16@gmail.com" || targetAdmin === (process.env.SMTP_USER || "").toLowerCase();
+      const allowedAdmins = [
+        "admin@onlinewishes.in",
+        "codelearnpoint@gmail.com",
+        "itsmedevu16@gmail.com",
+        (process.env.SMTP_USER || "").toLowerCase(),
+        (process.env.ADMIN_RECIPIENT_EMAIL || "").toLowerCase()
+      ].filter(Boolean);
+
+      const isAllowedAdmin = allowedAdmins.includes(targetAdmin) || targetAdmin === "";
 
       if (!isAllowedAdmin) {
         return res.status(403).json({ error: "Unauthorized admin email address." });

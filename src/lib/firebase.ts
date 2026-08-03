@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, inMemoryPersistence } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -9,7 +9,18 @@ const app = initializeApp(firebaseConfig);
 // CRITICAL: Connect to the specific database instance provisioned for this applet
 export const db = initializeFirestore(app, { experimentalForceLongPolling: true }, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence).catch(console.error);
+
+// Safe persistence setup handling IndexedDB backing store errors in sandboxed iframes
+try {
+  setPersistence(auth, browserLocalPersistence).catch((err) => {
+    console.warn('Firebase browserLocalPersistence failed (IndexedDB restricted), falling back to inMemoryPersistence:', err);
+    setPersistence(auth, inMemoryPersistence).catch(() => {});
+  });
+} catch (e) {
+  console.warn('Firebase setPersistence error:', e);
+  setPersistence(auth, inMemoryPersistence).catch(() => {});
+}
+
 export const storage = getStorage(app, firebaseConfig.storageBucket);
 
 export enum OperationType {

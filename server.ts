@@ -368,6 +368,9 @@ function getTransporter() {
       port,
       secure: port === 465,
       auth: { user, pass },
+      connectionTimeout: 3000, // 3 seconds
+      greetingTimeout: 3000,
+      socketTimeout: 3000,
     });
   }
   return null;
@@ -563,7 +566,9 @@ function getResendClient() {
 
       // DNS MX check
       try {
-        const mxRecords = await dns.promises.resolveMx(domain);
+        const mxPromise = dns.promises.resolveMx(domain);
+        const timeoutPromise = new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("DNS timeout")), 3000));
+        const mxRecords = await Promise.race([mxPromise, timeoutPromise]);
         if (!mxRecords || mxRecords.length === 0) {
           return res.status(200).json({
             valid: false,
@@ -571,12 +576,14 @@ function getResendClient() {
             error: `The email domain '${domain}' does not exist or has no mail servers.`
           });
         }
-      } catch (dnsErr) {
-        return res.status(200).json({
-          valid: false,
-          reason: "mx",
-          error: `The email domain '${domain}' does not exist or cannot receive emails.`
-        });
+      } catch (dnsErr: any) {
+        if (dnsErr.message !== "DNS timeout") {
+          return res.status(200).json({
+            valid: false,
+            reason: "mx",
+            error: `The email domain '${domain}' does not exist or cannot receive emails.`
+          });
+        }
       }
 
       res.json({ valid: true });
@@ -600,12 +607,16 @@ function getResendClient() {
 
       // Check DNS MX before sending OTP
       try {
-        const mxRecords = await dns.promises.resolveMx(domain);
+        const mxPromise = dns.promises.resolveMx(domain);
+        const timeoutPromise = new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("DNS timeout")), 3000));
+        const mxRecords = await Promise.race([mxPromise, timeoutPromise]);
         if (!mxRecords || mxRecords.length === 0) {
           return res.status(400).json({ error: `The email domain '${domain}' does not exist or cannot receive emails.` });
         }
-      } catch (e) {
-        return res.status(400).json({ error: `The email domain '${domain}' does not exist. Please check your email address.` });
+      } catch (e: any) {
+        if (e.message !== "DNS timeout") {
+          return res.status(400).json({ error: `The email domain '${domain}' does not exist. Please check your email address.` });
+        }
       }
 
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();

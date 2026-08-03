@@ -439,7 +439,7 @@ function getResendClient() {
   async function sendEmailWithFallback(params: { to: string; subject: string; html: string; text?: string }) {
     let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<{success: boolean, error?: string}>((resolve) => {
-      timeoutId = setTimeout(() => resolve({ success: false, error: "Email sending timed out. Please check server SMTP connection." }), 12000);
+      timeoutId = setTimeout(() => resolve({ success: false, error: "Email dispatch timed out on server host." }), 4500);
     });
     const corePromise = _sendEmailWithFallbackCore(params);
     corePromise.catch(() => {}); // prevent unhandled rejection if it fails after timeout
@@ -453,114 +453,7 @@ function getResendClient() {
     let errors: string[] = [];
     
     try {
-      // Attempt 0: Google Apps Script / Custom HTTP Webhook (100% works on Vercel serverless without port block)
-      const gasUrl = process.env.GOOGLE_SCRIPT_URL || process.env.GAS_URL || process.env.WEBHOOK_EMAIL_URL;
-      if (gasUrl) {
-        try {
-          const res = await fetch(gasUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to, subject, html, text }),
-          });
-          if (res.ok) {
-            console.log(`[Email Success - HTTP Webhook] Sent to ${to}`);
-            return { success: true, provider: 'http-webhook' };
-          } else {
-            errors.push(`HTTP Webhook status: ${res.status}`);
-          }
-        } catch (gasErr: any) {
-          errors.push(`HTTP Webhook Error: ${gasErr?.message || gasErr}`);
-        }
-      }
-
-      // Attempt 1: Direct Nodemailer SMTP using configured App Password & settings
-      const smtpUser = process.env.SMTP_USER || "codelearnpoint@gmail.com";
-      const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
-
-      if (rawPass) {
-        const pass = rawPass.trim().replace(/\s+/g, "");
-
-        // Config 1A: Port 587 STARTTLS (Recommended for Vercel/Cloud hostings to avoid 465 block)
-        try {
-          const t1 = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 587,
-            secure: false,
-            requireTLS: true,
-            auth: { user: smtpUser, pass },
-            connectionTimeout: 4000,
-            greetingTimeout: 4000,
-            socketTimeout: 4000,
-          });
-          await t1.sendMail({
-            from: `"OnlineWishes" <${smtpUser}>`,
-            to,
-            subject,
-            html,
-            text: text || "OnlineWishes Notification",
-          });
-          console.log(`[Email Success - Gmail Port 587] Sent to ${to}`);
-          return { success: true, provider: 'nodemailer-587' };
-        } catch (e1: any) {
-          const msg = e1?.message || String(e1);
-          errors.push(`Gmail 587: ${msg}`);
-          console.warn("[Gmail 587 notice]:", msg);
-        }
-
-        // Config 1B: Port 465 SMTPS
-        try {
-          const t2 = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            auth: { user: smtpUser, pass },
-            connectionTimeout: 4000,
-            greetingTimeout: 4000,
-            socketTimeout: 4000,
-          });
-          await t2.sendMail({
-            from: `"OnlineWishes" <${smtpUser}>`,
-            to,
-            subject,
-            html,
-            text: text || "OnlineWishes Notification",
-          });
-          console.log(`[Email Success - Gmail Port 465] Sent to ${to}`);
-          return { success: true, provider: 'nodemailer-465' };
-        } catch (e2: any) {
-          const msg = e2?.message || String(e2);
-          errors.push(`Gmail 465: ${msg}`);
-          console.warn("[Gmail 465 notice]:", msg);
-        }
-
-        // Config 1C: Built-in 'gmail' service transport
-        try {
-          const t3 = nodemailer.createTransport({
-            service: "gmail",
-            auth: { user: smtpUser, pass },
-            connectionTimeout: 4000,
-            greetingTimeout: 4000,
-            socketTimeout: 4000,
-          });
-          await t3.sendMail({
-            from: `"OnlineWishes" <${smtpUser}>`,
-            to,
-            subject,
-            html,
-            text: text || "OnlineWishes Notification",
-          });
-          console.log(`[Email Success - Gmail Service] Sent to ${to}`);
-          return { success: true, provider: 'nodemailer-service' };
-        } catch (e3: any) {
-          const msg = e3?.message || String(e3);
-          errors.push(`Gmail Service: ${msg}`);
-          console.warn("[Gmail Service notice]:", msg);
-        }
-      } else {
-        errors.push("Missing SMTP_PASS/GMAIL_APP_PASSWORD env var on server host.");
-      }
-
-      // Attempt 2: Resend API fallback (if configured)
+      // Attempt 1: Resend API (Fastest over HTTPS, ~200ms on Vercel)
       const resendClient = getResendClient();
 
       if (resendClient) {
@@ -573,18 +466,15 @@ function getResendClient() {
             html,
           });
           if (res.data && !res.error) {
-            console.log(`[Email Success - ${customSender}] Sent to ${to}`);
+            console.log(`[Email Success - Resend ${customSender}] Sent to ${to}`);
             return { success: true, provider: 'resend-custom' };
           }
           if (res.error) {
             const msg = res.error.message || JSON.stringify(res.error);
             errors.push(`Resend Custom Domain Error: ${msg}`);
-            console.warn(`[Resend custom domain note - ${customSender}]:`, res.error);
           }
         } catch (err: any) {
-          const msg = err?.message || String(err);
-          errors.push(`Resend Custom Domain Exception: ${msg}`);
-          console.warn(`[Resend custom domain error - ${customSender}]:`, msg);
+          errors.push(`Resend Exception: ${err?.message || err}`);
         }
 
         try {
@@ -595,27 +485,106 @@ function getResendClient() {
             html,
           });
           if (res.data && !res.error) {
-            console.log(`[Email Success - onboarding@resend.dev] Sent to ${to}`);
+            console.log(`[Email Success - Resend Dev] Sent to ${to}`);
             return { success: true, provider: 'resend-dev' };
           }
           if (res.error) {
-            const msg = res.error.message || JSON.stringify(res.error);
-            errors.push(`Resend Onboarding Error: ${msg}`);
-            console.warn("[Resend dev note]:", res.error);
+            errors.push(`Resend Dev Error: ${res.error.message || JSON.stringify(res.error)}`);
           }
         } catch (err: any) {
-          const msg = err?.message || String(err);
-          errors.push(`Resend Onboarding Exception: ${msg}`);
-          console.warn("[Resend dev error]:", msg);
+          errors.push(`Resend Dev Exception: ${err?.message || err}`);
         }
+      }
+
+      // Attempt 2: Google Apps Script / Custom HTTP Webhook (100% works on Vercel without port blocks)
+      const gasUrl = process.env.GOOGLE_SCRIPT_URL || process.env.GAS_URL || process.env.WEBHOOK_EMAIL_URL;
+      if (gasUrl) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 2500);
+          const res = await fetch(gasUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to, subject, html, text }),
+            signal: controller.signal
+          });
+          clearTimeout(timer);
+          if (res.ok) {
+            console.log(`[Email Success - HTTP Webhook] Sent to ${to}`);
+            return { success: true, provider: 'http-webhook' };
+          } else {
+            errors.push(`HTTP Webhook status: ${res.status}`);
+          }
+        } catch (gasErr: any) {
+          errors.push(`HTTP Webhook Error: ${gasErr?.message || gasErr}`);
+        }
+      }
+
+      // Attempt 3: Nodemailer SMTP using configured App Password with short 2s timeouts
+      const smtpUser = process.env.SMTP_USER || "codelearnpoint@gmail.com";
+      const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
+
+      if (rawPass) {
+        const pass = rawPass.trim().replace(/\s+/g, "");
+
+        // Config 3A: Port 587 STARTTLS
+        try {
+          const t1 = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
+            requireTLS: true,
+            auth: { user: smtpUser, pass },
+            connectionTimeout: 2000,
+            greetingTimeout: 2000,
+            socketTimeout: 2000,
+          });
+          await t1.sendMail({
+            from: `"OnlineWishes" <${smtpUser}>`,
+            to,
+            subject,
+            html,
+            text: text || "OnlineWishes Notification",
+          });
+          console.log(`[Email Success - Gmail Port 587] Sent to ${to}`);
+          return { success: true, provider: 'nodemailer-587' };
+        } catch (e1: any) {
+          errors.push(`Gmail 587: ${e1?.message || String(e1)}`);
+        }
+
+        // Config 3B: Port 465 SMTPS
+        try {
+          const t2 = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
+            auth: { user: smtpUser, pass },
+            connectionTimeout: 2000,
+            greetingTimeout: 2000,
+            socketTimeout: 2000,
+          });
+          await t2.sendMail({
+            from: `"OnlineWishes" <${smtpUser}>`,
+            to,
+            subject,
+            html,
+            text: text || "OnlineWishes Notification",
+          });
+          console.log(`[Email Success - Gmail Port 465] Sent to ${to}`);
+          return { success: true, provider: 'nodemailer-465' };
+        } catch (e2: any) {
+          errors.push(`Gmail 465: ${e2?.message || String(e2)}`);
+        }
+      } else {
+        errors.push("No SMTP_PASS or RESEND_API_KEY environment variable provided in Vercel settings.");
       }
     } catch (topLevelErr: any) {
       console.error("Email dispatch top level exception:", topLevelErr);
       errors.push(topLevelErr?.message || String(topLevelErr));
     }
 
-    const finalError = errors.length > 0 ? errors.join(" | ") : "Email delivery failed. Please check SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS environment variables.";
-    console.error(`[Email Delivery Failure] Could not send email to ${to}:`, finalError);
+    const finalError = errors.length > 0 ? errors.join(" | ") : "Email delivery skipped.";
+    console.warn(`[Email Delivery Notice] Could not send email to ${to}:`, finalError);
     return { success: false, error: finalError };
   }
 
@@ -1173,7 +1142,7 @@ function getResendClient() {
     }
   });
 
-  app.post("/api/admin/send-otp", async (req, res) => {
+  app.post(["/api/admin/send-otp", "/admin/send-otp"], async (req, res) => {
     try {
       const body = req.body || {};
       const adminEmail = body.adminEmail || body.email || "";

@@ -1,9 +1,8 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import dns from "node:dns/promises";
+import dns from "dns";
 import { fileURLToPath } from 'url';
-import validator from "deep-email-validator";
 import Razorpay from "razorpay";
 import SpotifyWebApi from "spotify-web-api-node";
 import nodemailer from "nodemailer";
@@ -564,7 +563,7 @@ function getResendClient() {
 
       // DNS MX check
       try {
-        const mxRecords = await dns.resolveMx(domain);
+        const mxRecords = await dns.promises.resolveMx(domain);
         if (!mxRecords || mxRecords.length === 0) {
           return res.status(200).json({
             valid: false,
@@ -578,28 +577,6 @@ function getResendClient() {
           reason: "mx",
           error: `The email domain '${domain}' does not exist or cannot receive emails.`
         });
-      }
-
-      // Deep email validator
-      try {
-        const deepRes = await validator({
-          email,
-          validateRegex: true,
-          validateMx: true,
-          validateTypo: true,
-          validateDisposable: true,
-          validateSMTP: false
-        });
-
-        if (!deepRes.valid) {
-          return res.status(200).json({
-            valid: false,
-            reason: deepRes.reason || "invalid",
-            error: "This email address failed validation. Please enter a real, active email address."
-          });
-        }
-      } catch (e) {
-        console.warn("Deep validator skip:", e);
       }
 
       res.json({ valid: true });
@@ -623,7 +600,7 @@ function getResendClient() {
 
       // Check DNS MX before sending OTP
       try {
-        const mxRecords = await dns.resolveMx(domain);
+        const mxRecords = await dns.promises.resolveMx(domain);
         if (!mxRecords || mxRecords.length === 0) {
           return res.status(400).json({ error: `The email domain '${domain}' does not exist or cannot receive emails.` });
         }

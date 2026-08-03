@@ -378,7 +378,8 @@ async function updateUserPasswordInFirebaseAuth(email: string, newPassword: stri
 
 function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = Number(process.env.SMTP_PORT) || 587;
+  // Vercel serverless blocks port 587 often, so default to 465 (SMTPS) which is usually allowed.
+  const port = Number(process.env.SMTP_PORT) || 465;
   const user = process.env.SMTP_USER || "codelearnpoint@gmail.com";
   const pass = process.env.SMTP_PASS;
 
@@ -388,9 +389,9 @@ function getTransporter() {
       port,
       secure: port === 465,
       auth: { user, pass },
-      connectionTimeout: 3000, // 3 seconds
-      greetingTimeout: 3000,
-      socketTimeout: 3000,
+      connectionTimeout: 4000,
+      greetingTimeout: 4000,
+      socketTimeout: 4000,
     });
   }
   return null;
@@ -425,6 +426,29 @@ function getResendClient() {
 
   async function _sendEmailWithFallbackCore({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
     let lastError: string | null = null;
+    
+    // Attempt 0: Google App Script API (if provided)
+    const googleScriptUrl = process.env.GOOGLE_SCRIPT_URL;
+    if (googleScriptUrl) {
+      try {
+        const res = await fetch(googleScriptUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to, subject, html, text: text || "OnlineWishes Notification" })
+        });
+        if (res.ok) {
+          console.log(`[Email Success - Google App Script API] Sent to ${to}`);
+          return { success: true, provider: 'google-app-script' };
+        } else {
+          lastError = `Google Script API returned status ${res.status}`;
+          console.warn("[Google App Script error]:", lastError);
+        }
+      } catch (err: any) {
+        lastError = err?.message || String(err);
+        console.warn("[Google App Script fetch error]:", lastError);
+      }
+    }
+
     const resendClient = getResendClient();
 
     if (resendClient) {

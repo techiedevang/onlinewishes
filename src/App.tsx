@@ -723,6 +723,11 @@ A story forever to be told.`,
 
               <AnimatedSection delay={0.1}>
                 <TemplateGallery
+                  limit={3}
+                  onSeeAllTemplates={() => {
+                    setActiveTab('templates');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   onPreviewTemplate={(tpl) => setPreviewTemplate(tpl)}
                   onSelectTemplateToBuild={handleSelectTemplateToBuild}
                   onOpenReviewsModal={(tpl) => setReviewTemplate(tpl)}
@@ -732,13 +737,6 @@ A story forever to be told.`,
                     setTemplateDetail(tpl);
                     setActiveTab('template-detail');
                   }}
-                />
-              </AnimatedSection>
-
-              <AnimatedSection delay={0.1}>
-                <PricingSection
-                  onSelectTemplateToBuild={handleSelectTemplateToBuild}
-                  onOpenCustomAiModal={() => setActiveTab('custom_AI')}
                 />
               </AnimatedSection>
 

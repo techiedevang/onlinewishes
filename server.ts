@@ -409,7 +409,20 @@ function getTransporter() {
 }
 
 export const app = express();
+
+// Enable CORS for all origins & options preflight
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
@@ -1162,7 +1175,8 @@ function getResendClient() {
 
   app.post("/api/admin/send-otp", async (req, res) => {
     try {
-      const { adminEmail } = req.body;
+      const body = req.body || {};
+      const adminEmail = body.adminEmail || body.email || "";
       const targetAdmin = (adminEmail || "").trim().toLowerCase();
 
       const allowedAdmins = [
@@ -1173,7 +1187,7 @@ function getResendClient() {
         (process.env.ADMIN_RECIPIENT_EMAIL || "").toLowerCase()
       ].filter(Boolean);
 
-      if (!allowedAdmins.includes(targetAdmin) && targetAdmin !== "") {
+      if (targetAdmin && !allowedAdmins.includes(targetAdmin)) {
         return res.status(403).json({
           error: "Unauthorized email address. Permitted admins: admin@onlinewishes.in, codelearnpoint@gmail.com, itsmedevu16@gmail.com",
         });
@@ -1182,45 +1196,58 @@ function getResendClient() {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
 
-      // Save to Firestore & in-memory cache
-      await saveOtpToFirestore("admin@onlinewishes.in", otpCode, expiresAt).catch(e => console.warn("Firestore OTP save notice:", e));
+      // Save to Firestore & in-memory cache safely
+      try {
+        await saveOtpToFirestore("admin@onlinewishes.in", otpCode, expiresAt);
+      } catch (e) {
+        console.warn("Firestore OTP save notice:", e);
+      }
 
       // Deliver primarily to codelearnpoint@gmail.com as requested by admin
       const primaryRecipient = "codelearnpoint@gmail.com";
 
-      const emailResult = await sendEmailWithFallback({
-        to: primaryRecipient,
-        subject: "🔐 Admin Portal Verification Code: " + otpCode,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
-            <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
-            <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>${targetAdmin || "admin@onlinewishes.in"}</strong>.</p>
-            <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
-              <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
+      let emailResult: any = { success: false };
+      try {
+        emailResult = await sendEmailWithFallback({
+          to: primaryRecipient,
+          subject: "🔐 Admin Portal Verification Code: " + otpCode,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
+              <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
+              <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>${targetAdmin || "admin@onlinewishes.in"}</strong>.</p>
+              <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
+                <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
+              </div>
+              <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code or your Master Admin Password to complete sign-in.</p>
+              <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
+              <p style="font-size: 11px; color: #64748b;">Delivered directly to: <strong>${primaryRecipient}</strong></p>
             </div>
-            <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code or your Master Admin Password to complete sign-in.</p>
-            <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
-            <p style="font-size: 11px; color: #64748b;">Delivered directly to: <strong>${primaryRecipient}</strong></p>
-          </div>
-        `
-      });
+          `
+        });
+      } catch (emailErr: any) {
+        console.warn("Email fallback caught error:", emailErr);
+        emailResult = { success: false, error: emailErr?.message || String(emailErr) };
+      }
 
       if (!emailResult.success) {
         console.warn("Admin OTP email send failure details:", emailResult.error);
         return res.json({
           success: true,
+          otpSent: false,
           message: `OTP generated (${otpCode})! Email notice: ${emailResult.error || 'Check SMTP config'}. You can also log in directly with your Admin Password.`
         });
       }
 
-      res.json({
+      return res.json({
         success: true,
+        otpSent: true,
         message: "OTP sent successfully to " + primaryRecipient + "! Please check your inbox / spam folder."
       });
     } catch (err: any) {
-      console.error("Admin OTP Error:", err);
-      res.json({
+      console.error("Admin OTP Endpoint Exception:", err);
+      return res.json({
         success: true,
+        otpSent: false,
         message: "You can log in directly using your Admin Password or Master Pass."
       });
     }

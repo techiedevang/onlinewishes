@@ -4,6 +4,8 @@ import { Template } from '../types';
 import { Star, Eye, Sparkles, Heart, Search, Filter, ArrowRight, Layers, Check, MessageSquare, Bot, Maximize2 } from 'lucide-react';
 
 interface TemplateGalleryProps {
+  limit?: number;
+  onSeeAllTemplates?: () => void;
   onPreviewTemplate: (template: Template) => void;
   onSelectTemplateToBuild: (template: Template) => void;
   onOpenReviewsModal: (template: Template) => void;
@@ -12,6 +14,8 @@ interface TemplateGalleryProps {
 }
 
 export function TemplateGallery({
+  limit,
+  onSeeAllTemplates,
   onPreviewTemplate,
   onSelectTemplateToBuild,
   onOpenReviewsModal,
@@ -36,6 +40,8 @@ export function TemplateGallery({
       tpl.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  const displayedTemplates = limit ? filteredTemplates.slice(0, limit) : filteredTemplates;
 
   return (
     <section id="templates" className="py-12 md:py-20 bg-slate-50/50 dark:bg-slate-900/50 transition-colors">
@@ -121,7 +127,7 @@ export function TemplateGallery({
 
         {/* Template Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {filteredTemplates.map((template) => (
+          {displayedTemplates.map((template) => (
             <div
               key={template.id}
               className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group"
@@ -237,6 +243,23 @@ export function TemplateGallery({
             </div>
           ))}
         </div>
+
+        {/* See All Templates Button (When limited on Home Page) */}
+        {onSeeAllTemplates && (
+          <div className="text-center pt-6 sm:pt-10 flex flex-col items-center justify-center space-y-3">
+            <button
+              type="button"
+              onClick={onSeeAllTemplates}
+              className="inline-flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 hover:from-rose-600 hover:to-purple-700 text-white font-extrabold text-sm sm:text-base rounded-2xl shadow-xl shadow-rose-500/20 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 group cursor-pointer"
+            >
+              <span>See All Templates ({TEMPLATES.length}+ Designs)</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+            </button>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Browse our full collection of interactive birthday, anniversary, love letter & friend scrapbooks
+            </p>
+          </div>
+        )}
 
       </div>
     </section>

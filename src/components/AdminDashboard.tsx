@@ -292,7 +292,8 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         data = JSON.parse(responseText);
       } catch {
         console.error("Non-JSON server response:", responseText);
-        throw new Error("Server communication error. Please try again in a moment.");
+        const cleanText = responseText.replace(/<[^>]*>/g, '').trim();
+        throw new Error(cleanText ? `Server response: ${cleanText.slice(0, 120)}` : "Server communication error. Please try again in a moment.");
       }
 
       if (res.ok && data.success) {
@@ -339,7 +340,8 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         data = JSON.parse(responseText);
       } catch {
         console.error("Non-JSON server response:", responseText);
-        throw new Error("Server communication error. Please try again.");
+        const cleanText = responseText.replace(/<[^>]*>/g, '').trim();
+        throw new Error(cleanText ? `Server response: ${cleanText.slice(0, 120)}` : "Server communication error. Please try again.");
       }
 
       if (res.ok && data.success) {

@@ -3,7 +3,6 @@ import path from "path";
 import fs from "fs";
 import dns from "node:dns/promises";
 import { fileURLToPath } from 'url';
-import { createServer as createViteServer } from "vite";
 import validator from "deep-email-validator";
 import Razorpay from "razorpay";
 import SpotifyWebApi from "spotify-web-api-node";
@@ -1588,12 +1587,24 @@ function getResendClient() {
     }
   });
 
+// Global Express Error Handling Middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error("Global Express Error:", err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({
+    error: err?.message || "Internal Server Error"
+  });
+});
+
 async function startServer() {
   const PORT = 3000;
 
   // Vite middleware for development (only when not on Vercel)
   if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
     try {
+      const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",

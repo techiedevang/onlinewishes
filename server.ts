@@ -378,53 +378,65 @@ function getTransporter() {
 export const app = express();
 app.use(express.json());
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+  try {
+    return new Resend(apiKey);
+  } catch (e) {
+    console.warn("Resend client init note:", e);
+    return null;
+  }
+}
 
 // Helper for multi-provider email dispatch
   async function sendEmailWithFallback({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
     let lastError: string | null = null;
+    const resendClient = getResendClient();
 
-    // Attempt 1: Resend with custom domain or environment sender address
-    const customSender = process.env.RESEND_FROM_EMAIL || "OnlineWishes <support@onlinewishes.in>";
-    try {
-      const res = await resend.emails.send({
-        from: customSender,
-        to,
-        subject,
-        html,
-      });
-      if (res.data && !res.error) {
-        console.log(`[Email Success - ${customSender}] Sent to ${to}`);
-        return { success: true, provider: 'resend-custom' };
+    if (resendClient) {
+      // Attempt 1: Resend with custom domain or environment sender address
+      const customSender = process.env.RESEND_FROM_EMAIL || "OnlineWishes <support@onlinewishes.in>";
+      try {
+        const res = await resendClient.emails.send({
+          from: customSender,
+          to,
+          subject,
+          html,
+        });
+        if (res.data && !res.error) {
+          console.log(`[Email Success - ${customSender}] Sent to ${to}`);
+          return { success: true, provider: 'resend-custom' };
+        }
+        if (res.error) {
+          lastError = res.error.message || JSON.stringify(res.error);
+          console.warn(`[Resend custom domain note - ${customSender}]:`, res.error);
+        }
+      } catch (err: any) {
+        lastError = err?.message || String(err);
+        console.warn(`[Resend custom domain error - ${customSender}]:`, lastError);
       }
-      if (res.error) {
-        lastError = res.error.message || JSON.stringify(res.error);
-        console.warn(`[Resend custom domain note - ${customSender}]:`, res.error);
-      }
-    } catch (err: any) {
-      lastError = err?.message || String(err);
-      console.warn(`[Resend custom domain error - ${customSender}]:`, lastError);
-    }
 
-    // Attempt 2: Resend with onboarding@resend.dev (default verified Resend domain)
-    try {
-      const res = await resend.emails.send({
-        from: "OnlineWishes <onboarding@resend.dev>",
-        to,
-        subject,
-        html,
-      });
-      if (res.data && !res.error) {
-        console.log(`[Email Success - onboarding@resend.dev] Sent to ${to}`);
-        return { success: true, provider: 'resend-dev' };
+      // Attempt 2: Resend with onboarding@resend.dev (default verified Resend domain)
+      try {
+        const res = await resendClient.emails.send({
+          from: "OnlineWishes <onboarding@resend.dev>",
+          to,
+          subject,
+          html,
+        });
+        if (res.data && !res.error) {
+          console.log(`[Email Success - onboarding@resend.dev] Sent to ${to}`);
+          return { success: true, provider: 'resend-dev' };
+        }
+        if (res.error) {
+          lastError = res.error.message || JSON.stringify(res.error);
+          console.warn("[Resend dev note]:", res.error);
+        }
+      } catch (err: any) {
+        lastError = err?.message || String(err);
+        console.warn("[Resend dev error]:", lastError);
       }
-      if (res.error) {
-        lastError = res.error.message || JSON.stringify(res.error);
-        console.warn("[Resend dev note]:", res.error);
-      }
-    } catch (err: any) {
-      lastError = err?.message || String(err);
-      console.warn("[Resend dev error]:", lastError);
     }
 
     // Attempt 3: Nodemailer / SMTP fallback
@@ -1579,14 +1591,18 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 async function startServer() {
   const PORT = 3000;
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
+  // Vite middleware for development (only when not on Vercel)
+  if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
+    try {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } catch (err) {
+      console.warn("Vite server creation skipped:", err);
+    }
+  } else if (!process.env.VERCEL) {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath, { index: false }));
     app.get('*', (req, res) => {

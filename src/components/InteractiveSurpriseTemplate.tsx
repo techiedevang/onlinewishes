@@ -377,16 +377,14 @@ export function InteractiveSurpriseTemplate({
     const key = customization.bgTheme || customization.occasion;
     if (['sunset', 'romantic-love-story', 'anniversary', 'girlfriend'].includes(key)) {
       if (stage === 'passcode') setStage('greeting');
-      else if (stage === 'greeting') setStage('anniversary_counter');
-      else if (stage === 'anniversary_counter') setStage('love_letter');
+      else if (stage === 'greeting') setStage('love_letter');
       else if (stage === 'love_letter') setStage('book');
       else if (stage === 'book') setStage('final');
       else setStage('final');
     }
     else if (['confetti_sky', 'birthday-confetti-party', 'birthday'].includes(key)) {
       if (stage === 'passcode') setStage('greeting');
-      else if (stage === 'greeting') setStage('birthday_countdown');
-      else if (stage === 'birthday_countdown') setStage('interactive_candles');
+      else if (stage === 'greeting') setStage('interactive_candles');
       else if (stage === 'interactive_candles') setStage('confetti_burst');
       else if (stage === 'confetti_burst') setStage('group_wishes_wall');
       else if (stage === 'group_wishes_wall') setStage('book');

@@ -424,28 +424,40 @@ function getResendClient() {
     return result;
   }
 
+  
   async function _sendEmailWithFallbackCore({ to, subject, html, text }: { to: string; subject: string; html: string; text?: string }) {
-    let lastError: string | null = null;
+    let errors: string[] = [];
     
     // Attempt 0: Google App Script API (if provided)
     const googleScriptUrl = process.env.GOOGLE_SCRIPT_URL;
     if (googleScriptUrl) {
+      if (!googleScriptUrl.endsWith("/exec")) {
+         const warnMsg = "The GOOGLE_SCRIPT_URL does not end with '/exec'. You may have provided the editor URL instead of a deployed Web App URL.";
+         console.warn("[Google App Script warning]:", warnMsg);
+         errors.push(warnMsg);
+      }
       try {
         const res = await fetch(googleScriptUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ to, subject, html, text: text || "OnlineWishes Notification" })
         });
-        if (res.ok) {
+        
+        const contentType = res.headers.get("content-type") || "";
+        const bodyText = await res.text();
+        
+        if (res.ok && !bodyText.includes('<div id="drive-logo">') && !bodyText.includes('需要存取權') && !bodyText.includes('You need permission')) {
           console.log(`[Email Success - Google App Script API] Sent to ${to}`);
           return { success: true, provider: 'google-app-script' };
         } else {
-          lastError = `Google Script API returned status ${res.status}`;
-          console.warn("[Google App Script error]:", lastError);
+          const err = `Google Script API returned status ${res.status} or a Google Drive permission error page. Please ensure it is deployed as a Web App with 'Execute as: Me' and 'Who has access: Anyone'.`;
+          errors.push(err);
+          console.warn("[Google App Script error/warning]:", err);
         }
       } catch (err: any) {
-        lastError = err?.message || String(err);
-        console.warn("[Google App Script fetch error]:", lastError);
+        const msg = err?.message || String(err);
+        errors.push(`Google Script Fetch Error: ${msg}`);
+        console.warn("[Google App Script fetch error]:", msg);
       }
     }
 
@@ -466,12 +478,14 @@ function getResendClient() {
           return { success: true, provider: 'resend-custom' };
         }
         if (res.error) {
-          lastError = res.error.message || JSON.stringify(res.error);
+          const msg = res.error.message || JSON.stringify(res.error);
+          errors.push(`Resend Custom Domain Error: ${msg}`);
           console.warn(`[Resend custom domain note - ${customSender}]:`, res.error);
         }
       } catch (err: any) {
-        lastError = err?.message || String(err);
-        console.warn(`[Resend custom domain error - ${customSender}]:`, lastError);
+        const msg = err?.message || String(err);
+        errors.push(`Resend Custom Domain Exception: ${msg}`);
+        console.warn(`[Resend custom domain error - ${customSender}]:`, msg);
       }
 
       // Attempt 2: Resend with onboarding@resend.dev (default verified Resend domain)
@@ -487,21 +501,24 @@ function getResendClient() {
           return { success: true, provider: 'resend-dev' };
         }
         if (res.error) {
-          lastError = res.error.message || JSON.stringify(res.error);
+          const msg = res.error.message || JSON.stringify(res.error);
+          errors.push(`Resend Onboarding Error: ${msg}`);
           console.warn("[Resend dev note]:", res.error);
         }
       } catch (err: any) {
-        lastError = err?.message || String(err);
-        console.warn("[Resend dev error]:", lastError);
+        const msg = err?.message || String(err);
+        errors.push(`Resend Onboarding Exception: ${msg}`);
+        console.warn("[Resend dev error]:", msg);
       }
     }
 
     // Attempt 3: Nodemailer / SMTP fallback
     const transporter = getTransporter();
     if (transporter) {
+      const smtpUser = process.env.SMTP_USER || "codelearnpoint@gmail.com";
       try {
         await transporter.sendMail({
-          from: '"OnlineWishes" <codelearnpoint@gmail.com>',
+          from: `"OnlineWishes" <${smtpUser}>`,
           to,
           subject,
           html,
@@ -510,14 +527,17 @@ function getResendClient() {
         console.log(`[Email Success - Nodemailer SMTP] Sent to ${to}`);
         return { success: true, provider: 'nodemailer' };
       } catch (smtpErr: any) {
-        lastError = smtpErr?.message || String(smtpErr);
-        console.warn("[Nodemailer SMTP error]:", lastError);
+        const msg = smtpErr?.message || String(smtpErr);
+        errors.push(`Nodemailer SMTP Error: ${msg}`);
+        console.warn("[Nodemailer SMTP error]:", msg);
       }
     }
 
-    console.error(`[Email Delivery Failure] Could not send email to ${to}:`, lastError);
-    return { success: false, error: lastError || "Email delivery failed" };
+    const finalError = errors.length > 0 ? errors.join(" | ") : "Email delivery failed: No providers configured or all failed.";
+    console.error(`[Email Delivery Failure] Could not send email to ${to}:`, finalError);
+    return { success: false, error: finalError };
   }
+
 
   async function sendPasswordChangeConfirmationEmail(email: string) {
     const cleanEmail = email.trim().toLowerCase();
@@ -630,28 +650,9 @@ function getResendClient() {
         });
       }
 
-      // Deep email validator for regex and disposable (no SMTP)
-      try {
-        const deepRes = await validator({
-          email,
-          validateRegex: true,
-          validateMx: false, // We just did it ourselves
-          validateTypo: true,
-          validateDisposable: true,
-          validateSMTP: false
-        });
-
-        if (!deepRes.valid) {
-          return res.status(200).json({
-            valid: false,
-            reason: deepRes.reason || "invalid",
-            error: "This email address failed validation. Please enter a real, active email address."
-          });
-        }
-      } catch (e) {
-        console.warn("Deep validator skip:", e);
-      }
-
+      // Removed deep validator here to save time and prevent Vercel 10s timeouts.
+      // Basic DNS MX is sufficient.
+      
       res.json({ valid: true });
     } catch (error) {
       console.error("Email validation error:", error);
@@ -677,25 +678,8 @@ function getResendClient() {
         return res.status(400).json({ error: `The email domain '${domain}' does not exist or cannot receive emails.` });
       }
 
-      // Deep email validator for regex and disposable (no SMTP)
-      try {
-        const deepRes = await validator({
-          email: cleanEmail,
-          validateRegex: true,
-          validateMx: false,
-          validateTypo: true,
-          validateDisposable: true,
-          validateSMTP: false
-        });
-
-        if (!deepRes.valid) {
-          return res.status(400).json({
-            error: "This email address appears to be invalid or disposable. Please enter a real, active email address."
-          });
-        }
-      } catch (e) {
-        console.warn("Deep validator skip:", e);
-      }
+      // Removed deep validator here to save time and prevent Vercel 10s timeouts.
+      // Basic DNS MX is sufficient.
 
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = Date.now() + 15 * 60 * 1000;

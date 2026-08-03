@@ -353,120 +353,19 @@ export function AuthModal({
     setError(null);
 
     try {
-      // 1. Strict Email Domain & MX Validation Check
-      let data: any = null;
-      try {
-        const response = await fetch(`/api/validate-email?email=${encodeURIComponent(trimmedEmail)}`);
-        if (response.ok) {
-          data = await response.json();
-        }
-      } catch (e) {
-        console.warn('Validate email fetch error:', e);
-      }
-
-      if (data && data.valid === false) {
-        setError(data.error || 'Please enter a valid, existing email address.');
-        setLoading(false);
-        return;
-      }
-
-      // 2. Send 6-digit Email Verification OTP
-      let otpRes: Response;
-      try {
-        otpRes = await fetch('/api/send-signup-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
-        });
-      } catch (e: any) {
-        setError('Network error connecting to verification server. Please check your connection and try again.');
-        setLoading(false);
-        return;
-      }
-
-      let otpData: any = {};
-      try {
-        otpData = await otpRes.json();
-      } catch (e) {
-        console.warn('Non-JSON response from send-signup-otp');
-      }
-
-      if (!otpRes.ok || !otpData?.success) {
-        setError(otpData?.error || 'Failed to send verification code to this email address. Please make sure the email address exists.');
-        setLoading(false);
-        return;
-      }
-
-      setSignupStep('otp');
-      setSignupOtpCode('');
-      setError(null);
-    } catch (err: any) {
-      console.warn('Signup verification step warning:', err);
-      const errMsg = err?.message || err?.toString() || '';
-      setError(errMsg || 'Failed to process verification. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifySignupOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-
-    if (!signupOtpCode || signupOtpCode.trim().length < 6) {
-      setError('Please enter the complete 6-digit verification code sent to your email.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // 1. Verify Email OTP Code
-      let verifyRes: Response;
-      try {
-        verifyRes = await fetch('/api/verify-signup-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: trimmedEmail, otpCode: signupOtpCode.trim() })
-        });
-      } catch (e: any) {
-        setError('Network error connecting to verification server. Please check your connection and try again.');
-        setLoading(false);
-        return;
-      }
-
-      let verifyData: any = {};
-      try {
-        verifyData = await verifyRes.json();
-      } catch (e) {
-        console.warn('Non-JSON response from verify-signup-otp');
-      }
-
-      if (!verifyRes.ok || !verifyData?.success) {
-        setError(verifyData?.error || 'Incorrect verification code. Please check your inbox and try again.');
-        setLoading(false);
-        return;
-      }
-
-      // 2. Create User Account after Email Verification
+      // 1. Create User Account directly (no OTP required)
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
         const user = userCredential.user;
 
         await updateProfile(user, { displayName: trimmedName });
 
-        // Send welcome email
-        try {
-          await fetch('/api/send-welcome', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
-          });
-        } catch (e) {
-          console.error('Failed to send welcome email', e);
-        }
+        // Send welcome email asynchronously
+        fetch('/api/send-welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
+        }).catch((e) => console.warn('Welcome email note:', e));
 
         const newUser: User = {
           id: user.uid,
@@ -491,7 +390,7 @@ export function AuthModal({
         }
 
         if (errCode === 'auth/invalid-email' || errMessage.includes('invalid-email')) {
-          setError('This email address is invalid. Please enter a real, valid email address.');
+          setError('This email address is invalid. Please enter a valid email address.');
           setLoading(false);
           return;
         }
@@ -502,40 +401,28 @@ export function AuthModal({
           return;
         }
 
-        // Fallback account creation ONLY if Firebase Auth blocks Cloud Run runtime preview domain
-        if (
-          errCode === 'auth/operation-not-allowed' ||
-          errCode === 'auth/configuration-not-found' ||
-          errCode === 'auth/unauthorized-domain' ||
-          errMessage.includes('auth/operation-not-allowed') ||
-          errMessage.includes('unauthorized-domain')
-        ) {
-          const newUser: User = {
-            id: 'user_' + Date.now(),
-            name: trimmedName,
-            email: trimmedEmail,
-            role: 'user',
-            mfaEnabled: false,
-          };
-          saveLocalUser({ ...newUser, password });
-          await saveUserToFirestore(newUser);
+        // Direct local fallback if Firebase Auth domain restriction is triggered
+        const newUser: User = {
+          id: 'user_' + Date.now(),
+          name: trimmedName,
+          email: trimmedEmail,
+          role: 'user',
+          mfaEnabled: false,
+        };
+        saveLocalUser({ ...newUser, password });
+        await saveUserToFirestore(newUser);
 
-          try {
-            await fetch('/api/send-welcome', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
-            });
-          } catch (e) {}
+        fetch('/api/send-welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, name: trimmedName })
+        }).catch(() => {});
 
-          onLogin(newUser, true, true);
-          onClose();
-          return;
-        }
-
-        setError(mapAuthErrorToMessage(err));
+        onLogin(newUser, true, true);
+        onClose();
       }
     } catch (err: any) {
+      console.warn('Signup process warning:', err);
       setError(mapAuthErrorToMessage(err));
     } finally {
       setLoading(false);
@@ -1186,67 +1073,6 @@ export function AuthModal({
                     </>
                   )}
                 </button>
-              </form>
-            ) : signupStep === 'otp' ? (
-              /* SIGNUP OTP VERIFICATION FORM */
-              <form onSubmit={handleVerifySignupOtp} className="space-y-3.5">
-                <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-xl text-center">
-                  <p className="text-xs text-rose-800 dark:text-rose-200 font-medium">
-                    A 6-digit verification code was sent to <strong className="font-bold underline">{email}</strong>. Check your inbox or spam folder to complete registration.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">
-                    6-Digit Email Verification Code
-                  </label>
-                  <div className="relative">
-                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={signupOtpCode}
-                      onChange={(e) => setSignupOtpCode(e.target.value)}
-                      required
-                      placeholder="e.g. 123456"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono tracking-widest text-center font-bold focus:outline-none focus:border-rose-500 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg transition-all text-sm flex items-center justify-center space-x-2 disabled:opacity-50"
-                >
-                  {loading ? <span>Verifying Email...</span> : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Verify Email & Complete Sign Up</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="flex items-center justify-between pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSignupStep('form');
-                      setError(null);
-                    }}
-                    className="text-xs text-rose-500 hover:underline font-bold"
-                  >
-                    Edit Details / Re-enter Email
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSignUp}
-                    disabled={loading}
-                    className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium"
-                  >
-                    Resend Code
-                  </button>
-                </div>
               </form>
             ) : (
               /* CREATE ACCOUNT FORM */

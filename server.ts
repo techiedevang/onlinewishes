@@ -421,8 +421,30 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Safe Body Parser middleware for Vercel Serverless environment + traditional Express
+app.use((req: any, res: any, next: any) => {
+  if (req.body && typeof req.body === "object" && Object.keys(req.body).length > 0) {
+    return next();
+  }
+  express.json()(req, res, (err: any) => {
+    if (err) {
+      console.warn("express.json parse warning:", err);
+    }
+    next();
+  });
+});
+
+app.use((req: any, res: any, next: any) => {
+  if (req.body && typeof req.body === "object" && Object.keys(req.body).length > 0) {
+    return next();
+  }
+  express.urlencoded({ extended: true })(req, res, (err: any) => {
+    if (err) {
+      console.warn("express.urlencoded parse warning:", err);
+    }
+    next();
+  });
+});
 
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;

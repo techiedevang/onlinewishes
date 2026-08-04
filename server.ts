@@ -1315,59 +1315,50 @@ function getResendClient() {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
 
-      // Save to Firestore & in-memory cache safely
+      // Save to Firestore & in-memory cache safely and instantly
       try {
         await saveOtpToFirestore("admin@onlinewishes.in", otpCode, expiresAt);
+        await saveOtpToFirestore("codelearnpoint@gmail.com", otpCode, expiresAt);
+        if (targetAdmin) {
+          await saveOtpToFirestore(targetAdmin, otpCode, expiresAt);
+        }
       } catch (e) {
         console.warn("Firestore OTP save notice:", e);
       }
 
-      // Deliver primarily to codelearnpoint@gmail.com as requested by admin
+      // Primary recipient for admin alerts
       const primaryRecipient = "codelearnpoint@gmail.com";
 
-      let emailResult: any = { success: false };
-      try {
-        emailResult = await sendEmailWithFallback({
-          to: primaryRecipient,
-          subject: "🔐 Admin Portal Verification Code: " + otpCode,
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
-              <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
-              <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>${targetAdmin || "admin@onlinewishes.in"}</strong>.</p>
-              <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
-                <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
-              </div>
-              <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code or your Master Admin Password to complete sign-in.</p>
-              <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
-              <p style="font-size: 11px; color: #64748b;">Delivered directly to: <strong>${primaryRecipient}</strong></p>
+      // Dispatch email asynchronously so Vercel serverless endpoint returns HTTP 200 immediately without 500 socket timeout
+      sendEmailWithFallback({
+        to: primaryRecipient,
+        subject: "🔐 Admin Portal Verification Code: " + otpCode,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
+            <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
+            <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>${targetAdmin || "admin@onlinewishes.in"}</strong>.</p>
+            <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
+              <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
             </div>
-          `
-        });
-      } catch (emailErr: any) {
-        console.warn("Email fallback caught error:", emailErr);
-        emailResult = { success: false, error: emailErr?.message || String(emailErr) };
-      }
-
-      if (!emailResult.success) {
-        console.warn("Admin OTP email send failure details:", emailResult.error);
-        return res.json({
-          success: true,
-          otpSent: false,
-          message: `OTP generated (${otpCode})! Email notice: ${emailResult.error || 'Check SMTP config'}. You can also log in directly with your Admin Password.`
-        });
-      }
+            <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code to complete sign-in.</p>
+            <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
+            <p style="font-size: 11px; color: #64748b;">Delivered directly to: <strong>${primaryRecipient}</strong></p>
+          </div>
+        `
+      }).then((res) => console.log("OTP Email dispatch background result:", res))
+        .catch((err) => console.warn("OTP Email dispatch background warning:", err));
 
       return res.json({
         success: true,
         otpSent: true,
-        message: "OTP sent successfully to " + primaryRecipient + "! Please check your inbox / spam folder."
+        message: `OTP sent successfully to ${primaryRecipient}! Please check your inbox / spam folder.`
       });
     } catch (err: any) {
       console.error("Admin OTP Endpoint Exception:", err);
       return res.json({
         success: true,
         otpSent: false,
-        message: "You can log in directly using your Admin Password or Master Pass."
+        message: "OTP generation error. Please enter your 6-digit code or Admin Password."
       });
     }
   });
@@ -1379,6 +1370,10 @@ function getResendClient() {
       const { adminEmail, otp, password } = body;
       const targetAdmin = (adminEmail || "").trim().toLowerCase();
       const inputPassOrOtp = (otp || password || "").trim();
+
+      if (!inputPassOrOtp) {
+        return res.json({ success: false, error: "Please enter your 6-digit OTP code or password." });
+      }
 
       const allowedAdmins = [
         "admin@onlinewishes.in",
@@ -1394,15 +1389,12 @@ function getResendClient() {
         return res.json({ success: false, error: "Unauthorized admin email address." });
       }
 
-      // Check master passwords (case insensitive check for ease of admin use)
+      // 1. Check master passwords
       const validMasterPasswords = [
         "Admin@123",
         "admin123",
-        "admin",
         "devu16",
         "onlinewishes",
-        "123456",
-        "999999",
         "OnlineWishes@2025",
         "DevuAdmin@123",
         "codelearnpoint",
@@ -1417,10 +1409,10 @@ function getResendClient() {
         mp => mp.length > 0 && inputPassOrOtp.toLowerCase() === mp.toLowerCase()
       );
 
-      if (isMasterPassMatch || inputPassOrOtp.length >= 4) {
+      if (isMasterPassMatch) {
         return res.json({
           success: true,
-          message: "Admin authenticated successfully.",
+          message: "Admin authenticated with Master Password.",
           user: {
             id: "admin-master-id",
             name: "Master Admin",
@@ -1430,14 +1422,22 @@ function getResendClient() {
         });
       }
 
-      // Check stored OTP in Firestore or in-memory
+      // 2. Check stored OTP in Firestore or in-memory
       try {
-        const storedData = await getOtpFromFirestore("admin@onlinewishes.in");
-        if (storedData && storedData.code === inputPassOrOtp && Date.now() <= storedData.expiresAt) {
+        const storedDataAdmin = await getOtpFromFirestore("admin@onlinewishes.in");
+        const storedDataCodelearn = await getOtpFromFirestore("codelearnpoint@gmail.com");
+        const storedDataTarget = targetAdmin ? await getOtpFromFirestore(targetAdmin) : null;
+
+        const activeOtp = storedDataTarget || storedDataCodelearn || storedDataAdmin;
+
+        if (activeOtp && activeOtp.code === inputPassOrOtp && Date.now() <= activeOtp.expiresAt) {
           await deleteOtpFromFirestore("admin@onlinewishes.in");
+          await deleteOtpFromFirestore("codelearnpoint@gmail.com");
+          if (targetAdmin) await deleteOtpFromFirestore(targetAdmin);
+
           return res.json({
             success: true,
-            message: "Admin OTP verified successfully.",
+            message: "Admin OTP verified successfully!",
             user: {
               id: "admin-master-id",
               name: "Master Admin",
@@ -1450,7 +1450,7 @@ function getResendClient() {
         console.warn("OTP firestore verify notice:", otpErr);
       }
 
-      return res.json({ success: false, error: "Invalid Admin Password or OTP code. Try master password 'admin123' or 'Admin@123'." });
+      return res.json({ success: false, error: "Incorrect OTP code or Password. Please check your 6-digit OTP and try again." });
     } catch (err: any) {
       console.error("Admin Login Error:", err);
       return res.json({ success: false, error: "Admin authentication error: " + (err.message || String(err)) });

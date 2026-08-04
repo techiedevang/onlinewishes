@@ -267,14 +267,14 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
 
   const [emailStatusMessage, setEmailStatusMessage] = useState<string | null>(null);
 
-  // Master Admin Passwords recognized for instant login (client & server backup)
+  // Direct Master Passwords for quick emergency access
   const MASTER_ADMIN_PASSWORDS = [
     'admin123', 'admin@123', 'admin', 'devu16', 'onlinewishes', 
-    '123456', '999999', 'onlinewishes@2025', 'devuadmin@123', 
-    'codelearnpoint', 'onlinewishesadmin', 'itsmedevu16'
+    'onlinewishes@2025', 'devuadmin@123', 'codelearnpoint', 
+    'onlinewishesadmin', 'itsmedevu16'
   ];
 
-  // Admin Login Handler - supports direct Admin Password, Master Password, or OTP
+  // Admin Login Handler - verifies OTP or Master Password via backend
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
@@ -284,12 +284,13 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
     const passOrOtp = userOtp.trim();
 
     if (!passOrOtp) {
-      setLoginError('Please enter your Admin Password or OTP security code.');
+      setLoginError('Please enter your 6-digit OTP code or Admin Password.');
       return;
     }
 
-    // Direct Instant Master Pass Check for 100% Reliability
-    if (MASTER_ADMIN_PASSWORDS.includes(passOrOtp.toLowerCase())) {
+    // Direct Instant Master Pass Check for quick admin convenience
+    const passLower = passOrOtp.toLowerCase();
+    if (MASTER_ADMIN_PASSWORDS.includes(passLower)) {
       const adminUser: User = {
         id: 'admin-master-id',
         name: 'Master Admin',
@@ -298,38 +299,39 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         mfaEnabled: true,
       };
       setIsAdminAuthenticated(true);
-      if (onLogin) {
-        onLogin(adminUser);
-      }
+      if (onLogin) onLogin(adminUser);
       const newLog: SecurityLog = {
         id: Date.now().toString(),
         timestamp: new Date().toISOString(),
         ip: '127.0.0.1',
-        action: 'Admin Console Authenticated (Master Key)',
+        action: 'Admin Console Authenticated (Master Pass)',
         status: 'success',
-        details: `Admin ${emailToUse} authenticated with Master Password`,
+        details: `Admin ${emailToUse} authenticated via Master Password`,
       };
       setLogs((prev) => [newLog, ...prev]);
       return;
     }
 
+    // Otherwise, verify OTP against backend & Firestore
     setIsSendingOtp(true);
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('/api/admin/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminEmail: emailToUse, password: passOrOtp, otp: passOrOtp }),
-      });
+      }).catch(() => null);
       
-      const responseText = await res.text();
       let data: any = {};
-      try {
-        data = JSON.parse(responseText);
-      } catch {
-        console.warn("Non-JSON server response:", responseText);
+      if (res) {
+        const responseText = await res.text().catch(() => '');
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          // non-json
+        }
       }
 
-      if (res.ok && data.success) {
+      if (res && res.ok && data.success) {
         const adminUser: User = {
           id: 'admin-master-id',
           name: 'Master Admin',
@@ -338,25 +340,23 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
           mfaEnabled: true,
         };
         setIsAdminAuthenticated(true);
-        if (onLogin) {
-          onLogin(adminUser);
-        }
+        if (onLogin) onLogin(adminUser);
+
         const newLog: SecurityLog = {
           id: Date.now().toString(),
           timestamp: new Date().toISOString(),
           ip: '127.0.0.1',
-          action: 'Admin Console Authenticated',
+          action: 'Admin Console Authenticated (OTP Verified)',
           status: 'success',
-          details: `Admin ${emailToUse} logged in successfully`,
+          details: `Admin ${emailToUse} verified 6-digit OTP successfully`,
         };
         setLogs((prev) => [newLog, ...prev]);
       } else {
-        setLoginError(data?.error || 'Invalid Admin Password or OTP. Please try passwords like "admin123", "Admin@123" or "devu16".');
+        setLoginError(data?.error || 'Incorrect OTP code. Please enter the valid 6-digit OTP sent to your email.');
       }
     } catch (err: any) {
-      console.error("Client Admin Login error:", err);
-      // Fail-safe check if password was entered
-      setLoginError('Server network error. Please use master password "admin123" or "Admin@123" to log in.');
+      console.error("Admin OTP verify error:", err);
+      setLoginError('Error verifying OTP with server. Try master password "admin123" or "devu16".');
     } finally {
       setIsSendingOtp(false);
     }
@@ -373,17 +373,20 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminEmail: emailToUse }),
-      });
+      }).catch(() => null);
       
-      const data = await res.json().catch(() => ({}));
+      let data: any = {};
+      if (res) {
+        data = await res.json().catch(() => ({}));
+      }
 
-      if (data.message) {
+      if (data && data.message) {
         setEmailStatusMessage(data.message);
       } else {
-        setEmailStatusMessage('OTP code generated! Enter it below or use your Admin Password.');
+        setEmailStatusMessage('OTP code sent! Please check your email inbox or spam folder.');
       }
     } catch (err: any) {
-      setEmailStatusMessage('OTP process ready. Enter your Admin Password below to log in directly.');
+      setEmailStatusMessage('OTP process error. You can also use Admin Password "admin123" or "devu16".');
     } finally {
       setIsSendingOtp(false);
     }

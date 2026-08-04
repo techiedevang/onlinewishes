@@ -1351,24 +1351,28 @@ function getResendClient() {
       // Primary recipient for admin alerts
       const primaryRecipient = "codelearnpoint@gmail.com";
 
-      // Dispatch email asynchronously so Vercel serverless endpoint returns HTTP 200 immediately without 500 socket timeout
-      sendEmailWithFallback({
-        to: primaryRecipient,
-        subject: "🔐 Admin Portal Verification Code: " + otpCode,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
-            <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
-            <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>${targetAdmin || "admin@onlinewishes.in"}</strong>.</p>
-            <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
-              <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
+      // Await the dispatch so Vercel does not terminate the lambda abruptly
+      let emailResult: any = { success: false };
+      try {
+        emailResult = await sendEmailWithFallback({
+          to: primaryRecipient,
+          subject: "🔐 Admin Portal Verification Code: " + otpCode,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #0f172a; color: #ffffff; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid #334155;">
+              <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px;">OnlineWishes.com Master Admin Portal</h2>
+              <p style="color: #94a3b8; font-size: 14px;">An admin access OTP was requested for <strong>${targetAdmin || "admin@onlinewishes.in"}</strong>.</p>
+              <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0; border: 1px solid #f59e0b;">
+                <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #10b981;">${otpCode}</span>
+              </div>
+              <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code to complete sign-in.</p>
+              <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
+              <p style="font-size: 11px; color: #64748b;">Delivered directly to: <strong>${primaryRecipient}</strong></p>
             </div>
-            <p style="color: #cbd5e1; font-size: 13px;">Use this 6-digit verification code to complete sign-in.</p>
-            <hr style="border-color: #334155; margin-top: 24px; margin-bottom: 16px;"/>
-            <p style="font-size: 11px; color: #64748b;">Delivered directly to: <strong>${primaryRecipient}</strong></p>
-          </div>
-        `
-      }).then((res) => console.log("OTP Email dispatch background result:", res))
-        .catch((err) => console.warn("OTP Email dispatch background warning:", err));
+          `
+        });
+      } catch (emailErr: any) {
+        console.warn("Email catch block warning:", emailErr);
+      }
 
       return res.json({
         success: true,

@@ -303,10 +303,10 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
       const newLog: SecurityLog = {
         id: Date.now().toString(),
         timestamp: new Date().toISOString(),
-        ip: '127.0.0.1',
-        action: 'Admin Console Authenticated (Master Pass)',
-        status: 'success',
-        details: `Admin ${emailToUse} authenticated via Master Password`,
+        ipAddress: '127.0.0.1',
+        event: 'Admin Console Authenticated (Master Pass)',
+        severity: 'low',
+        userEmail: emailToUse,
       };
       setLogs((prev) => [newLog, ...prev]);
       return;
@@ -345,10 +345,10 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         const newLog: SecurityLog = {
           id: Date.now().toString(),
           timestamp: new Date().toISOString(),
-          ip: '127.0.0.1',
-          action: 'Admin Console Authenticated (OTP Verified)',
-          status: 'success',
-          details: `Admin ${emailToUse} verified 6-digit OTP successfully`,
+          ipAddress: '127.0.0.1',
+          event: 'Admin Console Authenticated (OTP Verified)',
+          severity: 'low',
+          userEmail: emailToUse,
         };
         setLogs((prev) => [newLog, ...prev]);
       } else {

@@ -561,137 +561,75 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
 
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-6xl shadow-2xl text-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
-        
-        {/* Admin Header */}
-        <div className="p-5 sm:p-6 bg-slate-900/90 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 text-slate-950 flex items-center justify-center font-black shadow-lg">
-              <Shield className="w-6 h-6" />
+    <div className="fixed inset-0 z-50 bg-gray-100 flex overflow-hidden font-sans">
+      {!isAdminAuthenticated ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 p-6">
+          <div className="max-w-md w-full bg-white p-8 rounded-xl border border-gray-200 shadow-xl space-y-6">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-2xl font-bold text-gray-900">Admin Console</h3>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
             </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-black flex items-center space-x-2">
-                <span>OnlineWishes.in Admin Console</span>
-                <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold uppercase tracking-wider">
-                  Live Production
-                </span>
-              </h2>
-              <p className="text-xs text-slate-400">
-                Revenue analytics, payment records, user accounts, wishes & cloud health
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            {isAdminAuthenticated && (
-              <button
-                onClick={() => {
-                  setIsAdminAuthenticated(false);
-                  if (onClose) onClose();
-                }}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center space-x-2"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Secure Logout</span>
-              </button>
-            )}
-            <button
-              onClick={onClose}
-              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {!isAdminAuthenticated ? (
-          <div className="flex-1 flex items-center justify-center p-6 bg-slate-900/50">
-            <div className="max-w-md w-full bg-slate-950 p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
-              <div className="text-center space-y-2">
-                <div className="w-16 h-16 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-8 h-8 text-amber-500" />
-                </div>
-                <h3 className="text-xl font-black text-white">Admin Authentication</h3>
-                <p className="text-sm text-slate-400">Verify your identity to access the cloud console</p>
+            <p className="text-sm text-gray-500">Sign in to manage the platform</p>
+            {loginError && <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm border border-red-200">{loginError}</div>}
+            {emailStatusMessage && <div className="p-3 bg-green-50 text-green-700 rounded-md text-sm border border-green-200">{emailStatusMessage}</div>}
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">Email Address</label>
+                <input
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  placeholder="admin@onlinewishes.in"
+                  className="w-full p-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
-
-
-              {loginError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold text-center">
-                  {loginError}
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <label className="text-sm font-medium text-gray-700">Password / OTP</label>
+                  <button type="button" onClick={handleSendOtpOnly} disabled={isSendingOtp} className="text-xs text-blue-600 hover:underline">
+                    {isSendingOtp ? 'Sending...' : 'Send OTP'}
+                  </button>
                 </div>
-              )}
-
-              {emailStatusMessage && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold text-center">
-                  {emailStatusMessage}
-                </div>
-              )}
-
-              <form onSubmit={handleAdminLogin} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-400 px-1">Master Admin Email</label>
+                <div className="relative">
+                  <Key className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
                   <input
-                    type="email"
-                    value={adminEmail}
-                    onChange={(e) => setAdminEmail(e.target.value)}
-                    placeholder="admin@onlinewishes.in"
-                    className="w-full p-3 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-amber-500 transition-colors"
+                    type="password"
+                    value={userOtp}
+                    onChange={(e) => setUserOtp(e.target.value)}
+                    placeholder="Enter password..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-400 px-1 flex justify-between">
-                    <span>Admin Password or OTP</span>
-                    <button
-                      type="button"
-                      onClick={handleSendOtpOnly}
-                      disabled={isSendingOtp}
-                      className="text-amber-400 hover:underline hover:text-amber-300 font-normal"
-                    >
-                      {isSendingOtp ? 'Sending...' : 'Send OTP Email'}
-                    </button>
-                  </label>
-                  <div className="relative">
-                    <Key className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
-                    <input
-                      type="password"
-                      value={userOtp}
-                      onChange={(e) => setUserOtp(e.target.value)}
-                      placeholder="Enter Admin Password or 6-digit OTP..."
-                      className="w-full pl-9 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSendingOtp}
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-black rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
-                >
-                  {isSendingOtp ? (
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <span>Login to Admin Console</span>
-                      <ChevronRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
+              </div>
+              <button
+                type="submit"
+                disabled={isSendingOtp}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2"
+              >
+                {isSendingOtp ? <RefreshCw className="w-5 h-5 animate-spin" /> : <span>Sign In</span>}
+              </button>
+            </form>
           </div>
-        ) : (
-          <>
-            <div className="bg-slate-950 px-4 sm:px-6 pt-3 flex space-x-1 sm:space-x-2 border-b border-slate-800 overflow-x-auto no-scrollbar">
+        </div>
+      ) : (
+        <>
+          {/* Sidebar */}
+          <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white font-bold text-lg">
+                <Shield className="w-5 h-5 text-blue-400" />
+                <span>Admin Console</span>
+              </div>
+            </div>
+            <nav className="flex-1 overflow-y-auto p-4 space-y-1">
               {[
-                { id: 'overview', label: 'Overview', icon: TrendingUp },
-                { id: 'custom_requests', label: 'Custom Requests', icon: Mic, badge: `${customRequests.length}` },
-                { id: 'payments', label: 'Payments', icon: CreditCard, badge: `${transactions.length}` },
-                { id: 'users', label: 'Users', icon: Users, badge: `${usersList.length}` },
-                { id: 'wishes', label: 'Wishes', icon: Layout, badge: `${publishedWishes.length}` },
+                { id: 'overview', label: 'Dashboard', icon: Layout },
+                { id: 'custom_requests', label: 'Custom Requests', icon: MessageSquare, badge: customRequests.length },
+                { id: 'payments', label: 'Transactions', icon: CreditCard, badge: transactions.length },
+                { id: 'users', label: 'Users', icon: Users, badge: usersList.length },
+                { id: 'wishes', label: 'Projects', icon: FileCode, badge: publishedWishes.length },
                 { id: 'security', label: 'Security Logs', icon: Lock },
-                { id: 'seo', label: 'SEO & Sitemap', icon: FileCode },
+                { id: 'seo', label: 'SEO Settings', icon: Globe },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -699,120 +637,129 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-4 py-3 rounded-t-xl text-xs font-bold transition-all whitespace-nowrap ${
-                      isActive 
-                        ? 'bg-slate-900 text-white border-t-2 border-amber-500' 
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 hover:text-white'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-amber-500' : 'text-slate-500'}`} />
-                    <span>{tab.label}</span>
-                    {tab.badge && (
-                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${isActive ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'}`}>
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4" />
+                      {tab.label}
+                    </div>
+                    {tab.badge !== undefined && tab.badge > 0 && (
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${isActive ? 'bg-blue-800 text-white' : 'bg-slate-700 text-slate-300'}`}>
                         {tab.badge}
                       </span>
                     )}
                   </button>
                 );
               })}
+            </nav>
+            <div className="p-4 border-t border-slate-800">
+              <button
+                onClick={() => { setIsAdminAuthenticated(false); if (onClose) onClose(); }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-md text-sm font-medium transition-colors"
+              >
+                <LogOut className="w-4 h-4" /> Sign Out
+              </button>
             </div>
+          </aside>
 
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-900/50">
+          {/* Main Content */}
+          <main className="flex-1 flex flex-col bg-gray-50 overflow-hidden">
+            <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 flex-shrink-0">
+              <h1 className="text-xl font-semibold text-gray-800 capitalize">
+                {activeTab.replace('_', ' ')}
+              </h1>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-500">Live Production Environment</span>
+                <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </header>
+
+            <div className="flex-1 overflow-y-auto p-6">
               
               {activeTab === 'overview' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
-                      <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
-                        <span>Total Revenue</span>
-                        <IndianRupee className="w-4 h-4 text-emerald-400" />
-                      </div>
-                      <p className="text-3xl font-black text-emerald-400">₹{totalRevenue.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-500 mt-1">{totalSuccessfulTxns} Successful Orders</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                      <p className="text-sm font-medium text-gray-500 mb-1">Total Revenue</p>
+                      <h3 className="text-3xl font-bold text-gray-900">₹{totalRevenue.toLocaleString()}</h3>
+                      <p className="text-sm text-green-600 mt-2 flex items-center gap-1"><TrendingUp className="w-4 h-4" /> {totalSuccessfulTxns} Orders</p>
                     </div>
-                    <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
-                      <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
-                        <span>Active Sessions (Live)</span>
-                        <Activity className="w-4 h-4 text-amber-400" />
-                      </div>
-                      <p className="text-3xl font-black text-white">{activeSessionsCount}</p>
-                      <p className="text-[10px] text-slate-500 mt-1">out of {usersList.length} total users</p>
+                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                      <p className="text-sm font-medium text-gray-500 mb-1">Active Users</p>
+                      <h3 className="text-3xl font-bold text-gray-900">{usersList.length}</h3>
+                      <p className="text-sm text-blue-600 mt-2 flex items-center gap-1"><Activity className="w-4 h-4" /> {activeSessionsCount} currently online</p>
                     </div>
-                    <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 relative overflow-hidden">
-                      <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
-                        <span>Total Scrapbook Views</span>
-                        <Eye className="w-4 h-4 text-sky-400" />
-                      </div>
-                      <p className="text-3xl font-black text-white">{totalViews.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-500 mt-1">across {publishedWishes.length} published wishes</p>
+                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                      <p className="text-sm font-medium text-gray-500 mb-1">Published Projects</p>
+                      <h3 className="text-3xl font-bold text-gray-900">{publishedWishes.length}</h3>
+                      <p className="text-sm text-purple-600 mt-2 flex items-center gap-1"><Eye className="w-4 h-4" /> {totalViews.toLocaleString()} total views</p>
                     </div>
                   </div>
 
-                  <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800">
-                    <h3 className="text-sm font-bold text-white mb-4">Growth Metrics (Last 30 Days)</h3>
-                    <div className="h-72 w-full">
+                  <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Growth (30 Days)</h3>
+                    <div className="h-80 w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                          <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickMargin={10} />
-                          <YAxis stroke="#64748b" fontSize={10} tickFormatter={(val) => Math.floor(val).toString()} allowDecimals={false} />
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                          <XAxis dataKey="date" stroke="#6b7280" fontSize={12} tickMargin={10} />
+                          <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(val) => Math.floor(val).toString()} allowDecimals={false} />
                           <RechartsTooltip 
-                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px' }}
-                            itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                            labelStyle={{ fontSize: '12px', color: '#94a3b8', marginBottom: '4px' }}
+                            contentStyle={{ backgroundColor: '#fff', borderColor: '#e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                           />
-                          <Legend wrapperStyle={{ fontSize: '12px' }} />
-                          <Line type="monotone" name="New Users" dataKey="newUsers" stroke="#8b5cf6" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
-                          <Line type="monotone" name="New Scrapbooks" dataKey="newScrapbooks" stroke="#38bdf8" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                          <Legend />
+                          <Line type="monotone" name="New Users" dataKey="newUsers" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{ r: 6 }} />
+                          <Line type="monotone" name="New Projects" dataKey="newScrapbooks" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
                 </div>
               )}
+
               {activeTab === 'custom_requests' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-bold text-white">Custom Requests & Voice Notes</h4>
-                      <p className="text-xs text-slate-400">Manage user submitted requests</p>
-                    </div>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Custom Website Requests</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="divide-y divide-gray-200">
                     {customRequests.map((req) => (
-                      <div key={req.id} className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
+                      <div key={req.id} className="p-6 hover:bg-gray-50">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h5 className="font-bold text-white">{req.recipientName}</h5>
-                            <p className="text-xs text-slate-400">{req.whatsappNumber}</p>
+                            <h4 className="text-lg font-bold text-gray-900">{req.recipientName}</h4>
+                            <p className="text-sm text-gray-500 font-medium">{req.whatsappNumber}</p>
                           </div>
-                          <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                            req.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
-                            req.status === 'IN_PROGRESS' ? 'bg-sky-500/20 text-sky-400' :
-                            'bg-emerald-500/20 text-emerald-400'
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            req.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                            req.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                            'bg-green-100 text-green-800'
                           }`}>
                             {req.status}
                           </span>
                         </div>
-                        <div className="pt-3 border-t border-slate-800/60">
-                          <p className="text-xs font-bold text-slate-300 mb-1">Occasion / Details</p>
-                          <p className="text-sm text-slate-200">{req.relationship}</p>
-                          {req.clientPrompt && <p className="text-xs text-slate-400 mt-2 bg-slate-900 p-2 rounded-lg">{req.clientPrompt}</p>}
+                        <div className="mt-4">
+                          <p className="text-sm text-gray-700"><strong>Relationship:</strong> {req.relationship}</p>
+                          {req.clientPrompt && <p className="text-sm text-gray-600 mt-2 bg-gray-100 p-3 rounded-lg">{req.clientPrompt}</p>}
                         </div>
                         {req.audioUrl && (
-                          <div className="pt-3 border-t border-slate-800/60">
-                            <p className="text-xs font-bold text-emerald-400 mb-2 flex items-center gap-1"><Mic className="w-3 h-3" /> Voice Note Attached</p>
-                            <audio controls src={req.audioUrl} className="w-full h-8" />
+                          <div className="mt-4">
+                            <p className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2"><Mic className="w-4 h-4 text-blue-500" /> Voice Note</p>
+                            <audio controls src={req.audioUrl} className="w-full max-w-md h-10" />
                           </div>
                         )}
-                        <div className="pt-3 flex gap-2">
-                          <button onClick={() => handleUpdateStatus(req.id, 'IN_PROGRESS')} className="flex-1 py-1.5 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 text-xs font-bold rounded-lg transition-colors">Mark In-Progress</button>
-                          <button onClick={() => handleUpdateStatus(req.id, 'COMPLETED')} className="flex-1 py-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold rounded-lg transition-colors">Mark Completed</button>
+                        <div className="mt-4 flex gap-3">
+                          <button onClick={() => handleUpdateStatus(req.id, 'IN_PROGRESS')} className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Mark In-Progress</button>
+                          <button onClick={() => handleUpdateStatus(req.id, 'COMPLETED')} className="px-4 py-2 bg-blue-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700">Mark Completed</button>
                         </div>
                       </div>
                     ))}
                     {customRequests.length === 0 && (
-                      <div className="col-span-full p-8 text-center text-slate-500 text-sm">No custom requests found.</div>
+                      <div className="p-8 text-center text-gray-500">No requests found.</div>
                     )}
                   </div>
                 </div>
@@ -820,96 +767,65 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
 
               {activeTab === 'payments' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-slate-400">Total Collected</p>
-                        <p className="text-xl font-bold text-emerald-400">₹{totalRevenue}</p>
-                      </div>
-                      <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-slate-400">Pending Authorization</p>
-                        <p className="text-xl font-bold text-amber-400">₹{pendingRevenue}</p>
-                      </div>
-                      <Clock className="w-6 h-6 text-amber-400" />
-                    </div>
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-slate-400">Refunded Transactions</p>
-                        <p className="text-xl font-bold text-rose-400">{transactions.filter(t => t.status === 'REFUNDED').length}</p>
-                      </div>
-                      <RefreshCcw className="w-6 h-6 text-rose-400" />
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                  <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                    <div className="relative max-w-md w-full">
+                      <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
                       <input
                         type="text"
                         value={paymentSearch}
                         onChange={(e) => setPaymentSearch(e.target.value)}
                         placeholder="Search transactions..."
-                        className="w-full pl-10 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <select
                       value={paymentFilterStatus}
                       onChange={(e) => setPaymentFilterStatus(e.target.value)}
-                      className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
+                      className="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="ALL">All Statuses</option>
-                      <option value="SUCCESS">Success Only</option>
-                      <option value="PENDING">Pending Only</option>
-                      <option value="REFUNDED">Refunded Only</option>
+                      <option value="SUCCESS">Success</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="REFUNDED">Refunded</option>
                     </select>
                   </div>
-
-                  <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 border-b border-slate-800">
+                  
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
                         <tr>
-                          <th className="p-3">Order ID</th>
-                          <th className="p-3">Customer</th>
-                          <th className="p-3">Template</th>
-                          <th className="p-3">Method</th>
-                          <th className="p-3">Amount</th>
-                          <th className="p-3">Status</th>
-                          <th className="p-3">Actions</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Details</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60">
+                      <tbody className="bg-white divide-y divide-gray-200">
                         {filteredTransactions.map((txn) => (
-                          <tr key={txn.id} className="hover:bg-slate-900/40">
-                            <td className="p-3 font-mono text-amber-300">{txn.orderId}</td>
-                            <td className="p-3 text-slate-200">{txn.userName}<br/><span className="text-[10px] text-slate-400">{txn.userEmail}</span></td>
-                            <td className="p-3 text-slate-300">{txn.templateTitle}</td>
-                            <td className="p-3 text-slate-400">{txn.paymentGateway}</td>
-                            <td className="p-3 font-bold text-white">₹{txn.amount}</td>
-                            <td className="p-3">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${txn.status === 'SUCCESS' ? 'bg-emerald-500/20 text-emerald-400' : txn.status === 'REFUNDED' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                          <tr key={txn.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{txn.orderId}</div>
+                              <div className="text-sm text-gray-500">{txn.templateTitle}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{txn.userName}</div>
+                              <div className="text-sm text-gray-500">{txn.userEmail}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-bold text-gray-900">₹{txn.amount}</div>
+                              <div className="text-xs text-gray-500">{txn.paymentGateway}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${txn.status === 'SUCCESS' ? 'bg-green-100 text-green-800' : txn.status === 'REFUNDED' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                 {txn.status}
                               </span>
                             </td>
-                            <td className="p-3">
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  onClick={() => handleResendReceipt(txn)}
-                                  className="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-[10px] font-bold flex items-center gap-1"
-                                  title="Resend payment thank you receipt email"
-                                >
-                                  <Send className="w-3 h-3" />
-                                  <span>Send Email</span>
-                                </button>
-                                <button
-                                  onClick={() => handleToggleRefundStatus(txn.id)}
-                                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] font-bold"
-                                >
-                                  {txn.status === 'REFUNDED' ? 'Mark Success' : 'Refund'}
-                                </button>
-                              </div>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <button onClick={() => handleResendReceipt(txn)} className="text-blue-600 hover:text-blue-900 mr-4">Receipt</button>
+                              <button onClick={() => handleToggleRefundStatus(txn.id)} className="text-red-600 hover:text-red-900">
+                                {txn.status === 'REFUNDED' ? 'Undo' : 'Refund'}
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -920,149 +836,120 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
               )}
 
               {activeTab === 'users' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                    <div>
-                      <h4 className="text-sm font-bold text-white">Active Users & Role Management</h4>
-                      <p className="text-xs text-slate-400">View registered user credentials and download reports</p>
-                    </div>
-                    <button 
-                      onClick={handleDownloadCsv}
-                      className="flex items-center space-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors"
-                    >
-                      <Download className="w-4 h-4 text-emerald-400" />
-                      <span>Export CSV</span>
+                <div className="space-y-6">
+                  <div className="flex justify-end">
+                    <button onClick={handleDownloadCsv} className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                      <Download className="w-4 h-4 text-gray-500" /> Export CSV
                     </button>
                   </div>
-                  
-                  <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/80 text-slate-400 border-b border-slate-800">
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
                         <tr>
-                          <th className="p-3">User Name</th>
-                          <th className="p-3">Email Address</th>
-                          <th className="p-3">Role</th>
-                          <th className="p-3">Last Login</th>
-                          <th className="p-3 text-right">Actions</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60">
-                        {usersList.map((usr) => {
-                          const lastLogin = usr.lastLoginAt ? new Date(usr.lastLoginAt) : null;
-                          const isActive = lastLogin && (new Date().getTime() - lastLogin.getTime()) / (1000 * 60 * 60) < 24;
-                          
-                          return (
-                            <tr key={usr.id} className="hover:bg-slate-900/40">
-                              <td className="p-3 font-bold text-slate-200">
-                                <div className="flex items-center space-x-2">
-                                  <span>{usr.name}</span>
-                                  {isActive && <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>}
-                                </div>
-                              </td>
-                              <td className="p-3 text-slate-400">{usr.email}</td>
-                              <td className="p-3">
-                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${usr.role === 'admin' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-slate-400'}`}>
-                                  {usr.role}
-                                </span>
-                              </td>
-                              <td className="p-3 text-slate-500">
-                                {lastLogin ? lastLogin.toLocaleString() : 'Never'}
-                              </td>
-                              <td className="p-3 text-right">
-                                <button
-                                  onClick={() => handleToggleUserRole(usr.id)}
-                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded"
-                                >
-                                  {usr.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {usersList.length === 0 && (
-                          <tr><td colSpan={5} className="p-6 text-center text-slate-500">No users found.</td></tr>
-                        )}
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {usersList.map((usr) => (
+                          <tr key={usr.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{usr.name}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{usr.email}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${usr.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+                                {usr.role}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <button onClick={() => handleToggleUserRole(usr.id)} className="text-blue-600 hover:text-blue-900">
+                                {usr.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
               )}
+
               {activeTab === 'wishes' && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {publishedWishes.map((w) => (
-                    <div key={w.id} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-                      <div className="flex justify-between">
-                        <span className="px-2 py-0.5 bg-rose-500/10 text-rose-400 rounded-full text-[10px]">{w.subdomain}.onlinewishes.in</span>
-                        <span className="text-xs text-slate-400">{w.views} views</span>
+                    <div key={w.id} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
+                          {w.subdomain}.onlinewishes.in
+                        </span>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{w.views} views</span>
                       </div>
-                      <div>
-                        <h5 className="font-bold text-white text-sm line-clamp-1">{w.title}</h5>
-                        <p className="text-xs text-slate-400">For: <span className="text-slate-200">{w.recipientName}</span></p>
-                      </div>
-                      <div className="pt-2 border-t border-slate-800 flex justify-between">
-                        <a href={w.publishedUrl} target="_blank" rel="noreferrer" className="text-xs text-amber-400 hover:underline"><Eye className="w-3.5 h-3.5 inline mr-1" />Preview</a>
-                        <button onClick={() => handleDeleteWish(w.id)} className="text-rose-400 hover:text-rose-300"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <h4 className="text-lg font-bold text-gray-900 mb-1">{w.title}</h4>
+                      <p className="text-sm text-gray-500 mb-4">Recipient: {w.recipientName}</p>
+                      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                        <a href={w.publishedUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                          <ExternalLink className="w-4 h-4" /> Open
+                        </a>
+                        <button onClick={() => handleDeleteWish(w.id)} className="text-sm text-red-600 hover:text-red-800 font-medium flex items-center gap-1">
+                          <Trash2 className="w-4 h-4" /> Delete
+                        </button>
                       </div>
                     </div>
                   ))}
                   {publishedWishes.length === 0 && (
-                    <div className="col-span-full p-8 text-center text-slate-500 text-sm">No published wishes.</div>
+                    <div className="col-span-full p-12 text-center text-gray-500 bg-white rounded-xl border border-gray-200 border-dashed">No projects published yet.</div>
                   )}
                 </div>
               )}
 
               {activeTab === 'security' && (
-                <div className="space-y-4">
-                  <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-900/60 text-slate-400 border-b border-slate-800">
+                <div className="space-y-6">
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
                         <tr>
-                          <th className="p-3">Timestamp</th>
-                          <th className="p-3">Event</th>
-                          <th className="p-3">User</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60">
+                      <tbody className="bg-white divide-y divide-gray-200">
                         {logs.map((log) => (
-                          <tr key={log.id} className="hover:bg-slate-900/40">
-                            <td className="p-3 text-slate-400">{log.timestamp}</td>
-                            <td className="p-3 text-slate-200">{log.event}</td>
-                            <td className="p-3 text-slate-300">{log.userEmail}</td>
+                          <tr key={log.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.timestamp}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.event}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.userEmail}</td>
                           </tr>
                         ))}
-                        {logs.length === 0 && (
-                          <tr><td colSpan={3} className="p-6 text-center text-slate-500">No logs generated yet.</td></tr>
-                        )}
+                        {logs.length === 0 && <tr><td colSpan={3} className="px-6 py-8 text-center text-gray-500">No recent security events.</td></tr>}
                       </tbody>
                     </table>
                   </div>
-                  <div className="bg-slate-900/40 p-6 rounded-2xl border border-red-500/20 space-y-4">
-                    <h4 className="text-base font-bold text-red-400">Database Reset (Start Fresh)</h4>
-                    <p className="text-xs text-slate-400">Wipes all stored records from Cloud Firestore.</p>
-                    {purgeSuccessMessage && <div className="bg-emerald-500/10 text-emerald-400 p-4 rounded-xl text-xs">{purgeSuccessMessage}</div>}
-                    <button
-                      onClick={handlePurgeAllData}
-                      disabled={isPurging}
-                      className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold"
-                    >
-                      {isPurging ? 'Purging...' : 'Wipe Cloud Database & Start Fresh'}
+                  
+                  <div className="bg-red-50 p-6 rounded-xl border border-red-200">
+                    <h4 className="text-lg font-bold text-red-900 mb-2">Danger Zone</h4>
+                    <p className="text-sm text-red-700 mb-4">Wipe the entire database. This action cannot be undone.</p>
+                    {purgeSuccessMessage && <div className="mb-4 bg-green-100 text-green-800 p-3 rounded-md text-sm">{purgeSuccessMessage}</div>}
+                    <button onClick={handlePurgeAllData} disabled={isPurging} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium">
+                      {isPurging ? 'Purging Database...' : 'Wipe Database'}
                     </button>
                   </div>
                 </div>
               )}
 
               {activeTab === 'seo' && (
-                <div className="space-y-6">
-                  <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800">
-                    <h4 className="text-base font-bold text-white mb-2">Dynamic sitemap.xml</h4>
-                    <pre className="p-4 bg-slate-900 rounded-xl text-xs text-amber-200/90 overflow-x-auto">{sitemapXml}</pre>
-                  </div>
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <h4 className="text-lg font-bold text-gray-900 mb-4">Sitemap Configuration</h4>
+                  <pre className="bg-gray-50 p-4 rounded-md border border-gray-200 text-sm text-gray-700 overflow-x-auto">
+                    {sitemapXml}
+                  </pre>
                 </div>
               )}
             </div>
-          </>
-        )}
-      </div>
+          </main>
+        </>
+      )}
     </div>
   );
 }

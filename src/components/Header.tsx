@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Heart, Sparkles, Moon, Sun, Menu, X, Shield, Layout, UserCheck, IndianRupee } from 'lucide-react';
+import { Menu, X, Sparkles } from 'lucide-react';
 import { User } from '../types';
-
-import { Logo } from './Logo';
 
 interface HeaderProps {
   activeTab: string;
@@ -22,17 +20,8 @@ export function Header({
   onOpenAuth,
   onOpenUserDashboard,
   onOpenAdmin,
-  onOpenSeoModal,
-  onOpenCustomAiModal,
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const navItems = [
-    { id: 'home', label: 'Home', icon: Sparkles },
-    { id: 'templates', label: 'Templates', icon: Layout },
-    { id: 'customizer', label: 'Studio Builder', icon: Heart },
-    { id: 'pricing', label: 'Pricing', icon: IndianRupee },
-  ];
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-white/80 dark:bg-zinc-900/80 border-b border-rose-100 dark:border-zinc-800 transition-colors duration-300">
@@ -109,161 +98,98 @@ export function Header({
           {/* Admin Dashboard Trigger (If Admin user logged in) */}
           {currentUser && currentUser.role === 'admin' && (
             <button
-              onClick={onOpenAdmin}
-              className="hidden lg:flex items-center space-x-1 px-2.5 py-1.5 text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 rounded-lg hover:bg-amber-500/20 transition-colors"
-              title="Admin Panel"
+              onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }}
+              className="flex items-center gap-2"
+              aria-label="OnlineWishes Home Page"
             >
-              <Shield className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Admin Panel</span>
+              <img alt="Lovely" className="h-10 sm:h-12 w-auto drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/lovely-logo-new.png" />
             </button>
-          )}
-
-          {/* Desktop User Auth Action (Hidden on mobile, moved into 3-lines mobile menu) */}
-          <div className="hidden lg:flex items-center space-x-2">
-            {currentUser ? (
-              <button
-                onClick={onOpenUserDashboard || onOpenAuth}
-                className="flex items-center space-x-2 pl-2 pr-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 border border-slate-200 dark:border-slate-700 transition-colors"
-                aria-label="User profile settings and dashboard"
+            <nav className="hidden md:flex items-center gap-6">
+              <button 
+                onClick={() => setActiveTab('templates')} 
+                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-lovely-neon transition-colors text-white drop-shadow-md"
               >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
-                  {currentUser.name.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 max-w-[90px] truncate">
-                  {currentUser.name.split(' ')[0]}
-                </span>
-                {currentUser.mfaEnabled && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" title="MFA Secured" />
-                )}
+                Templates
               </button>
-            ) : (
-              <button
-                onClick={onOpenAuth}
-                className="flex items-center space-x-1.5 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 via-rose-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 rounded-xl shadow-sm hover:shadow transition-all"
+              <button 
+                onClick={() => setActiveTab('pricing')} 
+                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-lovely-neon transition-colors text-white drop-shadow-md"
               >
-                <UserCheck className="w-4 h-4" />
-                <span>Sign In</span>
+                Pricing
               </button>
-            )}
-          </div>
-
-          {/* Mobile Menu Button (3 lines icon) */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-            aria-label="Toggle mobile menu"
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu Drawer (3-lines menu) */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-b border-rose-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-3 shadow-xl">
-          
-          {/* User Sign In / Profile in Mobile Drawer */}
-          <div className="pb-2 border-b border-slate-100 dark:border-slate-800">
-            {currentUser ? (
-              <button
-                onClick={() => {
-                  if (onOpenUserDashboard) onOpenUserDashboard();
-                  else onOpenAuth();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                    {currentUser.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                      {currentUser.name}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                      {currentUser.email}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950 px-2.5 py-1 rounded-lg">
+              {currentUser ? (
+                <button
+                  onClick={onOpenUserDashboard || onOpenAuth}
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full text-white font-bold text-sm border border-white/40 transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.5)]"
+                >
                   Dashboard
-                </span>
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  onOpenAuth();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-center space-x-2 py-3 px-4 text-sm font-bold text-white bg-gradient-to-r from-pink-500 via-rose-500 to-rose-600 rounded-xl shadow-md active:scale-98 transition-all"
+                </button>
+              ) : (
+                <button
+                  onClick={onOpenAuth}
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full text-white font-bold text-sm border border-white/40 transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.5)]"
+                >
+                  Sign In
+                </button>
+              )}
+            </nav>
+            <div className="flex md:hidden items-center gap-3">
+              <button 
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20" 
+                aria-label="Open menu"
               >
-                <UserCheck className="w-5 h-5" />
-                <span>Sign In / Create Account</span>
+                <Menu className="w-6 h-6 text-white" />
               </button>
-            )}
+            </div>
           </div>
+        </div>
+      </header>
 
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <a
-                key={item.id}
-                href={item.id === 'home' ? '/' : `/${item.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (item.id === 'customizer' && !currentUser) {
-                    onOpenAuth();
-                    setMobileMenuOpen(false);
-                    return;
-                  }
-                  setActiveTab(item.id);
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-semibold transition-colors ${
-                  isActive
-                    ? 'bg-rose-500 text-white shadow-sm'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </a>
-            );
-          })}
-
-          {onOpenCustomAiModal && (
-            <button
+      {/* Mobile Menu Overlay */}
+      <div className={`fixed inset-0 z-50 transition-all duration-500 ${mobileMenuOpen ? 'visible' : 'invisible'}`}>
+        <div 
+          className={`absolute inset-0 bg-lovely-plum/70 backdrop-blur-xl transition-opacity duration-500 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`} 
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        <div className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-gradient-to-br from-lovely-plum to-lovely-violet backdrop-blur-2xl border-l border-white/10 transform transition-transform duration-500 ease-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <button 
+            onClick={() => setMobileMenuOpen(false)}
+            className="absolute z-50 top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center" 
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+          <div className="flex flex-col h-full pt-20 pb-8 px-6 relative">
+            <div className="absolute z-0 top-0 left-[10vw] w-full">
+              <img alt="Scroll Indicator" loading="lazy" className="w-[150px]" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/navbar-hanging-cat-new.png" />
+            </div>
+            <nav className="flex flex-col gap-2 flex-grow mt-16 relative z-10">
+              <button onClick={() => {setActiveTab('home'); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-lovely-neon/50 transition-all duration-300">
+                <span className="font-heading text-xl uppercase text-white group-hover:text-lovely-neon transition-colors">Home</span>
+              </button>
+              <button onClick={() => {setActiveTab('templates'); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-lovely-neon/50 transition-all duration-300">
+                <span className="font-heading text-xl uppercase text-white group-hover:text-lovely-neon transition-colors">Templates</span>
+              </button>
+              {currentUser?.role === 'admin' && (
+                <button onClick={() => {onOpenAdmin(); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-lovely-yellow/50 transition-all duration-300">
+                  <span className="font-heading text-xl uppercase text-white group-hover:text-lovely-yellow transition-colors">Admin Panel</span>
+                </button>
+              )}
+            </nav>
+            <button 
               onClick={() => {
-                onOpenCustomAiModal();
+                if (currentUser && onOpenUserDashboard) { onOpenUserDashboard(); } else { onOpenAuth(); }
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-gradient-to-r from-purple-500 to-rose-500 text-white font-bold text-xs rounded-xl shadow-sm"
+              className="w-full uppercase mt-6 flex items-center justify-center gap-2 bg-lovely-neon text-white font-bold border-4 border-black rounded-xl px-6 py-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[0px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
               <Sparkles className="w-4 h-4" />
               <span>Request Custom Wish Blueprint</span>
             </button>
-          )}
-
-          
-          {currentUser && currentUser.role === 'admin' && (
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => {
-                  onOpenAdmin();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 rounded-xl border border-amber-300 dark:border-amber-800"
-              >
-                <Shield className="w-4 h-4" />
-                <span>Admin Panel</span>
-              </button>
-            </div>
-          )}
+          </div>
         </div>
-      )}
-    </header>
+      </div>
+    </>
   );
 }

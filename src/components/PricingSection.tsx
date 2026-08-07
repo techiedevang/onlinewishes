@@ -48,18 +48,18 @@ export function PricingSection({
           </p>
         </div>
 
-        {/* CUSTOM AI IDEA BANNER CARD */}
-        <div className="relative overflow-hidden bg-lovely-neon text-white rounded-[2rem] p-8 sm:p-10 border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row items-center justify-between gap-8 transform rotate-1">
-          <div className="space-y-4 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 bg-white text-black font-heading font-black px-4 py-2 rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] uppercase text-sm">
-              <Bot className="w-5 h-5 text-lovely-pink" />
-              <span>Bespoke AI Architect</span>
+        {/* CUSTOM BLUEPRINT BANNER CARD */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 border-2 border-rose-500/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center space-x-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+              <Layers className="w-3.5 h-3.5 text-rose-400" />
+              <span>Bespoke Custom Request</span>
             </div>
-            <h3 className="font-heading text-3xl sm:text-4xl font-black uppercase drop-shadow-md">
-              Want a Custom Design Built From Scratch?
+            <h3 className="text-2xl sm:text-3xl font-black">
+              Want a Completely Custom Design Coded From Scratch?
             </h3>
-            <p className="font-body font-bold text-sm sm:text-base leading-relaxed text-white/90">
-              Share your exact idea or vision with our AI Architect. We will generate a bespoke custom concept, personalized color scheme, custom soundboard, and interactive features built just for you.
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Share your exact idea or vision with our Wish Architect. We will generate a bespoke custom design blueprint, personalized color scheme, custom soundboard, and interactive features built just for you (Flat Price: Rs. 79).
             </p>
           </div>
 
@@ -70,8 +70,8 @@ export function PricingSection({
               onClick={onOpenCustomAiModal}
               className="w-full md:w-auto px-6 py-4 bg-lovely-yellow hover:bg-[#E5B833] text-black font-heading font-black text-sm uppercase rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center space-x-2"
             >
-              <Sparkles className="w-5 h-5" />
-              <span>Describe My Idea</span>
+              <Sparkles className="w-4 h-4" />
+              <span>Configure Custom Wish Blueprint</span>
             </button>
           </div>
         </div>

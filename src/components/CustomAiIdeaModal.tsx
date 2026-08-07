@@ -114,7 +114,7 @@ export function CustomAiIdeaModal({
 
   const handleGenerateCustomIdea = async () => {
     if (!clientPrompt.trim() && !audioUrl) {
-      alert('Please write your custom idea or record a voice note for the AI Architect.');
+      alert('Please write your custom idea or record a voice note for the Wish Architect.');
       return;
     }
     setIsAnalyzing(true);
@@ -128,7 +128,7 @@ export function CustomAiIdeaModal({
 
       if (apiKey) {
         const ai = new GoogleGenAI({ apiKey });
-        const systemInstruction = `You are OnlineWishes's Senior AI Web Architect & Bespoke Gift Specialist.
+        const systemInstruction = `You are OnlineWishes's Senior Web Architect & Bespoke Gift Specialist.
 Analyze the user's custom gift website request and return a JSON object with:
 - "title": a creative title for the website concept
 - "conceptDescription": a 2-sentence summary of the custom visual & interactive experience
@@ -318,7 +318,7 @@ Respond strictly in valid JSON format.`;
         alert('Notice: Razorpay API keys are not configured on the server. Simulating a successful mock payment for testing.');
         const mockPayId = `pay_mock_${Date.now()}`;
         try {
-          await recordPaymentInCloud(order.id, mockPayId, price, `Bespoke AI Architecture Blueprint: ${generatedBlueprint?.title || 'Custom Surprise App'}`);
+          await recordPaymentInCloud(order.id, mockPayId, price, `Bespoke Custom Architecture Blueprint: ${generatedBlueprint?.title || 'Custom Surprise App'}`);
         } catch (payErr) {
           console.error("Failed to write mock custom payment to cloud:", payErr);
         }
@@ -338,7 +338,7 @@ Respond strictly in valid JSON format.`;
         order_id: order.id,
         handler: async function (response: any) {
           try {
-            await recordPaymentInCloud(order.id, response.razorpay_payment_id || `pay_${Date.now()}`, price, `Bespoke AI Architecture Blueprint: ${generatedBlueprint?.title || 'Custom Surprise App'}`);
+            await recordPaymentInCloud(order.id, response.razorpay_payment_id || `pay_${Date.now()}`, price, `Bespoke Custom Architecture Blueprint: ${generatedBlueprint?.title || 'Custom Surprise App'}`);
           } catch (payErr) {
             console.error("Failed to write custom payment to cloud:", payErr);
           }
@@ -462,9 +462,9 @@ Respond strictly in valid JSON format.`;
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-extrabold flex items-center space-x-2 text-slate-900 dark:text-white">
-                <span>Custom Website Idea Request</span>
+                <span>Custom Design Blueprint</span>
                 <span className="bg-rose-500/20 text-rose-400 text-[10px] px-2 py-0.5 rounded-full border border-rose-500/30">
-                  CUSTOM AI
+                  CUSTOM DESIGN
                 </span>
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -866,12 +866,12 @@ Respond strictly in valid JSON format.`;
                     {isAnalyzing ? (
                       <>
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Generating AI Concept...</span>
+                        <span>Generating Design Blueprint...</span>
                       </>
                     ) : (
                       <>
                         <Wand2 className="w-3.5 h-3.5 text-purple-400" />
-                        <span>Also Generate Instant AI Concept Preview</span>
+                        <span>Also Generate Custom Blueprint Preview</span>
                       </>
                     )}
                   </button>

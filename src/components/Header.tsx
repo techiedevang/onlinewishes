@@ -24,10 +24,79 @@ export function Header({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 bg-transparent">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex items-center justify-between h-14 sm:h-16">
+    <header className="sticky top-0 z-40 backdrop-blur-md bg-white/80 dark:bg-zinc-900/80 border-b border-rose-100 dark:border-zinc-800 transition-colors duration-300">
+      <div className="w-full px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
+        
+        {/* Brand Logo */}
+        <button
+          onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }}
+          className="flex items-center space-x-2.5 focus:outline-none focus:ring-2 focus:ring-rose-400 rounded-lg p-1 group text-left"
+          aria-label="OnlineWishes Home Page"
+        >
+          <Logo className="w-10 h-10 group-hover:scale-105 transition-transform drop-shadow-md" />
+          <div>
+            <div className="flex items-center space-x-1">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white">
+                Online<span className="text-rose-500">Wishes</span>
+              </span>
+              <span className="bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800 shrink-0">
+                PRO
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
+              Surprise & Gift Website Builder
+            </p>
+          </div>
+        </button>
+
+        {/* Desktop Navigation */}
+        <nav aria-label="Main Navigation" className="hidden lg:flex items-center space-x-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <a
+                key={item.id}
+                href={item.id === 'home' ? '/' : `/${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (item.id === 'customizer' && !currentUser) {
+                    onOpenAuth();
+                    return;
+                  }
+                  setActiveTab(item.id);
+                }}
+                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  isActive
+                    ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                }`}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-rose-500' : ''}`} />
+                <span>{item.label}</span>
+              </a>
+            );
+          })}
+
+          {onOpenCustomAiModal && (
+            <button
+              onClick={onOpenCustomAiModal}
+              className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-rose-500 text-white font-bold text-xs rounded-full shadow-sm hover:opacity-90 transition-opacity ml-1"
+              title="Request a custom wish website design blueprint"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Custom Wish Blueprint</span>
+            </button>
+          )}
+        </nav>
+
+        {/* Right Tools & User Actions */}
+        <div className="flex items-center space-x-2">
+          
+          
+          {/* Admin Dashboard Trigger (If Admin user logged in) */}
+          {currentUser && currentUser.role === 'admin' && (
             <button
               onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }}
               className="flex items-center gap-2"
@@ -115,8 +184,8 @@ export function Header({
               }}
               className="w-full uppercase mt-6 flex items-center justify-center gap-2 bg-lovely-neon text-white font-bold border-4 border-black rounded-xl px-6 py-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[0px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
-              <Sparkles className="w-5 h-5" />
-              {currentUser ? 'Dashboard' : 'Sign In'}
+              <Sparkles className="w-4 h-4" />
+              <span>Request Custom Wish Blueprint</span>
             </button>
           </div>
         </div>

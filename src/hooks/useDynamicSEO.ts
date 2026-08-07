@@ -106,8 +106,8 @@ export function useDynamicSEO(currentPath: string, activeTab: string, customizat
 
       if (activeTab === 'pricing' || currentPath === '/pricing') {
         updatePageMetadata({
-          title: 'Pricing & Custom AI Website Plans',
-          description: 'All interactive templates at flat Rs. 49 and custom AI website blueprints at flat Rs. 79. Instant delivery with zero subscription fees.',
+          title: 'Pricing & Custom Website Design Blueprints',
+          description: 'All interactive templates at flat Rs. 49 and custom design blueprints at flat Rs. 79. Instant delivery with zero subscription fees.',
           canonicalUrl: 'https://onlinewishes.in/pricing',
         });
         return;
@@ -115,8 +115,8 @@ export function useDynamicSEO(currentPath: string, activeTab: string, customizat
 
       if (activeTab === 'custom_AI' || currentPath === '/custom_AI') {
         updatePageMetadata({
-          title: 'AI Custom Website Blueprint Generator',
-          description: 'Tell our AI Architect your idea and get a bespoke custom surprise website blueprint generated in seconds.',
+          title: 'Bespoke Custom Website Design Blueprint',
+          description: 'Tell our Wish Architect your custom design idea and get a bespoke custom surprise website blueprint.',
           canonicalUrl: 'https://onlinewishes.in/custom_AI',
         });
         return;

@@ -94,10 +94,10 @@ export function Header({
             <button
               onClick={onOpenCustomAiModal}
               className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-rose-500 text-white font-bold text-xs rounded-full shadow-sm hover:opacity-90 transition-opacity ml-1"
-              title="Request a custom website idea built by AI"
+              title="Request a custom wish website design blueprint"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Custom Idea</span>
+              <span>Custom Wish Blueprint</span>
             </button>
           )}
         </nav>
@@ -243,7 +243,7 @@ export function Header({
               className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-gradient-to-r from-purple-500 to-rose-500 text-white font-bold text-xs rounded-xl shadow-sm"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Request AI Custom Idea</span>
+              <span>Request Custom Wish Blueprint</span>
             </button>
           )}
 

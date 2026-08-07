@@ -44,18 +44,18 @@ export function PricingSection({
           </p>
         </div>
 
-        {/* CUSTOM AI IDEA BANNER CARD */}
+        {/* CUSTOM BLUEPRINT BANNER CARD */}
         <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 border-2 border-rose-500/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center space-x-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-              <Bot className="w-3.5 h-3.5 text-rose-400" />
-              <span>Bespoke AI Custom Request</span>
+              <Layers className="w-3.5 h-3.5 text-rose-400" />
+              <span>Bespoke Custom Request</span>
             </div>
             <h3 className="text-2xl sm:text-3xl font-black">
-              Want a Completely Custom Design Built From Scratch?
+              Want a Completely Custom Design Coded From Scratch?
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Share your exact idea or vision with our AI Architect. We will generate a bespoke custom concept, personalized color scheme, custom soundboard, and interactive features built just for you (Flat Price: Rs. 79).
+              Share your exact idea or vision with our Wish Architect. We will generate a bespoke custom design blueprint, personalized color scheme, custom soundboard, and interactive features built just for you (Flat Price: Rs. 79).
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export function PricingSection({
               className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-xl transition-all flex items-center justify-center space-x-2"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Describe My Idea to AI</span>
+              <span>Configure Custom Wish Blueprint</span>
             </button>
           </div>
         </div>

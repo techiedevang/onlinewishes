@@ -461,7 +461,7 @@ function getResendClient() {
   async function sendEmailWithFallback(params: { to: string; subject: string; html: string; text?: string }) {
     let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<{success: boolean, error?: string}>((resolve) => {
-      timeoutId = setTimeout(() => resolve({ success: false, error: "Email dispatch timed out on server host." }), 4500);
+      timeoutId = setTimeout(() => resolve({ success: false, error: "Email dispatch timed out on server host." }), 10000);
     });
     const corePromise = _sendEmailWithFallbackCore(params);
     corePromise.catch(() => {}); // prevent unhandled rejection if it fails after timeout
@@ -542,63 +542,25 @@ function getResendClient() {
         }
       }
 
-      // Attempt 3: Nodemailer SMTP using configured App Password with short 2s timeouts
+      // Attempt 3: Nodemailer SMTP using getTransporter
       const smtpUser = process.env.SMTP_USER || "codelearnpoint@gmail.com";
-      const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS || process.env.SMTP_PASSWORD;
-
-      if (rawPass) {
-        const pass = rawPass.trim().replace(/\s+/g, "");
-
-        // Config 3A: Port 587 STARTTLS
+      const transporter = getTransporter();
+      if (transporter) {
         try {
-          const t1 = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 587,
-            secure: false,
-            requireTLS: true,
-            auth: { user: smtpUser, pass },
-            connectionTimeout: 2000,
-            greetingTimeout: 2000,
-            socketTimeout: 2000,
-          });
-          await t1.sendMail({
+          await transporter.sendMail({
             from: `"OnlineWishes" <${smtpUser}>`,
             to,
             subject,
             html,
             text: text || "OnlineWishes Notification",
           });
-          console.log(`[Email Success - Gmail Port 587] Sent to ${to}`);
-          return { success: true, provider: 'nodemailer-587' };
-        } catch (e1: any) {
-          errors.push(`Gmail 587: ${e1?.message || String(e1)}`);
-        }
-
-        // Config 3B: Port 465 SMTPS
-        try {
-          const t2 = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            auth: { user: smtpUser, pass },
-            connectionTimeout: 2000,
-            greetingTimeout: 2000,
-            socketTimeout: 2000,
-          });
-          await t2.sendMail({
-            from: `"OnlineWishes" <${smtpUser}>`,
-            to,
-            subject,
-            html,
-            text: text || "OnlineWishes Notification",
-          });
-          console.log(`[Email Success - Gmail Port 465] Sent to ${to}`);
-          return { success: true, provider: 'nodemailer-465' };
-        } catch (e2: any) {
-          errors.push(`Gmail 465: ${e2?.message || String(e2)}`);
+          console.log(`[Email Success - Nodemailer SMTP] Sent to ${to}`);
+          return { success: true, provider: 'nodemailer' };
+        } catch (smtpErr: any) {
+          errors.push(`Nodemailer SMTP: ${smtpErr?.message || String(smtpErr)}`);
         }
       } else {
-        errors.push("No SMTP_PASS or RESEND_API_KEY environment variable provided in Vercel settings.");
+        errors.push("No SMTP_PASS or RESEND_API_KEY environment variable provided in settings.");
       }
     } catch (topLevelErr: any) {
       console.error("Email dispatch top level exception:", topLevelErr);

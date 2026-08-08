@@ -170,6 +170,149 @@ const getThemeConfig = (themeKey?: string, occasion?: string) => {
         stageGradients: 'bg-gradient-to-br from-amber-950 via-stone-950 to-amber-900',
         icon: '📜',
       };
+    case 'rose-day-bouquet':
+      return {
+        greetingBg: 'bg-gradient-to-br from-red-950 via-rose-900 to-stone-905 text-white',
+        cardBg: 'bg-red-950/95 text-rose-100 border-2 border-red-500 shadow-2xl backdrop-blur-md',
+        accentBtn: 'bg-red-500 hover:bg-red-400 text-white font-black uppercase tracking-wider',
+        titleFont: 'font-serif',
+        primaryText: 'text-rose-100',
+        subText: 'text-red-300',
+        stageGradients: 'bg-gradient-to-br from-red-950 via-rose-950 to-stone-900',
+        icon: '🌹',
+      };
+    case 'daisy-love-reasons':
+      return {
+        greetingBg: 'bg-gradient-to-br from-yellow-500 via-amber-400 to-orange-100 text-black',
+        cardBg: 'bg-white/95 text-amber-950 border-4 border-yellow-500 shadow-2xl',
+        accentBtn: 'bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase tracking-wider border-2 border-black',
+        titleFont: 'font-sans font-black',
+        primaryText: 'text-amber-950',
+        subText: 'text-yellow-600',
+        stageGradients: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50',
+        icon: '🌼',
+      };
+    case 'propose-day-proposal':
+      return {
+        greetingBg: 'bg-gradient-to-br from-pink-500 via-rose-500 to-red-400 text-white',
+        cardBg: 'bg-white/95 text-black border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]',
+        accentBtn: 'bg-lovely-neon hover:bg-rose-600 text-white font-black uppercase tracking-wider border-2 border-black',
+        titleFont: 'font-heading text-xl uppercase font-black',
+        primaryText: 'text-black',
+        subText: 'text-rose-600',
+        stageGradients: 'bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50',
+        icon: '💍',
+      };
+    case 'chocolate-day-box':
+      return {
+        greetingBg: 'bg-gradient-to-br from-[#3e2723] via-[#4e342e] to-[#1a0c08] text-[#d7ccc8]',
+        cardBg: 'bg-[#3e2723]/95 text-[#f5f5f5] border-2 border-[#8d6e63] shadow-2xl',
+        accentBtn: 'bg-[#8d6e63] hover:bg-[#a1887f] text-white font-bold',
+        titleFont: 'font-serif italic',
+        primaryText: 'text-[#d7ccc8]',
+        subText: 'text-[#a1887f]',
+        stageGradients: 'bg-gradient-to-br from-[#1a0c08] via-[#2d150f] to-[#3e2723]',
+        icon: '🍫',
+      };
+    case 'teddy-day-bear':
+      return {
+        greetingBg: 'bg-gradient-to-br from-[#a1887f] via-[#bcaaa4] to-[#efebe9] text-[#3e2723]',
+        cardBg: 'bg-white/95 text-[#3e2723] border-4 border-[#8d6e63] shadow-2xl',
+        accentBtn: 'bg-[#8d6e63] hover:bg-[#705040] text-white font-black uppercase',
+        titleFont: 'font-sans font-extrabold',
+        primaryText: 'text-[#3e2723]',
+        subText: 'text-[#8d6e63]',
+        stageGradients: 'bg-gradient-to-br from-[#efebe9] via-[#d7ccc8] to-[#bcaaa4]',
+        icon: '🧸',
+      };
+    case 'promise-day-pledge':
+      return {
+        greetingBg: 'bg-gradient-to-br from-teal-900 via-cyan-900 to-slate-900 text-teal-100',
+        cardBg: 'bg-slate-900/95 text-white border-2 border-teal-400 shadow-2xl',
+        accentBtn: 'bg-teal-400 hover:bg-teal-300 text-slate-950 font-black tracking-wider',
+        titleFont: 'font-sans font-bold',
+        primaryText: 'text-teal-200',
+        subText: 'text-cyan-300',
+        stageGradients: 'bg-gradient-to-br from-slate-950 via-teal-950 to-cyan-950',
+        icon: '🤝',
+      };
+    case 'hug-day-warmth':
+      return {
+        greetingBg: 'bg-gradient-to-br from-orange-950 via-amber-900 to-stone-900 text-amber-100',
+        cardBg: 'bg-[#27150a]/95 text-amber-100 border border-orange-500/40 shadow-2xl',
+        accentBtn: 'bg-orange-500 hover:bg-orange-400 text-white font-bold',
+        titleFont: 'font-serif',
+        primaryText: 'text-orange-200',
+        subText: 'text-amber-300',
+        stageGradients: 'bg-gradient-to-br from-stone-950 via-orange-950 to-stone-900',
+        icon: '🤗',
+      };
+    case 'kiss-day-hearts':
+      return {
+        greetingBg: 'bg-gradient-to-br from-rose-950 via-pink-900 to-red-950 text-white',
+        cardBg: 'bg-rose-950/95 text-rose-100 border-2 border-pink-500 shadow-2xl',
+        accentBtn: 'bg-pink-500 hover:bg-pink-400 text-white font-black tracking-widest',
+        titleFont: 'font-mono',
+        primaryText: 'text-pink-200',
+        subText: 'text-rose-300',
+        stageGradients: 'bg-gradient-to-br from-rose-950 via-red-950 to-stone-950',
+        icon: '💋',
+      };
+    case 'slap-day-playful':
+      return {
+        greetingBg: 'bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-950 text-purple-100',
+        cardBg: 'bg-white text-black border-4 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)]',
+        accentBtn: 'bg-purple-600 hover:bg-purple-500 text-white font-black border-2 border-black uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)]',
+        titleFont: 'font-mono font-black',
+        primaryText: 'text-black',
+        subText: 'text-purple-600',
+        stageGradients: 'bg-gradient-to-br from-purple-50 via-indigo-50 to-slate-100',
+        icon: '👋',
+      };
+    case 'kick-day-playful':
+      return {
+        greetingBg: 'bg-gradient-to-br from-red-950 via-indigo-950 to-black text-red-400',
+        cardBg: 'bg-black text-red-500 border-4 border-red-500 shadow-[6px_6px_0px_rgba(255,0,0,0.2)]',
+        accentBtn: 'bg-red-500 hover:bg-red-400 text-black font-black uppercase tracking-wider',
+        titleFont: 'font-mono uppercase font-bold',
+        primaryText: 'text-red-400',
+        subText: 'text-red-600',
+        stageGradients: 'bg-black text-red-500 font-mono',
+        icon: '🦵',
+      };
+    case 'perfume-day-sweet':
+      return {
+        greetingBg: 'bg-gradient-to-br from-purple-950 via-pink-900 to-rose-950 text-pink-100',
+        cardBg: 'bg-purple-950/90 text-pink-100 border-2 border-pink-400 shadow-2xl backdrop-blur-md',
+        accentBtn: 'bg-pink-400 hover:bg-pink-300 text-slate-950 font-extrabold',
+        titleFont: 'font-serif italic',
+        primaryText: 'text-pink-200',
+        subText: 'text-purple-300',
+        stageGradients: 'bg-gradient-to-br from-purple-950 via-pink-950 to-slate-950',
+        icon: '🌸',
+      };
+    case 'rizz-quest-game':
+      return {
+        greetingBg: 'bg-[#0f0726] text-[#ff007f] border-4 border-[#ff007f] font-mono',
+        cardBg: 'bg-[#05021a] text-[#ff007f] border-2 border-[#ff007f] shadow-[0_0_15px_rgba(255,0,127,0.5)] font-mono',
+        accentBtn: 'bg-[#ff007f] hover:bg-[#ff3399] text-white font-black uppercase tracking-wider shadow-[0_0_10px_rgba(255,0,127,0.5)]',
+        titleFont: 'font-mono uppercase',
+        primaryText: 'text-[#ff99cc]',
+        subText: 'text-[#ff007f]',
+        stageGradients: 'bg-[#05021a] text-[#ff007f] font-mono',
+        icon: '👾',
+      };
+    case 'i-miss-you-scrapbook':
+      return {
+        greetingBg: 'bg-gradient-to-br from-amber-950 via-[#3d2314] to-stone-900 text-amber-200',
+        cardBg: 'bg-[#2b170c]/90 text-amber-100 border border-amber-600/50 shadow-2xl backdrop-blur-md',
+        accentBtn: 'bg-amber-600 hover:bg-amber-500 text-white font-bold',
+        titleFont: 'font-serif italic',
+        primaryText: 'text-amber-200',
+        subText: 'text-amber-400',
+        stageGradients: 'bg-gradient-to-br from-stone-950 via-amber-950 to-stone-900',
+        icon: '✈️',
+      };
     case 'friendship-day-greet':
     case 'friendship_greet':
       return {

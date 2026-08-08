@@ -18,6 +18,8 @@ export function PricingSection({
     { id: 'all', label: 'All Templates' },
     { id: 'bestie', label: '👭 Bestie' },
     { id: 'girlfriend', label: '❤️ Girlfriend / Partner' },
+    { id: 'valentine_week', label: '💖 Valentine Week' },
+    { id: 'post_valentine', label: '💔 Post Valentine' },
     { id: 'sister', label: '🌸 Sister' },
     { id: 'birthday', label: '🎉 Birthday' },
   ];

@@ -238,13 +238,13 @@ export function PolicyModal({ initialTab = 'privacy', onClose }: PolicyModalProp
               <div className="p-6 bg-gradient-to-r from-rose-500/10 via-pink-500/10 to-purple-500/10 border border-rose-500/20 rounded-3xl space-y-3">
                 <div className="inline-flex items-center space-x-2 bg-rose-500/20 text-rose-300 px-3 py-1 rounded-full text-xs font-bold">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>About OnlineWishes (Online Wishes)</span>
+                  <span>About OnlineWishes</span>
                 </div>
                 <h3 className="text-xl font-black text-white">
                   Founded & Developed by Devang Varshney — Crafting Digital Surprises That Turn Precious Moments Into Lifelong Memories
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  <strong>OnlineWishes</strong> (also known as <strong>Online Wishes</strong> at <a href="https://onlinewishes.in" target="_blank" rel="noopener noreferrer" className="text-rose-400 underline font-semibold">onlinewishes.in</a>) was proudly founded, architected, and developed by visionary engineer <strong>Devang Varshney</strong>. Born out of a simple desire to make digital gift-giving deeper, more emotional, and unforgettable, OnlineWishes has evolved into the premier platform for creating interactive birthday surprise websites, custom love vaults, memory scrapbooks, and bestie photo surprises.
+                  <strong>OnlineWishes</strong> (at <a href="https://onlinewishes.in" target="_blank" rel="noopener noreferrer" className="text-rose-400 underline font-semibold">onlinewishes.in</a>) was proudly founded, architected, and developed by visionary engineer <strong>Devang Varshney</strong>. Born out of a simple desire to make digital gift-giving deeper, more emotional, and unforgettable, OnlineWishes has evolved into the premier platform for creating interactive birthday surprise websites, custom love vaults, memory scrapbooks, and bestie photo surprises.
                 </p>
               </div>
 

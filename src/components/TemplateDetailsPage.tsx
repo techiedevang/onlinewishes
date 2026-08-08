@@ -146,5 +146,3 @@ export function TemplateDetailsPage({ template, onBack, onPreview, onSelectTempl
     </motion.div>
   );
 }
-  );
-}

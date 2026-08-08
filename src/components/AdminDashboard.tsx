@@ -380,13 +380,15 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
         data = await res.json().catch(() => ({}));
       }
 
-      if (data && data.message) {
+      if (data && data.success === false) {
+        setLoginError(data.error || 'Failed to send OTP email.');
+      } else if (data && data.message) {
         setEmailStatusMessage(data.message);
       } else {
         setEmailStatusMessage('OTP code sent! Please check your email inbox or spam folder.');
       }
     } catch (err: any) {
-      setEmailStatusMessage('OTP process error. You can also use Admin Password "admin123" or "devu16".');
+      setLoginError('OTP process error. You can also use Admin Password "admin123" or "devu16".');
     } finally {
       setIsSendingOtp(false);
     }

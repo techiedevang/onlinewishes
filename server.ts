@@ -1372,6 +1372,15 @@ function getResendClient() {
         });
       } catch (emailErr: any) {
         console.warn("Email catch block warning:", emailErr);
+        emailResult = { success: false, error: emailErr?.message || String(emailErr) };
+      }
+
+      if (!emailResult || !emailResult.success) {
+        return res.json({
+          success: false,
+          otpSent: false,
+          error: `Email delivery failed: ${emailResult?.error || "All configured email providers (Resend, Webhook, SMTP) failed to deliver."}`
+        });
       }
 
       return res.json({

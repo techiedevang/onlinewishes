@@ -694,13 +694,13 @@ export function AuthModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 max-w-md w-full max-h-[92vh] overflow-y-auto border border-slate-200 dark:border-slate-800 shadow-2xl relative text-slate-800 dark:text-slate-100 scrollbar-none">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-3xl p-5 sm:p-8 max-w-md w-full max-h-[92vh] overflow-y-auto border-4 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] relative text-black scrollbar-none">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl transition-colors"
+          className="absolute top-4 right-4 p-2 text-slate-500 hover:text-black rounded-xl transition-colors"
           aria-label="Close auth dialog"
         >
           <X className="w-5 h-5" />
@@ -709,34 +709,34 @@ export function AuthModal({
         {/* LOGGED IN VIEW */}
         {currentUser ? (
           <div className="text-center space-y-5 py-4">
-            <div className="w-16 h-16 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 flex items-center justify-center mx-auto text-2xl font-black">
+            <div className="w-16 h-16 rounded-full bg-lovely-pink text-white border-2 border-black flex items-center justify-center mx-auto text-2xl font-black">
               {currentUser.name.charAt(0).toUpperCase()}
             </div>
 
             <div>
-              <h3 className="text-xl font-bold">{currentUser.name}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{currentUser.email}</p>
-              <div className="mt-2 inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
+              <h3 className="font-heading text-2xl uppercase text-black font-black">{currentUser.name}</h3>
+              <p className="text-xs text-slate-600">{currentUser.email}</p>
+              <div className="mt-2 inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-lovely-yellow border-2 border-black text-black">
                 <Shield className="w-3 h-3" />
                 <span>Role: {currentUser.role.toUpperCase()}</span>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <div className="pt-4 border-t-2 border-black space-y-2">
               {onOpenDashboard && (
                 <button
                   onClick={() => {
                     onClose();
                     onOpenDashboard();
                   }}
-                  className="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition-colors shadow-sm"
+                  className="w-full py-2.5 bg-lovely-neon text-white font-heading font-black text-xs sm:text-sm uppercase border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-[#E6005C] active:translate-y-[2px] active:shadow-none"
                 >
                   Open User Dashboard & My Purchases
                 </button>
               )}
               <button
                 onClick={handleSignOut}
-                className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-red-500 hover:text-white text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-colors"
+                className="w-full py-2 bg-slate-100 border-2 border-black text-black font-heading font-bold text-xs uppercase shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:bg-red-500 hover:text-white active:translate-y-[2px] active:shadow-none"
               >
                 Sign Out
               </button>
@@ -746,14 +746,14 @@ export function AuthModal({
           <div>
             {/* Header Tabs */}
             {mode !== 'forgot' && (
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-6">
+              <div className="flex bg-slate-100 p-1 rounded-2xl mb-6 border-2 border-black">
                 <button
                   type="button"
                   onClick={() => { setMode('signin'); setSignupStep('form'); setError(null); }}
                   className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
                     mode === 'signin'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                      ? 'bg-lovely-yellow text-black border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                      : 'text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   <LogIn className="w-3.5 h-3.5" />
@@ -764,8 +764,8 @@ export function AuthModal({
                   onClick={() => { setMode('signup'); setSignupStep('form'); setError(null); }}
                   className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1.5 ${
                     mode === 'signup'
-                      ? 'bg-rose-500 text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                      ? 'bg-lovely-neon text-white border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]'
+                      : 'text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   <UserPlus className="w-3.5 h-3.5" />

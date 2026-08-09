@@ -194,8 +194,7 @@ export function RoseDayView({
                       className="bg-white p-2 rounded-xl border-2 border-rose-400 shadow-lg transform rotate-[-2deg] even:rotate-[2deg]"
                     >
                       <div className="aspect-square relative rounded-lg overflow-hidden mb-2 bg-stone-100">
-                        <SafeImage 
-                          src={mem.imageUrl} 
+                        <SafeImage src={mem.imageUrl} fallbackUrl={mem.fallbackUrl || mem.imageUrl} 
                           alt="Memory"
                           className="w-full h-full object-cover"
                         />

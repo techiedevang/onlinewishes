@@ -245,8 +245,7 @@ export function ProposeDayView({
                       className="bg-white p-2 rounded-xl border-4 border-pink-500 shadow-[4px_4px_0px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform"
                     >
                       <div className="aspect-square relative rounded-lg overflow-hidden mb-2 bg-stone-100 border-2 border-black">
-                        <SafeImage 
-                          src={mem.imageUrl} 
+                        <SafeImage src={mem.imageUrl} fallbackUrl={mem.fallbackUrl || mem.imageUrl} 
                           alt="Memory"
                           className="w-full h-full object-cover"
                         />

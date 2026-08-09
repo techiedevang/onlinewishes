@@ -229,7 +229,7 @@ export function ValentineDayView({
                     className="min-w-[280px] snap-center bg-black/50 p-3 rounded-xl border border-[#FFD700]/40 backdrop-blur-sm"
                   >
                     <div className="aspect-[4/5] relative rounded-lg overflow-hidden mb-4 border border-[#FFD700]/20">
-                      <SafeImage src={mem.imageUrl} fallbackSrc={mem.fallbackUrl} alt={mem.caption} className="w-full h-full object-cover" />
+                      <SafeImage src={mem.imageUrl} fallbackUrl={mem.fallbackUrl} alt={mem.caption} className="w-full h-full object-cover" />
                     </div>
                     <p className="text-white text-center italic px-2 text-sm">
                       {mem.caption}

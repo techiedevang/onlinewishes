@@ -256,7 +256,7 @@ export function FriendshipBondView({
                     className={`bg-white p-2 pb-6 shadow-xl relative ${i % 2 === 0 ? 'rotate-2' : '-rotate-2'} hover:rotate-0 transition-transform duration-300`}
                   >
                     <div className="aspect-square relative overflow-hidden mb-2">
-                      <SafeImage src={mem.imageUrl} fallbackSrc={mem.fallbackUrl} alt={mem.caption} className="w-full h-full object-cover grayscale-0 hover:grayscale transition-all" />
+                      <SafeImage src={mem.imageUrl} fallbackUrl={mem.fallbackUrl} alt={mem.caption} className="w-full h-full object-cover grayscale-0 hover:grayscale transition-all" />
                     </div>
                     <p className="text-gray-800 text-xs font-bold font-[cursive] text-center">{mem.caption}</p>
                     <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-red-400/50 rotate-3 shadow-sm" />

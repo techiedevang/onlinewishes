@@ -60,6 +60,12 @@ export function Header({
               >
                 Pricing
               </button>
+              <button 
+                onClick={() => { window.history.pushState(null, '', '/blog'); setActiveTab('blog'); setMobileMenuOpen(false); }} 
+                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-lovely-neon transition-colors text-white drop-shadow-md"
+              >
+                Blog
+              </button>
               {currentUser ? (
                 <button
                   onClick={onOpenUserDashboard || onOpenAuth}

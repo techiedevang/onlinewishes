@@ -33,6 +33,18 @@ const PolicyModal = lazy(() => import('./components/PolicyModal').then(m => ({ d
 const UserDashboard = lazy(() => import('./components/UserDashboard').then(m => ({ default: m.UserDashboard })));
 const InteractiveSurpriseTemplate = lazy(() => import('./components/InteractiveSurpriseTemplate').then(m => ({ default: m.InteractiveSurpriseTemplate })));
 
+// Static Pages (lazy loaded)
+const AboutPage = lazy(() => import('./components/pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const FaqPage = lazy(() => import('./components/pages/FaqPage').then(m => ({ default: m.FaqPage })));
+const HowItWorksPage = lazy(() => import('./components/pages/HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
+const WhyOnlineWishesPage = lazy(() => import('./components/pages/WhyOnlineWishesPage').then(m => ({ default: m.WhyOnlineWishesPage })));
+const ContactPage = lazy(() => import('./components/pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const TemplatesOverviewPage = lazy(() => import('./components/pages/TemplatesOverviewPage').then(m => ({ default: m.TemplatesOverviewPage })));
+const BlogPage = lazy(() => import('./components/pages/blog/BlogPage').then(m => ({ default: m.BlogPage })));
+
+// Blog article lazy loader - dynamically loads the correct blog component based on slug
+const BlogArticleLoader = lazy(() => import('./components/pages/blog/BlogArticleRouter').then(m => ({ default: m.BlogArticleRouter })));
+
 // Loading spinner fallback for lazy components
 const ComponentLoadingFallback = () => (
   <div className="flex flex-col items-center justify-center p-12 my-12 w-full min-h-[300px]">
@@ -89,6 +101,7 @@ export default function App() {
 
 
     const [rawActiveTab, setRawActiveTab] = useState<string>('home');
+  const [blogSlug, setBlogSlug] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem('onlinewishes_current_user');
@@ -438,7 +451,19 @@ A story forever to be told.`,
         if (possibleTemplateId === 'privacy-policy') { setPolicyTab('privacy'); return; }
         if (possibleTemplateId === 'terms-of-service') { setPolicyTab('terms'); return; }
         if (possibleTemplateId === 'refund-policy') { setPolicyTab('refund'); return; }
-        if (possibleTemplateId === 'about-us') { setPolicyTab('about'); return; }
+        if (possibleTemplateId === 'about-us' || possibleTemplateId === 'about') { setActiveTab('about'); return; }
+        if (possibleTemplateId === 'faq') { setActiveTab('faq'); return; }
+        if (possibleTemplateId === 'how-it-works') { setActiveTab('how-it-works'); return; }
+        if (possibleTemplateId === 'why-onlinewishes') { setActiveTab('why-onlinewishes'); return; }
+        if (possibleTemplateId === 'templates-overview') { setActiveTab('templates-overview'); return; }
+        if (possibleTemplateId === 'blog') { setBlogSlug(null); setActiveTab('blog'); return; }
+        // Blog article routes: /blog/:slug
+        if (possibleTemplateId.startsWith('blog/')) {
+          const slug = possibleTemplateId.replace('blog/', '');
+          setBlogSlug(slug);
+          setActiveTab('blog-article');
+          return;
+        }
         if (knownTabs.includes(possibleTemplateId)) {
            setActiveTab(possibleTemplateId);
            return;
@@ -813,6 +838,58 @@ A story forever to be told.`,
                 onClose={() => setActiveTab('home')}
                 onApplyBlueprint={handleApplyAiBlueprint}
               />
+            </AnimatedSection>
+          )}
+
+          {/* ====== STATIC PAGES ====== */}
+          {activeTab === 'about' && (
+            <AnimatedSection>
+              <AboutPage />
+            </AnimatedSection>
+          )}
+          {activeTab === 'faq' && (
+            <AnimatedSection>
+              <FaqPage />
+            </AnimatedSection>
+          )}
+          {activeTab === 'how-it-works' && (
+            <AnimatedSection>
+              <HowItWorksPage />
+            </AnimatedSection>
+          )}
+          {activeTab === 'why-onlinewishes' && (
+            <AnimatedSection>
+              <WhyOnlineWishesPage />
+            </AnimatedSection>
+          )}
+          {activeTab === 'contact' && (
+            <AnimatedSection>
+              <ContactPage />
+            </AnimatedSection>
+          )}
+          {activeTab === 'templates-overview' && (
+            <AnimatedSection>
+              <TemplatesOverviewPage />
+            </AnimatedSection>
+          )}
+
+          {/* ====== BLOG ====== */}
+          {activeTab === 'blog' && (
+            <AnimatedSection>
+              <BlogPage onNavigate={(slug) => {
+                window.history.pushState(null, '', `/blog/${slug}`);
+                setBlogSlug(slug);
+                setActiveTab('blog-article');
+              }} />
+            </AnimatedSection>
+          )}
+          {activeTab === 'blog-article' && blogSlug && (
+            <AnimatedSection>
+              <BlogArticleLoader slug={blogSlug} onBack={() => {
+                window.history.pushState(null, '', '/blog');
+                setBlogSlug(null);
+                setActiveTab('blog');
+              }} />
             </AnimatedSection>
           )}
         </Suspense>

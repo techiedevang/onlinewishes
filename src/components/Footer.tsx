@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, Instagram, Info, Mail, ShieldCheck, FileText, RefreshCw, Star } from 'lucide-react';
+import { Lock, Instagram, Info, Mail, ShieldCheck, FileText, RefreshCw, Star, BookOpen, HelpCircle, Heart } from 'lucide-react';
 import { PolicyTab } from './PolicyModal';
 
 interface FooterProps {
@@ -9,6 +9,12 @@ interface FooterProps {
 }
 
 export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
+  const navigate = (path: string) => {
+    window.history.pushState(null, '', path);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    window.scrollTo(0, 0);
+  };
+
   return (
     <footer className="bg-lovely-violet text-white py-12 md:py-16 border-t-8 border-black transition-colors relative overflow-hidden">
       <div className="absolute top-10 left-10 opacity-30">
@@ -19,15 +25,15 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
 
       <div className="w-full px-4 sm:px-8 lg:px-12 space-y-12 max-w-7xl mx-auto relative z-10">
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
           
           {/* Brand Column */}
-          <div className="space-y-4 md:col-span-1">
+          <div className="space-y-4 md:col-span-2">
             <div className="flex items-center space-x-2">
-              <img alt="Lovely" className="h-10 w-auto drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/lovely-logo-new.png" />
+              <img alt="OnlineWishes" className="h-10 w-auto drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/lovely-logo-new.png" />
             </div>
             <p className="font-body font-bold text-sm text-white/90 leading-relaxed drop-shadow-sm">
-              The premier platform for creating viral 21-photo surprise memory websites for your loved ones.
+              The premier platform for creating personalized surprise memory websites. Create beautiful digital gifts for your loved ones in minutes.
             </p>
             <div className="inline-flex items-center space-x-2 text-xs font-heading bg-white text-black px-3 py-1.5 rounded-lg border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
               <Lock className="w-3.5 h-3.5 text-lovely-pink" />
@@ -46,16 +52,17 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
             </div>
           </div>
 
-          {/* Quick Links / Templates */}
+          {/* Templates */}
           <div>
             <h4 className="font-heading text-xl font-black uppercase text-lovely-yellow mb-4 drop-shadow-[1px_1px_0px_rgba(0,0,0,1)]">
               Templates
             </h4>
             <ul className="space-y-3 font-body font-bold text-sm">
-              <li><a href="/templates" className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/> Bestie Surprise</a></li>
-              <li><a href="/templates" className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/> Romantic Love Vault</a></li>
-              <li><a href="/templates" className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/> Birthday Cannon</a></li>
-              <li><a href="/templates" className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/> Sister Memory Tree</a></li>
+              <li><button onClick={() => navigate('/templates')} className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/>All Templates</button></li>
+              <li><button onClick={() => navigate('/templates-overview')} className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/>Templates Overview</button></li>
+              <li><button onClick={() => navigate('/templates')} className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/>Valentine Templates</button></li>
+              <li><button onClick={() => navigate('/templates')} className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/>Birthday Templates</button></li>
+              <li><button onClick={() => navigate('/templates')} className="hover:text-lovely-neon transition-colors flex items-center gap-2"><Star className="w-3 h-3 text-lovely-yellow"/>Friendship Templates</button></li>
             </ul>
           </div>
 
@@ -66,12 +73,27 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
             </h4>
             <ul className="space-y-3 font-body font-bold text-sm">
               <li>
-                <button onClick={() => onOpenPolicy('about')} className="hover:text-lovely-neon transition-colors text-left flex items-center gap-2">
+                <button onClick={() => navigate('/about')} className="hover:text-lovely-neon transition-colors text-left flex items-center gap-2">
                   <Info className="w-4 h-4" /> About Us
                 </button>
               </li>
               <li>
-                <button onClick={() => onOpenPolicy('contact')} className="hover:text-lovely-neon transition-colors text-left flex items-center gap-2">
+                <button onClick={() => navigate('/how-it-works')} className="hover:text-lovely-neon transition-colors text-left flex items-center gap-2">
+                  <Heart className="w-4 h-4" /> How It Works
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/faq')} className="hover:text-lovely-neon transition-colors text-left flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4" /> FAQ
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/blog')} className="hover:text-lovely-neon transition-colors text-left flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" /> Blog
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/contact')} className="hover:text-lovely-neon transition-colors text-left flex items-center gap-2">
                   <Mail className="w-4 h-4" /> Contact
                 </button>
               </li>
@@ -99,6 +121,11 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
                   <RefreshCw className="w-4 h-4" /> Refund Policy
                 </button>
               </li>
+              <li>
+                <button onClick={() => navigate('/why-onlinewishes')} className="hover:text-lovely-neon transition-colors text-left flex items-center gap-2">
+                  <Star className="w-4 h-4" /> Why OnlineWishes?
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -113,6 +140,10 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
             <button onClick={() => onOpenPolicy('terms')} className="hover:text-lovely-yellow transition-colors">Terms</button>
             <span className="text-lovely-pink">•</span>
             <button onClick={() => onOpenPolicy('refund')} className="hover:text-lovely-yellow transition-colors">Refund</button>
+            <span className="text-lovely-pink">•</span>
+            <button onClick={() => navigate('/blog')} className="hover:text-lovely-yellow transition-colors">Blog</button>
+            <span className="text-lovely-pink">•</span>
+            <button onClick={() => navigate('/faq')} className="hover:text-lovely-yellow transition-colors">FAQ</button>
           </div>
         </div>
 
@@ -120,4 +151,3 @@ export function Footer({ onOpenAdmin, onOpenPolicy }: FooterProps) {
     </footer>
   );
 }
-

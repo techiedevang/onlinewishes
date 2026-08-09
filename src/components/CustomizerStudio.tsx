@@ -1269,8 +1269,177 @@ export function CustomizerStudio({
                 </div>
               )}
 
+              {/* ROSE DAY ROMANTIC */}
+              {selectedTemplate?.id === 'rose-day-romantic' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-red-50 dark:bg-red-950/40 rounded-2xl border border-red-200 dark:border-red-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>🌹</span><span>Rose Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Rose Color</label>
+                      <div className="flex flex-wrap gap-2">
+                        {[['Red 🌹', '#cc0000'], ['Pink 🩷', '#FF69B4'], ['White 🤍', '#f5f5f5'], ['Yellow 💛', '#FFD700'], ['Orange 🧡', '#FF8C00']].map(([label, color]) => (
+                          <button
+                            key={color}
+                            onClick={() => updateField('roseColor', color)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all ${customization.roseColor === color ? 'border-black scale-110 shadow-[2px_2px_0px_rgba(0,0,0,1)]' : 'border-slate-200 dark:border-slate-700'}`}
+                            style={{ background: color === '#f5f5f5' ? '#fff' : color, color: color === '#f5f5f5' || color === '#FFD700' ? '#000' : '#fff' }}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Love Message / Letter</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="My dearest, on this Rose Day I want you to know..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Romantic Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="A rose for you, a rose so true..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-400" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* PROPOSE DAY PROPOSAL */}
+              {selectedTemplate?.id === 'propose-day-proposal' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-pink-50 dark:bg-pink-950/40 rounded-2xl border border-pink-200 dark:border-pink-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>💍</span><span>Proposal Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">The Big Question <span className="text-pink-500">💍</span></label>
+                      <input type="text" value={customization.quizQuestion || 'Will you be my Valentine? 💍'} onChange={(e) => updateField('quizQuestion', e.target.value)} placeholder="Will you be my Valentine? 💍" className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-pink-600 dark:text-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Answer Options (3 options)</label>
+                      <div className="space-y-2">
+                        {[0, 1, 2].map((i) => (
+                          <input key={i} type="text" value={(customization.quizOptions || ['Yes! 💍', 'Obviously Yes! 😍', 'A thousand times YES! 🎉'])[i] || ''} onChange={(e) => { const opts = [...(customization.quizOptions || ['Yes! 💍', 'Obviously Yes! 😍', 'A thousand times YES! 🎉'])]; opts[i] = e.target.value; updateField('quizOptions', opts); }} placeholder={['Yes! 💍', 'Obviously Yes! 😍', 'A thousand times YES! 🎉'][i]} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Response message on YES</label>
+                      <input type="text" value={customization.quizBadgeText || 'She Said YES! 🎉💍'} onChange={(e) => updateField('quizBadgeText', e.target.value)} placeholder="She Said YES! 🎉💍" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Proposal Speech / Love Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="From the moment I first saw you, I knew you were the one..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Romantic Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="With this ring I thee wed..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* VALENTINE'S DAY LUXURY */}
+              {selectedTemplate?.id === 'valentine-day-luxury' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-200 dark:border-rose-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>❤️</span><span>Valentine's Day Luxury Customization</span>
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Couple Nickname</label>
+                        <input type="text" value={customization.coupleNickname || ''} onChange={(e) => updateField('coupleNickname', e.target.value)} placeholder="e.g. Romeo & Juliet" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">First Met Date</label>
+                        <input type="date" value={customization.firstMeetDate || ''} onChange={(e) => updateField('firstMeetDate', e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Relationship Duration</label>
+                      <input type="text" value={customization.relationshipDuration || ''} onChange={(e) => updateField('relationshipDuration', e.target.value)} placeholder="e.g. 2 years 3 months" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Love Letter / Romantic Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="My love, on this Valentine's Day I want the world to know..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Love Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="You are my heart, my soul, my everything..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Anniversary / Special Date Counter</label>
+                      <input type="date" value={customization.targetDate || ''} onChange={(e) => updateField('targetDate', e.target.value)} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                    </div>
+                    {/* Group Wishes for Valentine */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Group Wishes / Friend Messages</label>
+                      <div className="space-y-2">
+                        {(customization.groupWishes || []).map((wish, i) => (
+                          <div key={wish.id} className="flex gap-2">
+                            <input type="text" value={wish.name} onChange={(e) => { const w = [...(customization.groupWishes || [])]; w[i] = { ...w[i], name: e.target.value }; updateField('groupWishes', w); }} placeholder="Name" className="w-1/3 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                            <input type="text" value={wish.msg} onChange={(e) => { const w = [...(customization.groupWishes || [])]; w[i] = { ...w[i], msg: e.target.value }; updateField('groupWishes', w); }} placeholder="Message" className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                            <button onClick={() => { const w = (customization.groupWishes || []).filter((_, j) => j !== i); updateField('groupWishes', w); }} className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-lg text-xs font-bold">✕</button>
+                          </div>
+                        ))}
+                        <button onClick={() => { const w = [...(customization.groupWishes || []), { id: Date.now().toString(), name: '', msg: '', color: 'bg-rose-100 border-rose-300' }]; updateField('groupWishes', w); }} className="w-full px-3 py-2 bg-rose-100 dark:bg-rose-900/40 border-2 border-dashed border-rose-300 dark:border-rose-700 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-200 transition-colors">+ Add Wish</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* FRIENDSHIP BOND FOREVER */}
+              {selectedTemplate?.id === 'friendship-bond-forever' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-950/40 rounded-2xl border border-yellow-200 dark:border-yellow-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>💛</span><span>Friendship Bond Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Friendship Quiz Question</label>
+                      <input type="text" value={customization.quizQuestion || 'How well do we know each other? 🤔'} onChange={(e) => updateField('quizQuestion', e.target.value)} placeholder="How well do we know each other?" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Quiz Answer Options</label>
+                      <div className="space-y-2">
+                        {[0, 1, 2].map((i) => (
+                          <input key={i} type="text" value={(customization.quizOptions || ['A. We share the exact same brain cell 🧠', 'B. Unhinged voice notes at 3AM 🔊', 'C. Best friends forever 💛'])[i] || ''} onChange={(e) => { const opts = [...(customization.quizOptions || ['A. We share the exact same brain cell 🧠', 'B. Unhinged voice notes at 3AM 🔊', 'C. Best friends forever 💛'])]; opts[i] = e.target.value; updateField('quizOptions', opts); }} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Quiz Result Badge</label>
+                      <input type="text" value={customization.quizBadgeText || '10/10 CHAOS DUO 🏆'} onChange={(e) => updateField('quizBadgeText', e.target.value)} placeholder="10/10 CHAOS DUO 🏆" className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Inside Jokes Cards</label>
+                      <div className="space-y-2">
+                        {(customization.insideJokes || []).map((joke, i) => (
+                          <div key={joke.id} className="flex gap-2">
+                            <input type="text" value={joke.title} onChange={(e) => { const j = [...(customization.insideJokes || [])]; j[i] = { ...j[i], title: e.target.value }; updateField('insideJokes', j); }} placeholder="Card Title" className="w-1/3 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                            <input type="text" value={joke.caption} onChange={(e) => { const j = [...(customization.insideJokes || [])]; j[i] = { ...j[i], caption: e.target.value }; updateField('insideJokes', j); }} placeholder="The funny memory" className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                            <button onClick={() => { const j = (customization.insideJokes || []).filter((_, k) => k !== i); updateField('insideJokes', j); }} className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 rounded-lg text-xs font-bold">✕</button>
+                          </div>
+                        ))}
+                        <button onClick={() => { const j = [...(customization.insideJokes || []), { id: Date.now().toString(), title: 'MEMORY', caption: '' }]; updateField('insideJokes', j); }} className="w-full px-3 py-2 bg-yellow-100 dark:bg-yellow-900/40 border-2 border-dashed border-yellow-300 dark:border-yellow-700 rounded-xl text-xs font-bold text-yellow-700 dark:text-yellow-400 hover:bg-yellow-200 transition-colors">+ Add Inside Joke</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Heartfelt Message for Friend</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="You are the most incredible friend I've ever had..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Friendship Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="A friend like you is a treasure..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 2. BIRTHDAY CONFETTI PARTY */}
               {selectedTemplate?.id === 'birthday-confetti-party' && (
+
                 <div className="space-y-6">
                   <div className="p-4 bg-sky-50 dark:bg-sky-950/40 rounded-2xl border border-sky-200 dark:border-sky-900/60 space-y-4">
                     <div className="flex items-center justify-between">

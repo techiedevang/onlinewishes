@@ -385,6 +385,12 @@ A story forever to be told.`,
     else if (template.id === 'birthday-confetti-party') sound = 'birthday_light';
     else if (template.id === 'retro-90s-arcade') sound = 'arcade_8bit';
     else if (template.id === 'minimalist-editorial') sound = 'library_whispers';
+    else if (template.id === 'rose-day-romantic') sound = 'romantic_piano';
+    else if (template.id === 'propose-day-proposal') sound = 'romantic_piano';
+    else if (template.id === 'valentine-day-luxury') sound = 'romantic_piano';
+    else if (template.id === 'friendship-bond-forever') sound = 'acoustic_love';
+    else if (template.id === 'birthday-balloon-blast') sound = 'birthday_light';
+    else if (template.id === 'anniversary-garden') sound = 'romantic_piano';
 
     // Clear old localStorage draft when choosing a template so it starts fresh
     try {

@@ -1,0 +1,211 @@
+﻿# -*- coding: utf-8 -*-
+import re
+
+with open('D:/onlinewishes/src/data/templates.ts', 'r', encoding='utf-8') as f:
+    content = f.read()
+
+new_templates = """  },
+  // === VALENTINE WEEK TEMPLATES ===
+  {
+    id: 'rose-day-romantic',
+    title: 'Rose Day Romantic',
+    category: 'girlfriend',
+    description: 'A stunning rose petal experience for Rose Day (Feb 7). Animated falling petals, love letter envelope, and photo collage all wrapped in deep crimson romance.',
+    badge: '🌹 Rose Day Special',
+    rating: 4.97,
+    reviewsCount: 342,
+    thumbnail: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=800&q=80',
+    features: ['Falling Rose Petals Animation', 'Wax Seal Love Letter', 'Romantic Photo Collage', 'Custom Poem Display', 'Heartbeat Audio'],
+    themeColor: 'from-red-900 to-rose-800',
+    interactivePreviewType: 'rose_day_view',
+    photoCount: 6,
+    price: 49,
+  },
+  {
+    id: 'propose-day-proposal',
+    title: 'Propose Day Proposal',
+    category: 'girlfriend',
+    description: 'The ultimate digital proposal for Propose Day (Feb 8). Interactive "Will You Be Mine?" question, animated diamond ring, and a personalized love declaration.',
+    badge: '💍 Propose Day Special',
+    rating: 4.99,
+    reviewsCount: 521,
+    thumbnail: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&q=80',
+    features: ['Interactive Proposal Question', 'Diamond Ring Animation', 'Personalized Love Declaration', 'Photo Memories', 'Confetti on Yes!'],
+    themeColor: 'from-pink-600 to-rose-500',
+    interactivePreviewType: 'propose_day_view',
+    photoCount: 6,
+    price: 49,
+  },
+  {
+    id: 'chocolate-day-box',
+    title: 'Chocolate Day Surprise Box',
+    category: 'girlfriend',
+    description: 'A delicious chocolate-themed surprise for Chocolate Day (Feb 9). Unwrap a digital chocolate box to reveal sweet memories and love notes.',
+    badge: '🍫 Chocolate Day',
+    rating: 4.95,
+    reviewsCount: 287,
+    thumbnail: 'https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=800&q=80',
+    features: ['Chocolate Box Unwrap Animation', 'Sweet Photo Gallery', 'Love Note Cards', 'Custom Message', 'Warm Chocolate Aesthetic'],
+    themeColor: 'from-amber-900 to-yellow-900',
+    interactivePreviewType: 'chocolate_day_view',
+    photoCount: 9,
+    price: 49,
+  },
+  {
+    id: 'teddy-day-bear',
+    title: 'Teddy Day Virtual Hug',
+    category: 'girlfriend',
+    description: 'A warm and cuddly Teddy Day (Feb 10) surprise with a virtual teddy bear delivery, cozy memories, and heartfelt messages for your special someone.',
+    badge: '🧸 Teddy Day',
+    rating: 4.96,
+    reviewsCount: 198,
+    thumbnail: 'https://images.unsplash.com/photo-1530213786676-41ad9f7736f6?w=800&q=80',
+    features: ['Teddy Bear Delivery Animation', 'Cozy Photo Gallery', 'Warm Message Cards', 'Custom Poem', 'Soft Brown Aesthetic'],
+    themeColor: 'from-amber-800 to-stone-700',
+    interactivePreviewType: 'teddy_day_view',
+    photoCount: 6,
+    price: 49,
+  },
+  {
+    id: 'promise-day-pledge',
+    title: 'Promise Day Vow Book',
+    category: 'girlfriend',
+    description: 'A heartfelt Promise Day (Feb 11) vow book. Display your promises with an interactive checklist, sealed with your personal message and shared memories.',
+    badge: '🤝 Promise Day',
+    rating: 4.98,
+    reviewsCount: 245,
+    thumbnail: 'https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=800&q=80',
+    features: ['Interactive Promise Checklist', 'Sealed Vow Letters', 'Memory Timeline', 'Custom Promises', 'Teal & Gold Aesthetic'],
+    themeColor: 'from-teal-800 to-cyan-900',
+    interactivePreviewType: 'promise_day_view',
+    photoCount: 6,
+    price: 49,
+  },
+  {
+    id: 'hug-day-warmth',
+    title: 'Hug Day Warm Embrace',
+    category: 'girlfriend',
+    description: 'Send a virtual warm hug on Hug Day (Feb 12). A cozy, warm-toned experience with animated embrace, sweet words, and photo memories for long distance couples.',
+    badge: '🤗 Hug Day',
+    rating: 4.94,
+    reviewsCount: 176,
+    thumbnail: 'https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?w=800&q=80',
+    features: ['Virtual Hug Animation', 'Long Distance Love Letter', 'Cozy Photo Gallery', 'Warmth Message Cards', 'Amber & Orange Aesthetic'],
+    themeColor: 'from-orange-900 to-amber-800',
+    interactivePreviewType: 'hug_day_view',
+    photoCount: 6,
+    price: 49,
+  },
+  {
+    id: 'kiss-day-hearts',
+    title: 'Kiss Day Love Burst',
+    category: 'girlfriend',
+    description: 'A passionate Kiss Day (Feb 13) love burst experience. Floating hearts, romantic atmosphere, and intimate messages perfect for couples.',
+    badge: '💋 Kiss Day',
+    rating: 4.97,
+    reviewsCount: 312,
+    thumbnail: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=800&q=80',
+    features: ['Floating Hearts Animation', 'Romantic Love Burst', 'Intimate Photo Gallery', 'Custom Love Message', 'Deep Rose Aesthetic'],
+    themeColor: 'from-rose-900 to-red-800',
+    interactivePreviewType: 'kiss_day_view',
+    photoCount: 6,
+    price: 49,
+  },
+  {
+    id: 'valentine-day-luxury',
+    title: "Valentine's Day Luxury",
+    category: 'girlfriend',
+    description: 'The ultimate Valentine\\'s Day luxury experience (Feb 14). Red velvet aesthetic, golden floating hearts, love letter reveal, photo memories, and a grand romantic finale.',
+    badge: '❤️ Valentine Special',
+    rating: 5.0,
+    reviewsCount: 892,
+    thumbnail: 'https://images.unsplash.com/photo-1518895949257-7621c3c786d7?w=800&q=80',
+    features: ['Red Velvet Luxury Aesthetic', 'Golden Heart Animations', 'Love Letter Reveal', 'Anniversary Counter', 'Grand Romantic Finale', 'Group Wishes Wall'],
+    themeColor: 'from-red-900 to-rose-700',
+    interactivePreviewType: 'valentine_day_view',
+    photoCount: 12,
+    price: 79,
+  },
+  // === FRIENDSHIP TEMPLATES ===
+  {
+    id: 'friendship-bond-forever',
+    title: 'Friendship Bond Forever',
+    category: 'friendship',
+    description: 'A warm, joyful friendship celebration. Friendship quiz, inside jokes flip cards, polaroid photo wall, and a friendship timeline - perfect for best friends.',
+    badge: '💛 Best Friends',
+    rating: 4.96,
+    reviewsCount: 634,
+    thumbnail: 'https://images.unsplash.com/photo-1529156069898-49953eb1b5ae?w=800&q=80',
+    features: ['Friendship Quiz Game', 'Inside Jokes Flip Cards', 'Polaroid Photo Wall', 'Friendship Timeline', 'Warm Yellow Aesthetic'],
+    themeColor: 'from-yellow-700 to-orange-700',
+    interactivePreviewType: 'friendship_bond_view',
+    photoCount: 9,
+    price: 49,
+  },
+  // === BIRTHDAY TEMPLATES ===
+  {
+    id: 'birthday-balloon-blast',
+    title: 'Birthday Balloon Blast',
+    category: 'birthday',
+    description: 'A vibrant birthday celebration with floating balloons, animated birthday cake, interactive candle blowing, group wishes wall, and confetti explosion.',
+    badge: '🎈 Birthday Special',
+    rating: 4.98,
+    reviewsCount: 1102,
+    thumbnail: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
+    features: ['Floating Balloon Animation', 'Interactive Birthday Cake', 'Candle Blowing (Mic)', 'Group Wishes Wall', 'Confetti Explosion'],
+    themeColor: 'from-purple-700 to-pink-600',
+    interactivePreviewType: 'birthday_balloon_view',
+    photoCount: 12,
+    price: 49,
+  },
+  // === ANNIVERSARY TEMPLATES ===
+  {
+    id: 'anniversary-garden',
+    title: 'Anniversary Memory Garden',
+    category: 'anniversary',
+    description: 'A blooming anniversary garden experience. Watch your love story grow with an animated timeline, memory flowers, anniversary counter, and a romantic finale.',
+    badge: '🌸 Anniversary Special',
+    rating: 4.97,
+    reviewsCount: 423,
+    thumbnail: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&q=80',
+    features: ['Blooming Flower Timeline', 'Anniversary Counter', 'Memory Garden Gallery', 'Love Story Stages', 'Garden Botanical Aesthetic'],
+    themeColor: 'from-green-800 to-teal-700',
+    interactivePreviewType: 'anniversary_garden_view',
+    photoCount: 9,
+    price: 79,
+  },
+  // === SORRY/APOLOGY TEMPLATES ===
+  {
+    id: 'breakup-heal-journey',
+    title: 'Breakup Healing Journey',
+    category: 'girlfriend',
+    description: 'For Breakup Day or Post-Valentine healing. A gentle, therapeutic digital journal to express closure, gratitude, and moving forward with self-love.',
+    badge: '🦋 Healing & Closure',
+    rating: 4.93,
+    reviewsCount: 156,
+    thumbnail: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&q=80',
+    features: ['Healing Journey Stages', 'Gratitude Letters', 'Self-Love Affirmations', 'Closure Message', 'Butterfly Freedom Animation'],
+    themeColor: 'from-purple-800 to-blue-900',
+    interactivePreviewType: 'breakup_heal_view',
+    photoCount: 6,
+    price: 49,
+  }
+];"""
+
+# Find the end of the array which is '  }\n];'
+old_end = "  }\n];"
+
+if old_end in content:
+    content = content.replace(old_end, new_templates)
+else:
+    # try replacing \r\n
+    old_end = "  }\r\n];"
+    if old_end in content:
+        content = content.replace(old_end, new_templates)
+    else:
+        print("Could not find the end of TEMPLATES array")
+
+with open('D:/onlinewishes/src/data/templates.ts', 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print('templates.ts updated successfully')

@@ -50,7 +50,7 @@ export interface CustomAiBlueprint {
   initialParagraph: string;
 }
 
-export type OccasionType = 'bestie' | 'girlfriend' | 'sister' | 'birthday' | 'anniversary' | 'wedding' | 'friendship';
+export type OccasionType = 'bestie' | 'girlfriend' | 'sister' | 'birthday' | 'anniversary' | 'wedding' | 'friendship' | 'valentine' | 'rose_day' | 'propose_day';
 
 export interface Template {
   id: string;
@@ -63,7 +63,7 @@ export interface Template {
   thumbnail: string;
   features: string[];
   themeColor: string;
-  interactivePreviewType: 'box21' | 'love_story' | 'bestie_wall' | 'sister_tree' | 'birthday_party' | 'retro_arcade' | 'galaxy' | 'editorial' | 'vintage' | 'friendship_greet' | 'sorry_apology';
+  interactivePreviewType: 'box21' | 'love_story' | 'bestie_wall' | 'sister_tree' | 'birthday_party' | 'retro_arcade' | 'galaxy' | 'editorial' | 'vintage' | 'friendship_greet' | 'sorry_apology' | 'rose_day_view' | 'propose_day_view' | 'valentine_day_view' | 'friendship_bond_view' | 'birthday_balloon_view' | 'anniversary_garden_view' | 'breakup_heal_view' | 'chocolate_day_view' | 'teddy_day_view' | 'promise_day_view' | 'hug_day_view' | 'kiss_day_view';
   photoCount: number;
   price: number;
   reviews?: TemplateReview[];
@@ -162,6 +162,14 @@ export interface UserCustomization {
   finalClosingNote?: string;
   finalButtonText?: string;
   finalBgGradient?: string;
+
+  // Valentine & Special Day fields
+  coupleNickname?: string;
+  firstMeetDate?: string;
+  relationshipDuration?: string;
+  roseColor?: string;
+  proposalQuestion?: string;
+  reasonsILoveYou?: Array<{ id: string; reason: string }>;
 }
 
 export interface User {

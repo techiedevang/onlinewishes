@@ -33,9 +33,21 @@ export function Header({
               className="flex items-center gap-2"
               aria-label="OnlineWishes Home Page"
             >
-              <img alt="Lovely" className="h-10 sm:h-12 w-auto drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/lovely-logo-new.png" />
+              <img alt="OnlineWishes" className="h-10 sm:h-12 w-auto drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/lovely-logo-new.png" />
             </button>
             <nav className="hidden md:flex items-center gap-6">
+              <button 
+                onClick={() => {
+                  setActiveTab('templates');
+                  setTimeout(() => {
+                    const el = document.getElementById('valentine-special-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }} 
+                className="font-body font-semibold uppercase text-sm tracking-wide text-rose-300 hover:text-lovely-neon transition-colors drop-shadow-md flex items-center gap-1 animate-pulse"
+              >
+                <span>Valentine Special 💖</span>
+              </button>
               <button 
                 onClick={() => setActiveTab('templates')} 
                 className="font-body font-semibold uppercase text-sm tracking-wide hover:text-lovely-neon transition-colors text-white drop-shadow-md"
@@ -98,6 +110,19 @@ export function Header({
             <nav className="flex flex-col gap-2 flex-grow mt-16 relative z-10">
               <button onClick={() => {setActiveTab('home'); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-lovely-neon/50 transition-all duration-300">
                 <span className="font-heading text-xl uppercase text-white group-hover:text-lovely-neon transition-colors">Home</span>
+              </button>
+              <button 
+                onClick={() => {
+                  setActiveTab('templates'); 
+                  setMobileMenuOpen(false);
+                  setTimeout(() => {
+                    const el = document.getElementById('valentine-special-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }} 
+                className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-lovely-neon transition-all duration-300"
+              >
+                <span className="font-heading text-xl uppercase text-rose-300 group-hover:text-lovely-neon transition-colors">Valentine Special 💖</span>
               </button>
               <button onClick={() => {setActiveTab('templates'); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-lovely-neon/50 transition-all duration-300">
                 <span className="font-heading text-xl uppercase text-white group-hover:text-lovely-neon transition-colors">Templates</span>

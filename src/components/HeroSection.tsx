@@ -54,7 +54,7 @@ export function HeroSection({
 
       <div className="relative mb-24 z-20 w-full max-w-5xl bg-white rounded-[2rem] border-[6px] border-black p-8 sm:p-12 lg:p-16 text-center shadow-[12px_12px_0px_rgba(0,0,0,1)]">
         <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-4 sm:mb-6 uppercase text-black font-black">
-          Create <span className="text-lovely-neon">Lovely</span> Moments
+          Create <span className="text-lovely-neon">Beautiful</span> Moments
         </h1>
         <p className="font-body text-base sm:text-lg md:text-xl text-gray-700 font-bold mb-6 sm:mb-8 max-w-xl mx-auto">
           Design personalized love pages in minutes and share them ;) <br/>Make someone smile today

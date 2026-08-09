@@ -1536,6 +1536,115 @@ export function CustomizerStudio({
                 </div>
               )}
 
+              {/* SLAP DAY */}
+              {selectedTemplate?.id === 'slap-day-playful' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>👋</span><span>Slap Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Playful Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="Time for a reality check..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Funny Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="A gentle slap to wake you up..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* KICK DAY */}
+              {selectedTemplate?.id === 'kick-day-playful' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950/40 rounded-2xl border border-orange-200 dark:border-orange-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>🦵</span><span>Kick Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Energetic Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="Kicking the negativity away..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* PERFUME DAY */}
+              {selectedTemplate?.id === 'perfume-day-sweet' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-fuchsia-50 dark:bg-fuchsia-950/40 rounded-2xl border border-fuchsia-200 dark:border-fuchsia-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>🌸</span><span>Perfume Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Sweet Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="Your scent lingers in my mind..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-fuchsia-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* FLIRT DAY */}
+              {selectedTemplate?.id === 'rizz-quest-game' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-200 dark:border-rose-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>😉</span><span>Flirt Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Flirty Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="Are you a magician? Because whenever I look at you..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* CONFESSION DAY */}
+              {selectedTemplate?.id === 'love-confession-vault' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-purple-50 dark:bg-purple-950/40 rounded-2xl border border-purple-200 dark:border-purple-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>💬</span><span>Confession Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">My Confession</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="I have a confession to make..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* MISSING DAY */}
+              {selectedTemplate?.id === 'i-miss-you-scrapbook' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-2xl border border-blue-200 dark:border-blue-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>💭</span><span>Missing Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Missing You Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="Every moment without you feels like an eternity..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* BREAK-UP DAY */}
+              {selectedTemplate?.id === 'dramatic-meltdown-letter' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-slate-100 dark:bg-slate-800/40 rounded-2xl border border-slate-300 dark:border-slate-700/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>🦋</span><span>Break-up Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Closure Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="Sometimes moving on is the best way to heal..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 2. BIRTHDAY CONFETTI PARTY */}
               {selectedTemplate?.id === 'birthday-confetti-party' && (
 

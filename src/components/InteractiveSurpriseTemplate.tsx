@@ -19,6 +19,13 @@ import { TeddyDayView } from './templates/TeddyDayView';
 import { PromiseDayView } from './templates/PromiseDayView';
 import { HugDayView } from './templates/HugDayView';
 import { KissDayView } from './templates/KissDayView';
+import { SlapDayView } from './templates/SlapDayView';
+import { KickDayView } from './templates/KickDayView';
+import { PerfumeDayView } from './templates/PerfumeDayView';
+import { FlirtDayView } from './templates/FlirtDayView';
+import { ConfessionDayView } from './templates/ConfessionDayView';
+import { MissingDayView } from './templates/MissingDayView';
+import { BreakupDayView } from './templates/BreakupDayView';
 
 export type Stage = 'passcode' | 'greeting' | 'question' | 'no_error' | 'paragraph' | 'poem' | 'gift_box' | 'floating_photos' | 'collage' | 'book' | 'final' | 'love_letter' | 'birthday_cake' | 'polaroid_wall' | 'arcade_screen' | 'gratitude_tree' | 'celestial_wishes' | 'editorial_gallery' | 'vintage_letter' | 'anniversary_counter' | 'friendship_quiz' | 'inside_jokes' | 'downloadable_poster' | 'nostalgic_timeline' | 'gratitude_cards' | 'sisterhood_oath' | 'high_res_export' | 'birthday_countdown' | 'interactive_candles' | 'group_wishes_wall' | 'confetti_burst' | 'arcade_level_quest' | 'arcade_pixel_cards' | 'arcade_high_score' | 'star_constellations' | 'shooting_star_wish' | 'editorial_cover' | 'editorial_story' | 'vintage_botanical_gallery';
 
@@ -387,6 +394,27 @@ export function InteractiveSurpriseTemplate({
   }
   if (customization.bgTheme === 'kiss-day-hearts') {
     return <KissDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'slap-day-playful') {
+    return <SlapDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'kick-day-playful') {
+    return <KickDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'perfume-day-sweet') {
+    return <PerfumeDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'rizz-quest-game') {
+    return <FlirtDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'love-confession-vault') {
+    return <ConfessionDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'i-miss-you-scrapbook') {
+    return <MissingDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'dramatic-meltdown-letter') {
+    return <BreakupDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
   }
 
   const [quizAnswered, setQuizAnswered] = useState(false);

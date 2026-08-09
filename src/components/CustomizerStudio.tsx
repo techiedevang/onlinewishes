@@ -1437,6 +1437,105 @@ export function CustomizerStudio({
                 </div>
               )}
 
+              {/* CHOCOLATE DAY */}
+              {selectedTemplate?.id === 'chocolate-day-box' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>🍫</span><span>Chocolate Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Sweet Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="You're sweeter than any chocolate..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Chocolate Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="Life is like a box of chocolates..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TEDDY DAY */}
+              {selectedTemplate?.id === 'teddy-day-bear' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-stone-50 dark:bg-stone-950/40 rounded-2xl border border-stone-200 dark:border-stone-800/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>🧸</span><span>Teddy Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Cuddly Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="Sending you the biggest virtual hug..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Teddy Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="A teddy bear to hold you tight..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* PROMISE DAY */}
+              {selectedTemplate?.id === 'promise-day-pledge' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-teal-50 dark:bg-teal-950/40 rounded-2xl border border-teal-200 dark:border-teal-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>🤝</span><span>Promise Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">My Promises (max 5)</label>
+                      <div className="space-y-2">
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <input key={i} type="text" value={(customization.quizOptions || ['I promise to always make you smile', 'I promise to share my food', 'I promise to be your safe space', 'I promise to listen to your rants', 'I promise to love you endlessly'])[i] || ''} onChange={(e) => { const opts = [...(customization.quizOptions || ['I promise to always make you smile', 'I promise to share my food', 'I promise to be your safe space', 'I promise to listen to your rants', 'I promise to love you endlessly'])]; opts[i] = e.target.value; updateField('quizOptions', opts); }} placeholder={`Promise ${i+1}`} className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Vow Letter</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="On this Promise Day, I want you to know..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* HUG DAY */}
+              {selectedTemplate?.id === 'hug-day-warmth' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-orange-50 dark:bg-orange-950/40 rounded-2xl border border-orange-200 dark:border-orange-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>🤗</span><span>Hug Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Warm Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="I wish I was there to hug you right now..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hug Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="A hug so warm, a hug so tight..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* KISS DAY */}
+              {selectedTemplate?.id === 'kiss-day-hearts' && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-red-50 dark:bg-red-950/40 rounded-2xl border border-red-200 dark:border-red-900/60 space-y-4">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center space-x-2">
+                      <span>💋</span><span>Kiss Day Customization</span>
+                    </h4>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Intimate Message</label>
+                      <textarea rows={4} value={customization.customParagraph} onChange={(e) => updateField('customParagraph', e.target.value)} placeholder="Sending a million kisses your way..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Romantic Poem</label>
+                      <textarea rows={3} value={customization.customPoem} onChange={(e) => updateField('customPoem', e.target.value)} placeholder="Your kiss is like magic..." className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-serif italic text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 2. BIRTHDAY CONFETTI PARTY */}
               {selectedTemplate?.id === 'birthday-confetti-party' && (
 

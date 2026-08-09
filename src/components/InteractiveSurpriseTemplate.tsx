@@ -14,6 +14,11 @@ import { RoseDayView } from './templates/RoseDayView';
 import { ProposeDayView } from './templates/ProposeDayView';
 import { ValentineDayView } from './templates/ValentineDayView';
 import { FriendshipBondView } from './templates/FriendshipBondView';
+import { ChocolateDayView } from './templates/ChocolateDayView';
+import { TeddyDayView } from './templates/TeddyDayView';
+import { PromiseDayView } from './templates/PromiseDayView';
+import { HugDayView } from './templates/HugDayView';
+import { KissDayView } from './templates/KissDayView';
 
 export type Stage = 'passcode' | 'greeting' | 'question' | 'no_error' | 'paragraph' | 'poem' | 'gift_box' | 'floating_photos' | 'collage' | 'book' | 'final' | 'love_letter' | 'birthday_cake' | 'polaroid_wall' | 'arcade_screen' | 'gratitude_tree' | 'celestial_wishes' | 'editorial_gallery' | 'vintage_letter' | 'anniversary_counter' | 'friendship_quiz' | 'inside_jokes' | 'downloadable_poster' | 'nostalgic_timeline' | 'gratitude_cards' | 'sisterhood_oath' | 'high_res_export' | 'birthday_countdown' | 'interactive_candles' | 'group_wishes_wall' | 'confetti_burst' | 'arcade_level_quest' | 'arcade_pixel_cards' | 'arcade_high_score' | 'star_constellations' | 'shooting_star_wish' | 'editorial_cover' | 'editorial_story' | 'vintage_botanical_gallery';
 
@@ -367,6 +372,21 @@ export function InteractiveSurpriseTemplate({
   }
   if (customization.bgTheme === 'friendship-bond-forever') {
     return <FriendshipBondView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'chocolate-day-box') {
+    return <ChocolateDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'teddy-day-bear') {
+    return <TeddyDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'promise-day-pledge') {
+    return <PromiseDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'hug-day-warmth') {
+    return <HugDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
+  }
+  if (customization.bgTheme === 'kiss-day-hearts') {
+    return <KissDayView customization={customization} onClose={onClose} isStandaloneView={isStandaloneView} isPreviewMode={isPreviewMode} />;
   }
 
   const [quizAnswered, setQuizAnswered] = useState(false);

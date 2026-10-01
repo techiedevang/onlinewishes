@@ -1752,7 +1752,7 @@ function getResendClient() {
     const currentUrl = `https://onlinewishes.in${cleanPath}`;
 
     let title = "OnlineWishes | Best Personalized Digital Memory Scrapbooks & Surprises";
-    let description = "Create personalized digital surprises, memory books, birthday websites, and love scrapbooks for your loved ones at onlinewishes.in. Make their day special with custom digital gifts.";
+    let description = "Create beautiful, personalized memory websites in minutes. Add photos, write messages, and share an unforgettable digital gift.";
     let ogImage = "https://onlinewishes.in/favicon.svg";
 
     if (customFields) {

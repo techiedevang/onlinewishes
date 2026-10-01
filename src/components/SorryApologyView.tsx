@@ -94,7 +94,7 @@ export function SorryApologyView({
         });
       }, 300);
     } catch (e) {
-      console.log('Confetti triggered');
+      console.debug('Confetti triggered');
     }
   };
 

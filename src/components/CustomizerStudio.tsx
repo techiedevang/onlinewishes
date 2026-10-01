@@ -865,7 +865,7 @@ export function CustomizerStudio({
               <div>
                 <h4 className="text-xs sm:text-sm font-bold flex items-center space-x-2 flex-wrap">
                   <span>Interactive Canvas Sparkle Overlay</span>
-                  <span className="text-[9px] sm:text-[10px] bg-rose-500 text-white px-2 py-0.2 rounded-full uppercase font-black">
+                  <span className="text-[9px] sm:text-[10px] bg-rose-500 text-white px-2 py-0.2 rounded-full uppercase font-bold">
                     Hover / Touch
                   </span>
                 </h4>
@@ -963,7 +963,7 @@ export function CustomizerStudio({
                       <Sparkles className="w-3 h-3" />
                       <span>Active Template</span>
                     </div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                       {selectedTemplate?.title}
                     </h3>
                     <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
@@ -1283,7 +1283,7 @@ export function CustomizerStudio({
                           <button
                             key={color}
                             onClick={() => updateField('roseColor', color)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all ${customization.roseColor === color ? 'border-black scale-110 shadow-[2px_2px_0px_rgba(0,0,0,1)]' : 'border-slate-200 dark:border-slate-700'}`}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all ${customization.roseColor === color ? 'border-black scale-110 shadow-sm' : 'border-slate-200 dark:border-slate-700'}`}
                             style={{ background: color === '#f5f5f5' ? '#fff' : color, color: color === '#f5f5f5' || color === '#FFD700' ? '#000' : '#fff' }}
                           >
                             {label}
@@ -2143,7 +2143,7 @@ export function CustomizerStudio({
                         return (
                           <div key={idx} className="p-3.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5">
                             <div className="flex items-center justify-between">
-                              <label className="text-xs font-black text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
+                              <label className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
                                 <span>Truth #{idx + 1}</span>
                               </label>
                               <div className="flex items-center gap-1">
@@ -3367,7 +3367,7 @@ export function CustomizerStudio({
                   <div>
                     <h5 className="font-extrabold text-slate-900 dark:text-white flex items-center space-x-1.5">
                       <span>100% Client-Side End-to-End Privacy</span>
-                      <span className="text-[10px] bg-emerald-500 text-slate-950 px-2 py-0.2 rounded-full font-black uppercase">
+                      <span className="text-[10px] bg-emerald-500 text-slate-950 px-2 py-0.2 rounded-full font-bold uppercase">
                         Zero Knowledge
                       </span>
                     </h5>
@@ -3754,7 +3754,7 @@ export function CustomizerStudio({
                     <div>
                       <h4 className="font-extrabold text-sm text-white flex items-center space-x-2">
                         <span>Cloud Database Storage</span>
-                        <span className="text-[10px] bg-emerald-500 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase">
+                        <span className="text-[10px] bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded-full uppercase">
                           Firestore Connected
                         </span>
                       </h4>
@@ -3768,7 +3768,7 @@ export function CustomizerStudio({
                     type="button"
                     onClick={handleSaveToCloudDatabase}
                     disabled={isSavingCloud}
-                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-slate-950 font-black text-xs rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center space-x-1.5 shrink-0 disabled:opacity-50"
+                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center space-x-1.5 shrink-0 disabled:opacity-50"
                   >
                     <Cloud className="w-4 h-4" />
                     <span>{isSavingCloud ? 'Saving...' : 'Save To Cloud Database'}</span>
@@ -3952,14 +3952,14 @@ export function CustomizerStudio({
                 <div className="space-y-1">
                   <div className="flex items-center justify-center space-x-2">
                     <span className="text-slate-400 text-lg line-through font-bold">Rs. {basePrice}.00</span>
-                    <span className="text-3xl font-black text-emerald-600">Rs. {payablePrice}.00</span>
+                    <span className="text-3xl font-bold text-emerald-600">Rs. {payablePrice}.00</span>
                   </div>
                   <p className="text-xs text-emerald-600 font-bold bg-emerald-50 py-1 px-2.5 rounded-full inline-block border border-emerald-200">
                     🎉 You saved Rs. {discountAmount} {finalPrice === 1 ? '' : '(99% OFF)'}
                   </p>
                 </div>
               ) : (
-                <h3 className="text-3xl font-black text-slate-900">Rs. {basePrice}.00</h3>
+                <h3 className="text-3xl font-bold text-slate-900">Rs. {basePrice}.00</h3>
               )}
             </div>
 
@@ -4042,7 +4042,7 @@ export function CustomizerStudio({
             <Upload className="w-8 h-8" />
           </div>
 
-          <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">
+          <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
             Sign In Required to Upload Photos
           </h3>
 

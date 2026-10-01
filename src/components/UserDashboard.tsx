@@ -126,7 +126,7 @@ export function UserDashboard({
           setUserPayments([]);
         }
       } catch (e) {
-        console.log('User dashboard cloud sync note:', e);
+        console.debug('User dashboard cloud sync note:', e);
       }
     }
     loadUserData();

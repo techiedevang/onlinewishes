@@ -282,7 +282,7 @@ export function FriendshipDayGreetView({ customization, onClose, isStandaloneVie
       if (customAudioUrl) {
         soundscapeEngine.stop();
         if (audioRef.current) {
-          audioRef.current.play().catch((e) => console.log('Audio autoplay prevented:', e));
+          audioRef.current.play().catch((e) => console.debug('Audio autoplay prevented:', e));
         }
       } else if (customization.ambientSoundscape && customization.ambientSoundscape !== 'none') {
         soundscapeEngine.play(customization.ambientSoundscape);

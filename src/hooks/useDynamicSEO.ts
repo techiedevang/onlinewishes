@@ -125,7 +125,7 @@ export function useDynamicSEO(currentPath: string, activeTab: string, customizat
       // 6. Default Homepage
       updatePageMetadata({
         title: 'OnlineWishes.in - Personalized Digital Surprises & Scrapbooks',
-        description: 'Create personalized digital surprises, memory books, birthday websites, and love scrapbooks for your loved ones at onlinewishes.in. Make their day special with custom digital gifts.',
+        description: 'Create beautiful, personalized memory websites in minutes. Add photos, write messages, and share an unforgettable digital gift. Make their day special with custom digital gifts.',
         canonicalUrl: 'https://onlinewishes.in/',
       });
     }

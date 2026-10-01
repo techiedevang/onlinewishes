@@ -42,7 +42,7 @@ export function PricingSection({
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl font-black text-black uppercase tracking-tight">
+          <h2 className="font-body font-semibold text-4xl sm:text-5xl md:text-6xl font-bold text-black uppercase tracking-tight">
             Transparent <span className="text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">Pricing</span>
           </h2>
           <p className="font-body font-bold text-base sm:text-xl text-black">
@@ -51,13 +51,13 @@ export function PricingSection({
         </div>
 
         {/* CUSTOM AI IDEA BANNER CARD */}
-        <div className="relative overflow-hidden bg-lovely-neon text-white rounded-[2rem] p-8 sm:p-10 border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row items-center justify-between gap-8 transform rotate-1">
+        <div className="relative overflow-hidden bg-rose-600 text-white rounded-[2rem] p-8 sm:p-10 border border-slate-200 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 transform rotate-1">
           <div className="space-y-4 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 bg-white text-black font-heading font-black px-4 py-2 rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] uppercase text-sm">
+            <div className="inline-flex items-center space-x-2 bg-white text-black font-body font-semibold font-bold px-4 py-2 rounded-xl border border-slate-200 shadow-sm uppercase text-sm">
               <Bot className="w-5 h-5 text-lovely-pink" />
               <span>Bespoke AI Architect</span>
             </div>
-            <h3 className="font-heading text-3xl sm:text-4xl font-black uppercase drop-shadow-md">
+            <h3 className="font-body font-semibold text-3xl sm:text-4xl font-bold uppercase drop-shadow-md">
               Want a Custom Design Built From Scratch?
             </h3>
             <p className="font-body font-bold text-sm sm:text-base leading-relaxed text-white/90">
@@ -65,12 +65,12 @@ export function PricingSection({
             </p>
           </div>
 
-          <div className="flex-shrink-0 text-center md:text-right w-full md:w-auto bg-white border-4 border-black p-6 rounded-2xl shadow-[4px_4px_0px_rgba(0,0,0,1)] transform -rotate-2">
-            <div className="font-heading text-4xl font-black text-black mb-1">Rs. 79</div>
+          <div className="flex-shrink-0 text-center md:text-right w-full md:w-auto bg-white border border-slate-200 p-6 rounded-2xl shadow-sm transform -rotate-2">
+            <div className="font-body font-semibold text-4xl font-bold text-black mb-1">Rs. 79</div>
             <div className="font-body font-bold text-gray-500 text-xs mb-4 uppercase tracking-wider">Flat Setup Fee</div>
             <button
               onClick={onOpenCustomAiModal}
-              className="w-full md:w-auto px-6 py-4 bg-lovely-yellow hover:bg-[#E5B833] text-black font-heading font-black text-sm uppercase rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center space-x-2"
+              className="w-full md:w-auto px-6 py-4 bg-amber-100 hover:bg-[#E5B833] text-black font-body font-semibold font-bold text-sm uppercase rounded-xl border border-slate-200 shadow-sm hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center space-x-2"
             >
               <Sparkles className="w-5 h-5" />
               <span>Describe My Idea</span>
@@ -84,9 +84,9 @@ export function PricingSection({
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-5 py-2.5 rounded-xl font-heading text-sm font-black uppercase transition-all border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] ${
+              className={`px-5 py-2.5 rounded-xl font-body font-semibold text-sm font-bold uppercase transition-all border border-slate-200 shadow-sm ${
                 selectedCategory === cat.id
-                  ? 'bg-lovely-pink text-white translate-y-1 shadow-none'
+                  ? 'bg-rose-500 text-white translate-y-1 shadow-none'
                   : 'bg-white text-black hover:bg-gray-100'
               }`}
             >
@@ -100,21 +100,21 @@ export function PricingSection({
           {filteredTemplates.map((template, idx) => (
             <div
               key={template.id}
-              className="bg-white rounded-[2rem] p-6 sm:p-8 border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:-translate-y-2 hover:shadow-[12px_12px_0px_rgba(0,0,0,1)] transition-all duration-300 flex flex-col justify-between group"
+              className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-200 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group"
             >
               <div>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-heading text-xs font-black uppercase text-black bg-lovely-yellow px-3 py-1.5 rounded-lg border-2 border-black">
+                  <span className="font-body font-semibold text-xs font-bold uppercase text-black bg-amber-100 px-3 py-1.5 rounded-lg border border-slate-200">
                     {template.category}
                   </span>
-                  <div className="flex items-center space-x-1 bg-black text-white px-2.5 py-1 rounded-lg border-2 border-black">
+                  <div className="flex items-center space-x-1 bg-black text-white px-2.5 py-1 rounded-lg border border-slate-200">
                     <Star className="w-3.5 h-3.5 fill-lovely-yellow text-lovely-yellow" />
                     <span className="font-body font-bold text-xs">{template.rating}</span>
                   </div>
                 </div>
 
-                <h3 className="font-heading text-2xl font-black text-black uppercase line-clamp-1 mb-2">
+                <h3 className="font-body font-semibold text-2xl font-bold text-black uppercase line-clamp-1 mb-2">
                   {template.title}
                 </h3>
                 
@@ -124,7 +124,7 @@ export function PricingSection({
 
                 {/* Price Display */}
                 <div className="mt-6 mb-6 flex items-baseline">
-                  <span className="font-heading text-4xl font-black text-lovely-neon">
+                  <span className="font-body font-semibold text-4xl font-bold text-lovely-neon">
                     Rs. {template.price}
                   </span>
                   <span className="font-body font-bold text-sm text-gray-500 ml-2">
@@ -152,7 +152,7 @@ export function PricingSection({
               <div className="pt-8 mt-auto">
                 <button
                   onClick={() => onSelectTemplateToBuild(template)}
-                  className="w-full py-4 px-4 bg-lovely-neon hover:bg-[#E6005C] text-white font-heading font-black text-lg uppercase rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center space-x-2"
+                  className="w-full py-4 px-4 bg-rose-600 hover:bg-[#E6005C] text-white font-body font-semibold font-bold text-lg uppercase rounded-xl border border-slate-200 shadow-sm hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center space-x-2"
                 >
                   <span>Select Plan</span>
                   <ArrowRight className="w-5 h-5" />
@@ -164,7 +164,7 @@ export function PricingSection({
         </div>
 
         {/* Payment Security Guarantees */}
-        <div className="bg-white p-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] flex flex-wrap items-center justify-around gap-6 font-body font-bold text-sm text-black">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-around gap-6 font-body font-bold text-sm text-black">
           <div className="flex items-center space-x-2">
             <Lock className="w-5 h-5 text-lovely-pink" />
             <span>256-Bit SSL Checkout</span>

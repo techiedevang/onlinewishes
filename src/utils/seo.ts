@@ -15,8 +15,8 @@ export interface MetaDataOptions {
 }
 
 const DEFAULT_TITLE = 'OnlineWishes - Personalized Digital Surprises & Scrapbooks';
-const DEFAULT_DESC = 'Create personalized digital surprises, memory books, birthday websites, and love scrapbooks for your loved ones at onlinewishes.in.';
-const DEFAULT_KEYWORDS = 'online wishes, digital surprise website, birthday surprise website, memory scrapbook, love letter website, online greeting card, custom surprise link';
+const DEFAULT_DESC = 'Create beautiful, personalized memory websites in minutes. Add photos, write messages, and share an unforgettable digital gift.';
+const DEFAULT_KEYWORDS = 'digital gift, personalized website, memory scrapbook, custom greeting, romantic surprise, birthday website, relationship timeline';
 const DEFAULT_URL = 'https://onlinewishes.in/';
 const DEFAULT_OG_IMAGE = 'https://onlinewishes.in/favicon.svg';
 

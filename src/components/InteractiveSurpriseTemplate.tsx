@@ -494,7 +494,7 @@ export function InteractiveSurpriseTemplate({
     if (stage !== 'passcode' && customization.spotifyPreviewUrl && !audioMuted) {
       previewAudio = new Audio(customization.spotifyPreviewUrl);
       previewAudio.loop = true;
-      previewAudio.play().catch(e => console.log('Preview audio autoplay blocked:', e));
+      previewAudio.play().catch(e => console.debug('Preview audio autoplay blocked:', e));
     }
     return () => {
       if (previewAudio) {
@@ -1495,7 +1495,7 @@ A story forever to be told.`}
                   { id: '1', title: 'VOICE NOTE #1:', caption: safeMemories[0]?.caption || 'That one time... you know.' },
                   { id: '2', title: 'VOICE NOTE #2:', caption: safeMemories[1]?.caption || 'We do not speak of this.' }
                 ]).map((joke, idx) => (
-                  <div key={joke.id || idx} className="bg-white/10 p-4 rounded-xl hover:bg-white/20 transition-colors cursor-pointer" onClick={() => { if(!audioMuted) { const a = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); a.play().catch(e=>console.log(e)); } }}>
+                  <div key={joke.id || idx} className="bg-white/10 p-4 rounded-xl hover:bg-white/20 transition-colors cursor-pointer" onClick={() => { if(!audioMuted) { const a = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'); a.play().catch(e=>console.debug(e)); } }}>
                     <p className="text-fuchsia-300 font-mono mb-2">▶️ {joke.title || `VOICE NOTE #${idx+1}`}</p>
                     <p className="text-xl text-white font-bold italic">"{joke.caption}"</p>
                   </div>
@@ -1889,7 +1889,7 @@ A story forever to be told.`}
                     onClick={() => {
                       if (!audioMuted) {
                         const a = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
-                        a.play().catch(e=>console.log(e));
+                        a.play().catch(e=>console.debug(e));
                       }
                     }}
                   >

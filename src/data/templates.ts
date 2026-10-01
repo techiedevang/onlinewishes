@@ -135,6 +135,22 @@ export const SAMPLE_REVIEWS_BOX21: TemplateReview[] = [
 
 export const TEMPLATES: Template[] = [
   {
+    id: 'genz-aesthetic',
+    title: 'Classy Gen Z Vibe',
+    category: 'bestie',
+    description: 'A highly polished, minimalist Gen Z aesthetic template featuring bento-grid layouts, soft glassmorphism, clean typography, and smooth interactive hover states. Perfect for modern, subtle, and stylish surprises.',
+    badge: '✨ Minimalist Vibe',
+    rating: 4.95,
+    reviewsCount: 310,
+    thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800',
+    features: ['Bento Grid Layout', 'Soft Glassmorphism', 'Clean Typography', 'Smooth Animations', 'Aesthetic Photo Gallery'],
+    themeColor: 'from-zinc-100 to-zinc-300',
+    interactivePreviewType: 'genz_aesthetic',
+    photoCount: 4,
+    price: 49,
+    reviews: []
+  },
+  {
     id: 'sorry-heartfelt-apology',
     title: 'Heartfelt Apology & Forgiveness Scrapbook',
     category: 'girlfriend',

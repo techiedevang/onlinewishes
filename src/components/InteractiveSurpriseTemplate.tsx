@@ -26,6 +26,7 @@ import { FlirtDayView } from './templates/FlirtDayView';
 import { ConfessionDayView } from './templates/ConfessionDayView';
 import { MissingDayView } from './templates/MissingDayView';
 import { BreakupDayView } from './templates/BreakupDayView';
+import { GenZAestheticView } from './templates/GenZAestheticView';
 
 export type Stage = 'passcode' | 'greeting' | 'question' | 'no_error' | 'paragraph' | 'poem' | 'gift_box' | 'floating_photos' | 'collage' | 'book' | 'final' | 'love_letter' | 'birthday_cake' | 'polaroid_wall' | 'arcade_screen' | 'gratitude_tree' | 'celestial_wishes' | 'editorial_gallery' | 'vintage_letter' | 'anniversary_counter' | 'friendship_quiz' | 'inside_jokes' | 'downloadable_poster' | 'nostalgic_timeline' | 'gratitude_cards' | 'sisterhood_oath' | 'high_res_export' | 'birthday_countdown' | 'interactive_candles' | 'group_wishes_wall' | 'confetti_burst' | 'arcade_level_quest' | 'arcade_pixel_cards' | 'arcade_high_score' | 'star_constellations' | 'shooting_star_wish' | 'editorial_cover' | 'editorial_story' | 'vintage_botanical_gallery';
 

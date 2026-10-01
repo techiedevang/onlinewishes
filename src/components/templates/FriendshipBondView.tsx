@@ -117,7 +117,7 @@ export function FriendshipBondView({
               </div>
               
               <div className="bg-white/80 backdrop-blur p-6 rounded-3xl border-4 border-dashed border-[#FF8C42] shadow-xl transform rotate-2">
-                <h1 className="text-4xl font-black mb-4 text-[#FF8C42] uppercase tracking-wider">
+                <h1 className="text-4xl font-bold mb-4 text-[#FF8C42] uppercase tracking-wider">
                   BFF Forever!
                 </h1>
                 <div className="inline-block bg-[#4ADE80] text-white px-6 py-2 rounded-full font-bold text-2xl shadow-md -rotate-3 mt-2">
@@ -181,7 +181,7 @@ export function FriendshipBondView({
               exit={{ opacity: 0 }}
               className="w-full max-w-sm grid grid-cols-2 gap-4"
             >
-              <h3 className="col-span-2 text-center text-3xl font-black text-white drop-shadow-md mb-4 uppercase">Secret Files 🤫</h3>
+              <h3 className="col-span-2 text-center text-3xl font-bold text-white drop-shadow-md mb-4 uppercase">Secret Files 🤫</h3>
               {customization.insideJokes?.map((joke, i) => (
                 <div key={joke.id} className="relative h-40 perspective-1000">
                   <motion.div
@@ -245,7 +245,7 @@ export function FriendshipBondView({
               exit={{ opacity: 0 }}
               className="w-full h-full flex flex-col justify-center max-w-sm"
             >
-              <h3 className="text-3xl font-black text-center text-white mb-6 drop-shadow-md">Core Memories</h3>
+              <h3 className="text-3xl font-bold text-center text-white mb-6 drop-shadow-md">Core Memories</h3>
               <div className="grid grid-cols-2 gap-4">
                 {safeMemories.map((mem, i) => (
                   <motion.div
@@ -275,7 +275,7 @@ export function FriendshipBondView({
               exit={{ opacity: 0 }}
               className="w-full max-w-sm h-full flex flex-col"
             >
-              <h3 className="text-2xl font-black text-white text-center mb-6 flex items-center justify-center gap-2">
+              <h3 className="text-2xl font-bold text-white text-center mb-6 flex items-center justify-center gap-2">
                 <History className="w-6 h-6" /> The Eras Tour
               </h3>
               <div className="relative border-l-4 border-white/50 ml-4 space-y-6 flex-1 overflow-y-auto pr-4 pb-12 custom-scrollbar">
@@ -312,7 +312,7 @@ export function FriendshipBondView({
               <div className="absolute -bottom-10 -left-10 text-8xl opacity-20">🌈</div>
               
               <Smile className="w-24 h-24 text-[#F2C94C] mb-6 relative z-10" />
-              <h2 className="text-3xl font-black text-gray-800 mb-4 relative z-10 uppercase leading-tight">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4 relative z-10 uppercase leading-tight">
                 Friendships like ours are rare 💛
               </h2>
               <p className="text-lg font-bold text-gray-500 relative z-10">
@@ -353,7 +353,7 @@ export function FriendshipBondView({
           <button
             onClick={handleNext}
             disabled={stage === 'friendship_quiz' && !quizAnswered}
-            className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center space-x-2 shadow-lg ${
+            className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center space-x-2 shadow-lg ${
               stage === 'friendship_quiz' && !quizAnswered
                 ? 'bg-white/50 text-gray-500 cursor-not-allowed'
                 : 'bg-white text-[#FF8C42] hover:bg-gray-50 hover:-translate-y-1'

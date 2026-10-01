@@ -33,7 +33,7 @@ export function Header({
               className="flex items-center gap-2"
               aria-label="OnlineWishes Home Page"
             >
-              <img alt="OnlineWishes" className="h-10 sm:h-12 w-auto drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/lovely-logo-new.png" />
+              <img alt="OnlineWishes" className="h-10 sm:h-12 w-auto drop-shadow-sm" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/lovely-logo-new.png" />
             </button>
             <nav className="hidden md:flex items-center gap-6">
               <button 
@@ -44,39 +44,39 @@ export function Header({
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                   }, 100);
                 }} 
-                className="font-body font-semibold uppercase text-sm tracking-wide text-rose-300 hover:text-lovely-neon transition-colors drop-shadow-md flex items-center gap-1 animate-pulse"
+                className="font-body font-semibold uppercase text-sm tracking-wide text-rose-300 hover:text-rose-600 transition-colors drop-shadow-md flex items-center gap-1 animate-pulse"
               >
                 <span>Valentine Special 💖</span>
               </button>
               <button 
                 onClick={() => setActiveTab('templates')} 
-                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-lovely-neon transition-colors text-white drop-shadow-md"
+                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-rose-600 transition-colors text-white drop-shadow-md"
               >
                 Templates
               </button>
               <button 
                 onClick={() => setActiveTab('pricing')} 
-                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-lovely-neon transition-colors text-white drop-shadow-md"
+                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-rose-600 transition-colors text-white drop-shadow-md"
               >
                 Pricing
               </button>
               <button 
                 onClick={() => { window.history.pushState(null, '', '/blog'); setActiveTab('blog'); setMobileMenuOpen(false); }} 
-                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-lovely-neon transition-colors text-white drop-shadow-md"
+                className="font-body font-semibold uppercase text-sm tracking-wide hover:text-rose-600 transition-colors text-white drop-shadow-md"
               >
                 Blog
               </button>
               {currentUser ? (
                 <button
                   onClick={onOpenUserDashboard || onOpenAuth}
-                  className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full text-white font-bold text-sm border border-white/40 transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.5)]"
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full text-white font-bold text-sm border border-white/40 transition-all shadow-md"
                 >
                   Dashboard
                 </button>
               ) : (
                 <button
                   onClick={onOpenAuth}
-                  className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full text-white font-bold text-sm border border-white/40 transition-all shadow-[2px_2px_0px_rgba(0,0,0,0.5)]"
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full text-white font-bold text-sm border border-white/40 transition-all shadow-md"
                 >
                   Sign In
                 </button>
@@ -98,7 +98,7 @@ export function Header({
       {/* Mobile Menu Overlay */}
       <div className={`fixed inset-0 z-50 transition-all duration-500 ${mobileMenuOpen ? 'visible' : 'invisible'}`}>
         <div 
-          className={`absolute inset-0 bg-lovely-plum/70 backdrop-blur-xl transition-opacity duration-500 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`} 
+          className={`absolute inset-0 bg-indigo-900/70 backdrop-blur-xl transition-opacity duration-500 ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
           onClick={() => setMobileMenuOpen(false)}
         />
         <div className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-gradient-to-br from-lovely-plum to-lovely-violet backdrop-blur-2xl border-l border-white/10 transform transition-transform duration-500 ease-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -114,8 +114,8 @@ export function Header({
               <img alt="Scroll Indicator" loading="lazy" className="w-[150px]" src="https://res.cloudinary.com/dt94eifov/image/upload/lovely/defaults/navbar-hanging-cat-new.png" />
             </div>
             <nav className="flex flex-col gap-2 flex-grow mt-16 relative z-10">
-              <button onClick={() => {setActiveTab('home'); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-lovely-neon/50 transition-all duration-300">
-                <span className="font-heading text-xl uppercase text-white group-hover:text-lovely-neon transition-colors">Home</span>
+              <button onClick={() => {setActiveTab('home'); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-rose-600/50 transition-all duration-300">
+                <span className="font-body font-semibold text-xl uppercase text-white group-hover:text-rose-600 transition-colors">Home</span>
               </button>
               <button 
                 onClick={() => {
@@ -126,16 +126,16 @@ export function Header({
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                   }, 100);
                 }} 
-                className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-lovely-neon transition-all duration-300"
+                className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-600 transition-all duration-300"
               >
-                <span className="font-heading text-xl uppercase text-rose-300 group-hover:text-lovely-neon transition-colors">Valentine Special 💖</span>
+                <span className="font-body font-semibold text-xl uppercase text-rose-300 group-hover:text-rose-600 transition-colors">Valentine Special 💖</span>
               </button>
-              <button onClick={() => {setActiveTab('templates'); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-lovely-neon/50 transition-all duration-300">
-                <span className="font-heading text-xl uppercase text-white group-hover:text-lovely-neon transition-colors">Templates</span>
+              <button onClick={() => {setActiveTab('templates'); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-rose-600/50 transition-all duration-300">
+                <span className="font-body font-semibold text-xl uppercase text-white group-hover:text-rose-600 transition-colors">Templates</span>
               </button>
               {currentUser?.role === 'admin' && (
                 <button onClick={() => {onOpenAdmin(); setMobileMenuOpen(false);}} className="group flex items-center justify-between py-2 px-4 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-lovely-yellow/50 transition-all duration-300">
-                  <span className="font-heading text-xl uppercase text-white group-hover:text-lovely-yellow transition-colors">Admin Panel</span>
+                  <span className="font-body font-semibold text-xl uppercase text-white group-hover:text-amber-500 transition-colors">Admin Panel</span>
                 </button>
               )}
             </nav>
@@ -144,7 +144,7 @@ export function Header({
                 if (currentUser && onOpenUserDashboard) { onOpenUserDashboard(); } else { onOpenAuth(); }
                 setMobileMenuOpen(false);
               }}
-              className="w-full uppercase mt-6 flex items-center justify-center gap-2 bg-lovely-neon text-white font-bold border-4 border-black rounded-xl px-6 py-3 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[0px_0px_0px_rgba(0,0,0,1)] transition-all"
+              className="w-full uppercase mt-6 flex items-center justify-center gap-2 bg-rose-600 text-white font-bold border border-slate-200 rounded-xl px-6 py-3 shadow-lg hover:translate-y-1 hover:shadow-[0px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
               <Sparkles className="w-5 h-5" />
               {currentUser ? 'Dashboard' : 'Sign In'}

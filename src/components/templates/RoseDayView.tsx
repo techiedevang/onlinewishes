@@ -141,7 +141,7 @@ export function RoseDayView({
               
               <button
                 onClick={nextStage}
-                className="bg-lovely-neon text-white font-heading font-black uppercase px-8 py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all mx-auto flex items-center gap-2"
+                className="bg-lovely-neon text-white font-body font-semibold uppercase px-8 py-3 rounded-xl border border-slate-200 shadow-lg hover:translate-y-1 hover:shadow-none transition-all mx-auto flex items-center gap-2"
               >
                 Tap to Open <ArrowRight className="w-5 h-5" />
               </button>
@@ -164,7 +164,7 @@ export function RoseDayView({
               <div className="mt-8 flex justify-center">
                 <button
                   onClick={nextStage}
-                  className="bg-lovely-neon text-white font-heading font-black uppercase px-8 py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
+                  className="bg-lovely-neon text-white font-body font-semibold uppercase px-8 py-3 rounded-xl border border-slate-200 shadow-lg hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
                 >
                   Next <ArrowRight className="w-5 h-5" />
                 </button>
@@ -214,7 +214,7 @@ export function RoseDayView({
 
               <button
                 onClick={nextStage}
-                className="bg-lovely-neon text-white font-heading font-black uppercase px-8 py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
+                className="bg-lovely-neon text-white font-body font-semibold uppercase px-8 py-3 rounded-xl border border-slate-200 shadow-lg hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
               >
                 Read Letter <ArrowRight className="w-5 h-5" />
               </button>
@@ -239,7 +239,7 @@ export function RoseDayView({
               <div className="mt-8 flex justify-center">
                 <button
                   onClick={nextStage}
-                  className="bg-lovely-neon text-white font-heading font-black uppercase px-8 py-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
+                  className="bg-lovely-neon text-white font-body font-semibold uppercase px-8 py-3 rounded-xl border border-slate-200 shadow-lg hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
                 >
                   Final Surprise <Sparkles className="w-5 h-5" />
                 </button>

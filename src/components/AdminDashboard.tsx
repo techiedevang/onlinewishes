@@ -109,26 +109,30 @@ export function AdminDashboard({ currentUser, onClose, onLogin, onLogout }: Admi
       });
 
       // Keep payments as getDocs for now or also make it onSnapshot
-      getDocs(collection(db, 'payments')).then(paymentsSnap => {
-        const loadedTxns = [];
-        paymentsSnap.forEach((docSnap) => {
-          const d = docSnap.data();
-          loadedTxns.push({
-            id: docSnap.id,
-            orderId: d.orderId || docSnap.id,
-            userEmail: d.userEmail || '',
-            userName: d.userName || 'Anonymous',
-            amount: d.amount || 199,
-            currency: d.currency || 'INR',
-            templateTitle: d.templateTitle || 'Surprise Website License',
-            paymentGateway: d.paymentGateway || 'Razorpay UPI',
-            status: d.status || 'SUCCESS',
-            createdAt: d.createdAt ? d.createdAt.replace('T', ' ').substring(0, 19) : new Date().toISOString().substring(0, 10),
-            receiptUrl: d.receiptUrl || '#',
+      getDocs(collection(db, 'payments'))
+        .then(paymentsSnap => {
+          const loadedTxns: any[] = [];
+          paymentsSnap.forEach((docSnap) => {
+            const d = docSnap.data();
+            loadedTxns.push({
+              id: docSnap.id,
+              orderId: d.orderId || docSnap.id,
+              userEmail: d.userEmail || '',
+              userName: d.userName || 'Anonymous',
+              amount: d.amount || 199,
+              currency: d.currency || 'INR',
+              templateTitle: d.templateTitle || 'Surprise Website License',
+              paymentGateway: d.paymentGateway || 'Razorpay UPI',
+              status: d.status || 'SUCCESS',
+              createdAt: d.createdAt ? d.createdAt.replace('T', ' ').substring(0, 19) : new Date().toISOString().substring(0, 10),
+              receiptUrl: d.receiptUrl || '#',
+            });
           });
+          setTransactions(loadedTxns);
+        })
+        .catch(err => {
+          console.error("Failed to load payments from Firestore. Permission denied or network issue:", err);
         });
-        setTransactions(loadedTxns);
-      });
     }
 
     return () => {
